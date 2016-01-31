@@ -135,7 +135,7 @@ void C_CrossbowBolt::ClientThink( void )
 {
 	m_bUpdated = false;
 }
-/*
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : &data - 
@@ -156,5 +156,4 @@ void CrosshairLoadCallback( const CEffectData &data )
 	}
 }
 
-DECLARE_CLIENT_EFFECT( "CrossbowLoad", CrosshairLoadCallback );
-*/
+DECLARE_CLIENT_EFFECT( CrossbowLoad, CrosshairLoadCallback );

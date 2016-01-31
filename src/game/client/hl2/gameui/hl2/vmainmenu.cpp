@@ -40,6 +40,10 @@
 // UI defines. Include if you want to implement some of them [str]
 #include "ui_defines.h"
 
+#ifdef ENABLE_CEF
+#include "cef/src_cef.h"
+#endif // ENABLE_CEF
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -86,7 +90,6 @@ MainMenu::MainMenu( Panel *parent, const char *panelName ):
 MainMenu::~MainMenu()
 {
 	RemoveFrameListener( this );
-
 }
 
 //=============================================================================

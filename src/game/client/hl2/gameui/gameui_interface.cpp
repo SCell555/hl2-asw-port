@@ -66,6 +66,12 @@ typedef BaseModUI::CBaseModPanel UI_BASEMOD_PANEL_CLASS;
 inline UI_BASEMOD_PANEL_CLASS & GetUiBaseModPanelClass() { return UI_BASEMOD_PANEL_CLASS::GetSingleton(); }
 inline UI_BASEMOD_PANEL_CLASS & ConstructUiBaseModPanelClass() { return * new UI_BASEMOD_PANEL_CLASS(); }
 
+#ifdef ENABLE_CEF
+#include "cbase.h" // ugly
+#include "cef/src_cef.h"
+SrcCefBrowser *s_ui_basemodpanel = NULL;
+#endif // ENABLE_CEF
+
 #ifdef _X360
 #include "xbox/xbox_win32stubs.h"
 #endif // _X360
@@ -481,6 +487,21 @@ bool CGameUI::FindPlatformDirectory(char *platformDir, int bufferSize)
 	return (platformDir[0] != 0);
 }
 
+#ifdef ENABLE_CEF
+//-----------------------------------------------------------------------------
+// Purpose: Called before Python interpreter is shutdown, which is before
+//			CGameUI:Shutdown. Python managed GameUI should be destroyed here.
+//-----------------------------------------------------------------------------
+void CGameUI::ShutdownCEFMenu()
+{
+	if( s_ui_basemodpanel && s_ui_basemodpanel->GetPanel() )
+	{
+		s_ui_basemodpanel->GetPanel()->SetParent( (vgui::Panel *)NULL ); // Detach from gameui base panel
+	}
+	s_ui_basemodpanel = NULL;
+}
+#endif // ENABLE_CEF
+
 //-----------------------------------------------------------------------------
 // Purpose: Called to Shutdown the game UI system
 //-----------------------------------------------------------------------------
@@ -773,6 +794,7 @@ void CGameUI::OnLevelLoadingStarted( const char *levelName, bool bShowProgressDi
 	g_VModuleLoader.PostMessageToAllModules( new KeyValues( "LoadingStarted" ) );
 
 	GetUiBaseModPanelClass().OnLevelLoadingStarted( levelName, bShowProgressDialog );
+
 	ShowLoadingBackgroundDialog();
 
 	if ( bShowProgressDialog )
@@ -795,9 +817,8 @@ void CGameUI::OnLevelLoadingFinished(bool bError, const char *failureReason, con
 	g_VModuleLoader.PostMessageToAllModules( new KeyValues( "LoadingFinished" ) );
 
 	GetUiBaseModPanelClass().OnLevelLoadingFinished( new KeyValues( "LoadingFinished" ) );
+
 	HideLoadingBackgroundDialog();
-
-
 }
 
 //-----------------------------------------------------------------------------

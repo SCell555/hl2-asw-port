@@ -2192,7 +2192,7 @@ int CClientLeafSystem::ComputeTranslucency( int nFrameNumber, int nViewID, int n
 	}
 
 	// If we're taking devshots, don't fade props at all
-	bool bFadeProps = true;
+	bool bFadeProps = false;
 #ifdef _DEBUG
 	bFadeProps = r_FadeProps.GetBool();
 #endif

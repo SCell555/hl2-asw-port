@@ -27,6 +27,7 @@
 #include "hl2_shareddefs.h"
 #include "rumble_shared.h"
 #include "gamestats.h"
+#include "particle_parse.h"
 
 #ifdef PORTAL
 	#include "portal_util_shared.h"
@@ -144,6 +145,8 @@ void CMissile::Precache( void )
 	PrecacheModel( "models/weapons/w_missile.mdl" );
 	PrecacheModel( "models/weapons/w_missile_launch.mdl" );
 	PrecacheModel( "models/weapons/w_missile_closed.mdl" );
+
+	PrecacheParticleSystem( "Rocket_Smoke");
 }
 
 
@@ -342,7 +345,7 @@ void CMissile::DoExplosion( void )
 {
 	// Explode
 	ExplosionCreate( GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), CMissile::EXPLOSION_RADIUS, 
-		SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE, 0.0f, this);
+		SF_ENVEXPLOSION_NOSPARKS, 0.0f, this);
 }
 
 
@@ -410,23 +413,7 @@ void CMissile::CreateSmokeTrail( void )
 	if ( m_hRocketTrail )
 		return;
 
-	// Smoke trail.
-	if ( (m_hRocketTrail = RocketTrail::CreateRocketTrail()) != NULL )
-	{
-		m_hRocketTrail->m_Opacity = 0.2f;
-		m_hRocketTrail->m_SpawnRate = 100;
-		m_hRocketTrail->m_ParticleLifetime = 0.5f;
-		m_hRocketTrail->m_StartColor.Init( 0.65f, 0.65f , 0.65f );
-		m_hRocketTrail->m_EndColor.Init( 0.0, 0.0, 0.0 );
-		m_hRocketTrail->m_StartSize = 8;
-		m_hRocketTrail->m_EndSize = 32;
-		m_hRocketTrail->m_SpawnRadius = 4;
-		m_hRocketTrail->m_MinSpeed = 2;
-		m_hRocketTrail->m_MaxSpeed = 16;
-		
-		m_hRocketTrail->SetLifetime( 999 );
-		m_hRocketTrail->FollowEntity( this, "0" );
-	}
+	DispatchParticleEffect("Rocket_Smoke", PATTACH_POINT_FOLLOW, this, 1, false);
 }
 
 
@@ -716,7 +703,6 @@ CMissile *CMissile::Create( const Vector &vecOrigin, const QAngle &vecAngles, ed
 	CMissile *pMissile = (CMissile *) CBaseEntity::Create( "rpg_missile", vecOrigin, vecAngles, CBaseEntity::Instance( pentOwner ) );
 	pMissile->SetOwnerEntity( Instance( pentOwner ) );
 	pMissile->Spawn();
-	pMissile->AddEffects( EF_NOSHADOW );
 	
 	Vector vecForward;
 	AngleVectors( vecAngles, &vecForward );
@@ -1463,6 +1449,9 @@ void CWeaponRPG::Precache( void )
 	PrecacheModel( RPG_BEAM_SPRITE );
 
 	UTIL_PrecacheOther( "rpg_missile" );
+
+	PrecacheEffect( "RPGShotDown" );
+	PrecacheEffect( "WaterSurfaceExplosion" );
 }
 
 
@@ -1651,7 +1640,7 @@ void CWeaponRPG::PrimaryAttack( void )
 		}
 	}
 
-	/*if( hl2_episodic.GetBool() )
+	if( hl2_episodic.GetBool() )
 	{
 		CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
 		int nAIs = g_AI_Manager.NumAIs();
@@ -1665,7 +1654,7 @@ void CWeaponRPG::PrimaryAttack( void )
 				ppAIs[ i ]->DispatchInteraction( g_interactionPlayerLaunchedRPG, NULL, m_hMissile );
 			}
 		}
-	}*/
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1875,6 +1864,12 @@ void CWeaponRPG::StopGuiding( void )
 
 	StopLaserEffects();
 
+	if( m_hLaserBeam != NULL )
+	{
+		m_hLaserBeam->TurnOff();
+		UTIL_Remove( m_hLaserBeam );
+		m_hLaserBeam = NULL;
+	}
 	// Kill the dot completely
 	if ( m_hLaserDot != NULL )
 	{
@@ -2185,14 +2180,12 @@ void CWeaponRPG::StopLaserEffects( void )
 	if ( m_hLaserBeam != NULL )
 	{
 		m_hLaserBeam->SetBrightness( 0 );
-		UTIL_Remove(m_hLaserBeam);
 	}
 	
 	if ( m_hLaserMuzzleSprite != NULL )
 	{
 		m_hLaserMuzzleSprite->SetScale( 0.01f );
 		m_hLaserMuzzleSprite->SetBrightness( 0, 0.5f );
-		UTIL_Remove(m_hLaserMuzzleSprite);
 	}
 }
 

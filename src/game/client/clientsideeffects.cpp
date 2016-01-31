@@ -183,6 +183,8 @@ void CEffectsList::RemoveEffect( int effectIndex )
 	delete pEffect;	//FIXME: Yes, no?
 }
 
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Iterate through list and simulate/draw stuff
 // Input  : frametime - 

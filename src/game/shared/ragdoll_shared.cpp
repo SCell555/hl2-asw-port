@@ -294,7 +294,7 @@ static void RagdollCreateObjects( IPhysicsEnvironment *pPhysEnv, ragdoll_t &ragd
 	
 	if ( !params.pCollide || params.pCollide->solidCount > RAGDOLL_MAX_ELEMENTS )
 	{
-		Warning( "Ragdoll solid count d exceeds maximum limit of d - Ragdoll not created"/*, params.pCollide->solidCount, RAGDOLL_MAX_ELEMENTS*/ );
+		Warning( "Ragdoll solid count %d exceeds maximum limit of %d - Ragdoll not created", params.pCollide->solidCount, RAGDOLL_MAX_ELEMENTS );
 		Assert( false );
 		return;
 	}
@@ -312,6 +312,34 @@ static void RagdollCreateObjects( IPhysicsEnvironment *pPhysEnv, ragdoll_t &ragd
 	RagdollAddSolids( pPhysEnv, ragdoll, params, const_cast<cache_ragdollsolid_t *>(pCache->GetSolids()), pCache->solidCount, pCache->GetConstraints(), pCache->constraintCount );
 	RagdollAddConstraints( pPhysEnv, ragdoll, params, pCache->GetConstraints(), pCache->constraintCount );
 }
+
+static void RagdollCreateDestrObjects( IPhysicsEnvironment *pPhysEnv, ragdoll_t &ragdoll, const ragdollparams_t &params )
+{
+	ragdoll.listCount = 0;
+	ragdoll.pGroup = NULL;
+	ragdoll.allowStretch = params.allowStretch;
+	memset( ragdoll.list, 0, sizeof(ragdoll.list) );
+	memset( &ragdoll.animfriction, 0, sizeof(ragdoll.animfriction) );
+	
+	if ( !params.pCollide || params.pCollide->solidCount > RAGDOLL_MAX_ELEMENTS )
+	{
+		Warning( "Ragdoll solid count d exceeds maximum limit of d - Ragdoll not created"/*, params.pCollide->solidCount, RAGDOLL_MAX_ELEMENTS*/ );
+		Assert( false );
+		return;
+	}
+
+	cache_ragdoll_t *pCache = (cache_ragdoll_t *)params.pCollide->pUserData;
+	if ( !pCache )
+	{
+		pCache = ParseRagdollIntoCache(params.pStudioHdr, params.pCollide, params.modelIndex);
+	}
+ 
+	constraint_groupparams_t group;
+	group.Defaults();
+	ragdoll.pGroup = pPhysEnv->CreateConstraintGroup( group );
+
+	RagdollAddSolids( pPhysEnv, ragdoll, params, const_cast<cache_ragdollsolid_t *>(pCache->GetSolids()), pCache->solidCount, pCache->GetConstraints(), pCache->constraintCount );
+ }
 
 void RagdollSetupCollisions( ragdoll_t &ragdoll, vcollide_t *pCollide, int modelIndex )
 {
@@ -405,6 +433,37 @@ void RagdollActivate( ragdoll_t &ragdoll, vcollide_t *pCollide, int modelIndex, 
 	}
 }
 
+void RagdollActivateDestr( ragdoll_t &ragdoll, vcollide_t *pCollide, int modelIndex, bool bForceWake )
+{
+	RagdollSetupCollisions( ragdoll, pCollide, modelIndex );
+
+	for ( int i = 0; i < ragdoll.listCount; i++ )
+	{
+		//SAVE THE FPS!!!
+		PhysSetGameFlags( ragdoll.list[i].pObject, FVPHYSICS_NO_SELF_COLLISIONS );
+		// now that the relationships are set, activate the collision system
+		ragdoll.list[i].pObject->EnableCollisions( true );
+
+		if ( bForceWake == true )
+		{
+			ragdoll.list[i].pObject->Wake();
+		}
+	}
+	if ( ragdoll.pGroup )
+	{
+		// NOTE: This also wakes the objects
+		ragdoll.pGroup->Activate();
+		// so if we didn't want that, we'll need to put them back to sleep here
+		if ( !bForceWake )
+		{
+			for ( int i = 0; i < ragdoll.listCount; i++ )
+			{
+				ragdoll.list[i].pObject->Sleep();
+			}
+
+		}
+	}
+}
 
 bool RagdollCreate( ragdoll_t &ragdoll, const ragdollparams_t &params, IPhysicsEnvironment *pPhysEnv )
 {
@@ -449,7 +508,13 @@ bool RagdollCreate( ragdoll_t &ragdoll, const ragdollparams_t &params, IPhysicsE
 	}
 	return true;
 }
+//do i really need this?
+bool RagdollCreateDestr( ragdoll_t &ragdoll, const ragdollparams_t &params, IPhysicsEnvironment *pPhysEnv )
+{
+	RagdollCreateDestrObjects( pPhysEnv, ragdoll, params );
 
+	return true;
+}
 
 void RagdollApplyAnimationAsVelocity( ragdoll_t &ragdoll, const matrix3x4_t *pPrevBones, const matrix3x4_t *pCurrentBones, float dt )
 {
@@ -754,12 +819,12 @@ bool ShouldRemoveThisRagdoll( CBaseAnimating *pRagdoll )
 	   If you're encountering trouble with ragdolls leaving effects behind, try renabling the code below.
     /////////////////////
 	//Just ignore it until we're done burning/dissolving.
+	
 	if ( pRagdoll->GetEffectEntity() )
-		return false;
-	*/
-
+		return false;*/
+	
 	Vector vMins, vMaxs;
-		
+
 	Vector origin = pRagdoll->m_pRagdoll->GetRagdollOrigin();
 	pRagdoll->m_pRagdoll->GetRagdollBounds( vMins, vMaxs );
 
@@ -783,7 +848,7 @@ bool ShouldRemoveThisRagdoll( CBaseAnimating *pRagdoll )
 
 		return true;
 	}
-
+	
 #else
 	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 
@@ -811,11 +876,8 @@ bool ShouldRemoveThisRagdoll( CBaseAnimating *pRagdoll )
 
 
 //-----------------------------------------------------------------------------
-// Cull stale ragdolls. There is an ifdef here: one version for episodic, 
-// one for everything else.
+// Cull stale ragdolls.
 //-----------------------------------------------------------------------------
-#if HL2_EPISODIC
-
 void CRagdollLRURetirement::Update( float frametime ) // EPISODIC VERSION
 {
 	VPROF( "CRagdollLRURetirement::Update" );
@@ -952,118 +1014,6 @@ void CRagdollLRURetirement::Update( float frametime ) // EPISODIC VERSION
 		}
 	}
 }
-
-#else
-
-void CRagdollLRURetirement::Update( float frametime ) // Non-episodic version
-{
-	VPROF( "CRagdollLRURetirement::Update" );
-	// Compress out dead items
-	int i, next;
-
-	int iMaxRagdollCount = m_iMaxRagdolls;
-
-	if ( iMaxRagdollCount == -1 )
-	{
-		iMaxRagdollCount = g_ragdoll_maxcount.GetInt();
-	}
-
-	// fade them all for the low violence version
-	if ( g_RagdollLVManager.IsLowViolence() )
-	{
-		iMaxRagdollCount = 0;
-	}
-	m_iRagdollCount = 0;
-	m_iSimulatedRagdollCount = 0;
-
-	// remove ragdolls with a forced retire time
-	for ( i = m_LRU.Head(); i < m_LRU.InvalidIndex(); i = next )
-	{
-		next = m_LRU.Next(i);
-
-		CBaseAnimating *pRagdoll = m_LRU[i].Get();
-
-		//Just ignore it until we're done burning/dissolving.
-		if ( pRagdoll && pRagdoll->GetEffectEntity() )
-			continue;
-
-		// ignore if it's not time to force retire this ragdoll
-		if ( m_LRU[i].GetForcedRetireTime() == 0.0f || gpGlobals->curtime < m_LRU[i].GetForcedRetireTime() )
-			continue;
-
-		//Msg(" Removing ragdoll %s due to forced retire time of %f (now = %f)\n", pRagdoll->GetModelName(), m_LRU[i].GetForcedRetireTime(), gpGlobals->curtime );
-
-#ifdef CLIENT_DLL
-		pRagdoll->SUB_Remove();
-#else
-		pRagdoll->SUB_StartFadeOut( 0 );
-#endif
-		m_LRU.Remove(i);
-	}
-
-	for ( i = m_LRU.Head(); i < m_LRU.InvalidIndex(); i = next )
-	{
-		next = m_LRU.Next(i);
-		CBaseAnimating *pRagdoll = m_LRU[i].Get();
-		if ( pRagdoll )
-		{
-			m_iRagdollCount++;
-			IPhysicsObject *pObject = pRagdoll->VPhysicsGetObject();
-			if (pObject && !pObject->IsAsleep())
-			{
-				m_iSimulatedRagdollCount++;
-			}
-			if ( m_LRU.Count() > iMaxRagdollCount )
-			{
-				//Found one, we're done.
-				if ( ShouldRemoveThisRagdoll( pRagdoll ) == true )
-				{
-#ifdef CLIENT_DLL
-					pRagdoll->SUB_Remove();
-#else
-					pRagdoll->SUB_StartFadeOut( 0 );
-#endif
-
-					m_LRU.Remove(i);
-					return;
-				}
-			}
-		}
-		else 
-		{
-			m_LRU.Remove(i);
-		}
-	}
-
-
-	//////////////////////////////
-	///   ORIGINAL ALGORITHM   ///
-	//////////////////////////////
-	// not episodic -- this is the original mechanism
-
-	for ( i = m_LRU.Head(); i < m_LRU.InvalidIndex(); i = next )
-	{
-		if ( m_LRU.Count() <=  iMaxRagdollCount )
-			break;
-
-		next = m_LRU.Next(i);
-
-		CBaseAnimating *pRagdoll = m_LRU[i].Get();
-
-		//Just ignore it until we're done burning/dissolving.
-		if ( pRagdoll && pRagdoll->GetEffectEntity() )
-			continue;
-
-#ifdef CLIENT_DLL
-		pRagdoll->SUB_Remove();
-#else
-		pRagdoll->SUB_StartFadeOut( 0 );
-#endif
-		m_LRU.Remove(i);
-	}
-}
-
-#endif // HL2_EPISODIC
 
 //This is pretty hacky, it's only called on the server so it just calls the update method.
 void CRagdollLRURetirement::FrameUpdatePostEntityThink( void )

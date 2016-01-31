@@ -105,7 +105,6 @@
 #include "tier2/tier2_logging.h"
 #include "fmtstr.h"
 
-
 #ifdef _WIN32
 #include "IGameUIFuncs.h"
 #endif
@@ -769,8 +768,6 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetAchievementSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetVScriptSaveRestoreBlockHandler() );
 
-
-
 	bool bInitSuccess = false;
 	if ( sv_threaded_init.GetBool() )
 	{
@@ -855,7 +852,6 @@ void CServerGameDLL::DLLShutdown( void )
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetPhysSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetEntitySaveRestoreBlockHandler() );
 
-
 	char *pFilename = g_TextStatsMgr.GetStatsFilename();
 	if ( !pFilename || !pFilename[0] )
 	{
@@ -887,7 +883,7 @@ void CServerGameDLL::DLLShutdown( void )
 	s_SteamGameServerAPIContext.Clear();	
 	// SteamAPI_Shutdown(); << Steam shutdown is controlled by engine
 #endif
-	
+
 	DisconnectTier3Libraries();
 	DisconnectTier2Libraries();
 	ConVar_Unregister();
@@ -2590,7 +2586,6 @@ void CServerGameEnts::CheckTransmit( CCheckTransmitInfo *pInfo, const unsigned s
 			check = check->GetNetworkParent();
 		}
 	}
-
 //	Msg("A:%i, N:%i, F: %i, P: %i\n", always, dontSend, fullCheck, PVS );
 }
 

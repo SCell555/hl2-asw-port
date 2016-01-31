@@ -25,6 +25,8 @@ public:
 
 						C_BaseHLPlayer();
 
+	virtual void		Spawn();
+
 	virtual void		OnDataChanged( DataUpdateType_t updateType );
 
 	void				Weapon_DropPrimary( void );
@@ -53,7 +55,7 @@ public:
 	void			PerformClientSideNPCSpeedModifiers( float flFrameTime, CUserCmd *pCmd );
 
 	bool				IsWeaponLowered( void ) { return m_HL2Local.m_bWeaponLowered; }
-
+	
 public:
 
 	C_HL2PlayerLocalData		m_HL2Local;

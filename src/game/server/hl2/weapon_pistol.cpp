@@ -145,6 +145,13 @@ acttable_t	CWeaponPistol::m_acttable[] =
 	{ ACT_GESTURE_RELOAD,			ACT_GESTURE_RELOAD_PISTOL,		false },
 	{ ACT_WALK,						ACT_WALK_PISTOL,				false },
 	{ ACT_RUN,						ACT_RUN_PISTOL,					false },
+	{ ACT_WALK_CROUCH,				ACT_RANGE_AIM_PISTOL_LOW,		false },
+	{ ACT_VM_IDLE_LOWERED,			ACT_PISTOL_IDLE_LOWERED,		false },
+	{ ACT_STRAFE_LEFT,				ACT_STRAFE_LEFT_PISTOL,			false },
+	{ ACT_STRAFE_RIGHT,				ACT_STRAFE_RIGHT_PISTOL,		false },
+	{ ACT_VM_HOLSTER,				ACT_PISTOL_HOLSTER,				false },
+	{ ACT_VM_DEPLOY,				ACT_PISTOL_DEPLOY,				false },
+	{ ACT_JUMP,						ACT_HL2MP_JUMP_PISTOL,			true },
 };
 
 

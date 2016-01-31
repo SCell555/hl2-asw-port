@@ -14,8 +14,8 @@
 #include "UtlVector.h"
 #include "ehandle.h"
 #include "ISpatialPartition.h"
-
-class C_BaseEntity;
+#include "networkvar.h"
+#include "c_baseentity.h"
 
 class CPlayerEnumerator : public IPartitionEnumerator
 {
@@ -29,7 +29,7 @@ public:
 		m_Objects.RemoveAll();
 	}
 
-	int	GetObjectCount() { return m_Objects.Size(); }
+	int	GetObjectCount() { return m_Objects.Count(); }
 
 	C_BaseEntity *GetObject( int index )
 	{

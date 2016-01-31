@@ -448,6 +448,7 @@ public:
 
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
+	DECLARE_ACTTABLE();
 
 private:
 	
@@ -496,6 +497,33 @@ BEGIN_DATADESC( CWeaponCrossbow )
 	DEFINE_FIELD( m_hChargerSprite,	FIELD_EHANDLE ),
 
 END_DATADESC()
+
+acttable_t	CWeaponCrossbow::m_acttable[] = 
+{
+	{ ACT_IDLE,						ACT_IDLE_CROSSBOW,				true },
+	{ ACT_IDLE_ANGRY,				ACT_IDLE_ANGRY_PISTOL,			true },
+	{ ACT_RANGE_ATTACK1,			ACT_RANGE_ATTACK_PISTOL,		true },
+	{ ACT_RELOAD,					ACT_RELOAD_PISTOL,				true },
+	{ ACT_WALK_AIM,					ACT_WALK_AIM_PISTOL,			true },
+	{ ACT_RUN_AIM,					ACT_RUN_AIM_PISTOL,				true },
+	{ ACT_GESTURE_RANGE_ATTACK1,	ACT_GESTURE_RANGE_ATTACK_PISTOL,true },
+	{ ACT_RELOAD_LOW,				ACT_RELOAD_PISTOL_LOW,			false },
+	{ ACT_RANGE_ATTACK1_LOW,		ACT_RANGE_ATTACK_PISTOL_LOW,	false },
+	{ ACT_COVER_LOW,				ACT_COVER_PISTOL_LOW,			false },
+	{ ACT_RANGE_AIM_LOW,			ACT_RANGE_AIM_PISTOL_LOW,		false },
+	{ ACT_GESTURE_RELOAD,			ACT_GESTURE_RELOAD_PISTOL,		false },
+	{ ACT_WALK,						ACT_WALK_PISTOL,				false },
+	{ ACT_RUN,						ACT_RUN_PISTOL,					false },
+	{ ACT_WALK_CROUCH,				ACT_RANGE_AIM_PISTOL_LOW,		false },
+	{ ACT_VM_IDLE_LOWERED,			ACT_PISTOL_IDLE_LOWERED,		false },
+	{ ACT_STRAFE_LEFT,				ACT_STRAFE_LEFT_PISTOL,			false },
+	{ ACT_STRAFE_RIGHT,				ACT_STRAFE_RIGHT_PISTOL,		false },
+	{ ACT_VM_HOLSTER,				ACT_PISTOL_HOLSTER,				false },
+	{ ACT_VM_DEPLOY,				ACT_PISTOL_DEPLOY,				false },
+	{ ACT_JUMP,						ACT_HL2MP_JUMP_PISTOL,			true },
+};
+
+IMPLEMENT_ACTTABLE( CWeaponCrossbow );
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor

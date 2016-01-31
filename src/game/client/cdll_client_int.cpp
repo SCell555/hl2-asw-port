@@ -125,7 +125,8 @@
 #include "c_rumble.h"
 #include "viewpostprocess.h"
 
-
+#include "../materialsystem/IShaderSystem.h"
+#include "shaderapi/ishaderapi.h"
 
 #ifdef INFESTED_PARTICLES
 #include "c_asw_generic_emitter.h"
@@ -133,11 +134,14 @@
 
 #ifdef INFESTED_DLL
 #include "missionchooser/iasw_mission_chooser.h"
-
 #endif
 
 #include "tier1/UtlDict.h"
 #include "keybindinglistener.h"
+
+#ifdef ENABLE_CEF
+#include "cef/src_cef.h"
+#endif // ENABLE_CEF
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -182,6 +186,10 @@ IASW_Mission_Chooser *missionchooser = NULL;
 #if defined( REPLAY_ENABLED )
 IReplayHistoryManager *g_pReplayHistoryManager = NULL;
 #endif
+
+IShaderSystem *g_pSLShaderSystem = NULL;
+
+IShaderAPI *g_pShaderAPI = NULL;
 
 IScriptManager *scriptmanager = NULL;
 
@@ -1168,6 +1176,10 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGloba
 	if ( (missionchooser = (IASW_Mission_Chooser *)appSystemFactory(ASW_MISSION_CHOOSER_VERSION, NULL)) == NULL )
 		return false;
 #endif
+
+	g_pSLShaderSystem = (IShaderSystem*)appSystemFactory(SHADERSYSTEM_INTERFACE_VERSION, NULL);
+
+	g_pShaderAPI = (IShaderAPI*)appSystemFactory(SHADERAPI_INTERFACE_VERSION, NULL);
 
 	if ( !CommandLine()->CheckParm( "-noscripting") )
 	{
@@ -2857,6 +2869,10 @@ void CHLClient::OnScreenSizeChanged( int nOldWidth, int nOldHeight )
 {
 	// Tell split screen system
 	VGui_OnScreenSizeChanged();
+
+#ifdef ENABLE_CEF
+	CEFSystem().OnScreenSizeChanged(nOldWidth, nOldHeight);
+#endif // ENALBE_CEF
 }
 
 IMaterialProxy *CHLClient::InstantiateMaterialProxy( const char *proxyName )

@@ -44,15 +44,14 @@ CServerNetworkProperty::~CServerNetworkProperty()
 	/* Free our transmit proxy.
 	if ( m_pTransmitProxy )
 	{
-		m_pTransmitProxy->Release();
+	m_pTransmitProxy->Release();
 	}*/
 
-	engine->CleanUpEntityClusterList( &m_PVSInfo );
+	engine->CleanUpEntityClusterList(&m_PVSInfo);
 
 	// remove the attached edict if it exists
 	DetachEdict();
 }
-
 
 //-----------------------------------------------------------------------------
 // Initialization

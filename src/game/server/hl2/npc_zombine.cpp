@@ -44,6 +44,8 @@ enum
 	SQUAD_SLOT_ZOMBINE_SPRINT2,
 };
 
+#define SF_CAN_JUMP		( 1 << 15 )		// zombies and zombines usually can't jump, right?
+
 #define MIN_SPRINT_TIME 3.5f
 #define MAX_SPRINT_TIME 5.5f
 
@@ -134,6 +136,7 @@ public:
 
 	bool IsSprinting( void ) { return m_flSprintTime > gpGlobals->curtime;	}
 	bool HasGrenade( void ) { return m_hGrenade != NULL; }
+	bool IsJumpLegal( const Vector &startPos, const Vector &apex, const Vector &endPos, float maxUp, float maxDown, float maxDist ) const;
 
 	int TranslateSchedule( int scheduleType );
 
@@ -694,6 +697,10 @@ void CNPC_Zombine::Sprint( bool bMadSprint )
 
 	EmitSound( "Zombine.Charge" );
 }
+bool CNPC_Zombine::IsJumpLegal( const Vector &startPos, const Vector &apex, const Vector &endPos, float maxUp, float maxDown, float maxDist ) const
+{ 
+	return HasSpawnFlags( SF_CAN_JUMP ) ? BaseClass::IsJumpLegal( startPos, apex, endPos, maxUp, maxDown, maxDist ) : false;
+};
 
 void CNPC_Zombine::RunTask( const Task_t *pTask )
 {

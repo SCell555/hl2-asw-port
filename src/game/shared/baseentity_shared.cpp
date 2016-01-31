@@ -506,7 +506,6 @@ bool CBaseEntity::KeyValue( const char *szKeyName, const char *szValue )
 	}
 
 #endif
-
 	// key hasn't been handled
 	return false;
 }
@@ -691,7 +690,13 @@ void CBaseEntity::DecalTrace( trace_t *pTrace, char const *decalName )
 void CBaseEntity::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName )
 {
 	VPROF( "CBaseEntity::ImpactTrace" );
-	Assert( pTrace->m_pEnt );
+
+	// hit no entity?
+	if( !pTrace->m_pEnt )
+	{
+		Assert(0);
+		return;
+	}
 
 	CBaseEntity *pEntity = pTrace->m_pEnt;
  
@@ -768,7 +773,7 @@ int CBaseEntity::RegisterThinkContext( const char *szContext )
 
 	// Make a new think func
 	thinkfunc_t sNewFunc;
-	Q_memset( &sNewFunc, 0, sizeof( sNewFunc ) );
+	Q_memset(&sNewFunc, 0, sizeof(sNewFunc));
 	sNewFunc.m_pfnThink = NULL;
 	sNewFunc.m_nNextThinkTick = 0;
 	sNewFunc.m_iszContext = AllocPooledString(szContext);

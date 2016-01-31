@@ -10,6 +10,7 @@
 #include "npc_metropolice.h"
 #include "weapon_stunstick.h"
 #include "IEffects.h"
+#include "te_effect_dispatch.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -34,8 +35,20 @@ PRECACHE_WEAPON_REGISTER( weapon_stunstick );
 
 acttable_t CWeaponStunStick::m_acttable[] = 
 {
+	{ ACT_GESTURE_RANGE_ATTACK1, ACT_MELEE_ATTACK_SWING, true },
 	{ ACT_MELEE_ATTACK1,	ACT_MELEE_ATTACK_SWING,	true },
-	{ ACT_IDLE_ANGRY,		ACT_IDLE_ANGRY_MELEE,	true },
+	{ ACT_IDLE,				ACT_IDLE_ANGRY_MELEE,		true },
+	{ ACT_WALK,				ACT_WALK_STUNBATON,			true },
+	{ ACT_STRAFE_RIGHT,		ACT_STRAFE_RIGHT_STUNBATON,	true },
+	{ ACT_STRAFE_LEFT,		ACT_STRAFE_LEFT_STUNBATON,	true },
+	{ ACT_RUN,				ACT_RUN_STUNBATON,			true },
+	{ ACT_COVER_LOW,		ACT_COVER_STUNBATON_LOW,	true },
+	{ ACT_WALK_CROUCH,		ACT_CROUCH_WALK_STUNBATON,	true },
+	{ ACT_VM_HOLSTER,		ACT_STUNBATON_HOLSTER,		true },
+	{ ACT_VM_DEPLOY,		ACT_STUNBATON_DEPLOY,		true },
+	{ ACT_COVER_RIGHT,		ACT_CROUCH_STRAFE_RIGHT_STUNBATON,	true },
+	{ ACT_COVER_LEFT,		ACT_CROUCH_STRAFE_LEFT_STUNBATON,	true },
+	{ ACT_JUMP,				ACT_JUMP_STUNBATON,			true },
 };
 
 IMPLEMENT_ACTTABLE(CWeaponStunStick);
@@ -77,6 +90,7 @@ void CWeaponStunStick::Precache()
 	PrecacheScriptSound( "Weapon_StunStick.Activate" );
 	PrecacheScriptSound( "Weapon_StunStick.Deactivate" );
 
+	PrecacheEffect( "StunstickImpact" );
 }
 
 //-----------------------------------------------------------------------------
@@ -174,8 +188,12 @@ int CWeaponStunStick::WeaponMeleeAttack1Condition( float flDot, float flDist )
 //-----------------------------------------------------------------------------
 void CWeaponStunStick::ImpactEffect( trace_t &traceHit )
 {
-	//Glowing spark effect for hit
-	//UTIL_DecalTrace( &m_trLineHit, "PlasmaGlowFade" );
+	CEffectData	data;
+
+	data.m_vNormal = traceHit.plane.normal;
+	data.m_vOrigin = traceHit.endpos + ( data.m_vNormal * 4.0f );
+
+	DispatchEffect( "StunstickImpact", data );
 	
 	//FIXME: need new decals
 	UTIL_ImpactTrace( &traceHit, DMG_CLUB );

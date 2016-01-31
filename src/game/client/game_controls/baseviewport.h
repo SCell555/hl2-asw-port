@@ -59,6 +59,10 @@ public:
 
 	virtual vgui::VPANEL GetSchemeSizingVPanel( void );
 
+#ifdef ENABLE_CEF
+	virtual void PostChildPaint();
+#endif // ENABLE_CEF
+
 #ifndef _XBOX
 	virtual int GetViewPortScheme() { return m_pBackGround->GetScheme(); }
 	virtual VPANEL GetViewPortPanel() { return m_pBackGround->GetVParent(); }

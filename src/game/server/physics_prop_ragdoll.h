@@ -106,22 +106,28 @@ public:
 	void			InputTurnOff( inputdata_t &inputdata );
 	void			InputFadeAndRemove( inputdata_t &inputdata );
 
+	void UpdateNetworkDataFromVPhysics( IPhysicsObject *pPhysics, int index );
+
+	Vector				m_ragdollMins[RAGDOLL_MAX_ELEMENTS];
+	Vector				m_ragdollMaxs[RAGDOLL_MAX_ELEMENTS];
+
+	string_t			m_anglesOverrideString;
+
 	DECLARE_DATADESC();
 
+	COutputEvent		m_OnTakeDamage; 
+	COutputEvent		m_OnFullyDestroyed; 
 protected:
 	void CalcRagdollSize( void );
 	ragdoll_t			m_ragdoll;
 
 private:
-	void UpdateNetworkDataFromVPhysics( IPhysicsObject *pPhysics, int index );
 	void FadeOutThink();
 
 	bool				m_bStartDisabled;
 
 	CNetworkArray( Vector, m_ragPos, RAGDOLL_MAX_ELEMENTS );
 	CNetworkArray( QAngle, m_ragAngles, RAGDOLL_MAX_ELEMENTS );
-
-	string_t			m_anglesOverrideString;
 
 	typedef CHandle<CBaseAnimating> CBaseAnimatingHandle;
 	CNetworkVar( CBaseAnimatingHandle, m_hUnragdoll );
@@ -137,7 +143,6 @@ private:
 	float				m_flFadeOutStartTime;
 	float				m_flFadeTime;
 
-
 	string_t			m_strSourceClassName;
 	bool				m_bHasBeenPhysgunned;
 
@@ -146,8 +151,6 @@ private:
 	CNetworkVar( int, m_nOverlaySequence );
 	float	m_flDefaultFadeScale;
 	
-	Vector				m_ragdollMins[RAGDOLL_MAX_ELEMENTS];
-	Vector				m_ragdollMaxs[RAGDOLL_MAX_ELEMENTS];
 };
 
 CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, const CTakeDamageInfo &info, int collisionGroup, bool bUseLRURetirement = false );

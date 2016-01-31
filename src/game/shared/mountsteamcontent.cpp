@@ -9,8 +9,8 @@
 #include "KeyValues.h"
 #include "mountsteamcontent.h"
 // Andrew; grab only what we need from Open Steamworks.
-//#include "SteamTypes.h"
-#include "ISteam006.h"
+#include "Open Steamworks/SteamTypes.h"
+#include "Open Steamworks/ISteam006.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -130,9 +130,9 @@ void MountUserContent()
 #ifdef CLIENT_DLL
 #define UTIL_VarArgs VarArgs //Andrew; yep.
 #endif
-	for (int i = 0; i < sizeof(gamePaths_t); i++)
+	for (int i = 0; i < ARRAYSIZE(g_GamePaths); i++)
 	{
-		AddSearchPathByAppId( 420/*g_GamePaths[i].m_nAppId*/ );
-		Steam_MountSteamContent( 420/*g_GamePaths[i].m_nAppId*/ );
+		AddSearchPathByAppId( g_GamePaths[i].m_nAppId );
+		Steam_MountSteamContent( g_GamePaths[i].m_nAppId );
 	}
 }

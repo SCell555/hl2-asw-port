@@ -302,6 +302,9 @@ public:
 	void							SetModelScale( float scale );
 	inline float					GetModelScale() const { return m_flModelScale; }
 	inline bool						IsModelScaleFractional() const;  /// very fast way to ask if the model scale is < 1.0f  (faster than if (GetModelScale() < 1.0f) )
+	
+	void							UpdateModelScale( void );
+	virtual	void					RefreshCollisionBounds( void );
 
 	int								GetSequence();
 	void							SetSequence(int nSequence);

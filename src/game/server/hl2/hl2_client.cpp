@@ -183,23 +183,23 @@ void GameStartFrame( void )
 	gpGlobals->teamplay = (teamplay.GetInt() != 0);
 }
 
-/*#ifdef HL2_EPISODIC
+#ifdef HL2_EPISODIC
 extern ConVar gamerules_survival;
-#endif*/
+#endif
 
 //=========================================================
 // instantiate the proper game rules object
 //=========================================================
 void InstallGameRules()
 {
-/*#ifdef HL2_EPISODIC
+#ifdef HL2_EPISODIC
 	if ( gamerules_survival.GetBool() )
 	{
 		// Survival mode
 		CreateGameRulesObject( "CHalfLife2Survival" );
 	}
 	else
-#endif*/
+#endif
 	{
 		// generic half-life
 		CreateGameRulesObject( "CHalfLife2" );

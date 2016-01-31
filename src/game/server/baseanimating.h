@@ -31,10 +31,10 @@ class CBaseAnimating : public CBaseEntity
 {
 public:
 	DECLARE_CLASS( CBaseAnimating, CBaseEntity );
-
+	
 	CBaseAnimating();
 	~CBaseAnimating();
-
+	
 	DECLARE_PREDICTABLE();
 
 	enum
@@ -167,8 +167,7 @@ protected:
 	// in general code -- it causes many many string comparisons, which is slower than you think. Better is to 
 	// save off your pose parameters in member variables in your derivation of this function:
 	virtual void	PopulatePoseParameters( void );
-
-
+	
 public:
 
 	int  LookupBone( const char *szName );

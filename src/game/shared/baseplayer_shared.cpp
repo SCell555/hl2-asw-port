@@ -1479,6 +1479,23 @@ void CBasePlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, 
 		else
 		{
 			CalcPlayerView( eyeOrigin, eyeAngles, fov );
+			CBaseAnimating *pAnimating = dynamic_cast<CBaseAnimating *>(this);
+			pAnimating->SetPoseParameter("aim_pitch", eyeAngles[PITCH]);
+			pAnimating->GetAttachment( pAnimating->LookupAttachment( "eyes" ), eyeOrigin, eyeAngles);
+
+			#ifdef CLIENT_DLL
+			if ( !this->IsAlive() )
+			{
+				CalcDeathView( eyeOrigin, eyeAngles, fov );
+			}
+			if ( !prediction->InPrediction() )		//LOOOOOOL THAT'S WHAT I NEED TO MAKE ENV_SHAKE WORK!!!!1111
+			{
+				// Shake it up baby!
+				GetViewEffects()->CalcShake();
+				GetViewEffects()->ApplyShake( eyeOrigin, eyeAngles, 1.0 );
+				// Tilting handled in CInput::AdjustAngles
+	}
+			#endif
 		}
 	}
 	else
@@ -1533,6 +1550,13 @@ void CBasePlayer::CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeA
 
 void CBasePlayer::CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov )
 {
+
+	QAngle saveAngles = GetLocalAngles();
+	QAngle useAngles = saveAngles;
+	useAngles[ PITCH ] = 0.0f;
+	if(GetMoveType() == MOVETYPE_LADDER)SetLocalAngles(QAngle(0,180,0));
+	else SetLocalAngles( useAngles );
+
 #if defined( CLIENT_DLL )
 	if ( !prediction->InPrediction() )
 	{

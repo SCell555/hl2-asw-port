@@ -14,9 +14,13 @@
 LINK_ENTITY_TO_CLASS( env_projectedtexture, CEnvProjectedTexture );
 
 BEGIN_DATADESC( CEnvProjectedTexture )
-	DEFINE_FIELD( m_hTargetEntity, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_bState, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_bAlwaysUpdate, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_bUberLightEnabled, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_bEnableVolumetrics, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_hTargetEntity, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_bSimpleProjection, FIELD_BOOLEAN ),
+	DEFINE_FIELD ( m_bEnableCampfireMode, FIELD_BOOLEAN ),
 	DEFINE_KEYFIELD( m_flLightFOV, FIELD_FLOAT, "lightfov" ),
 	DEFINE_KEYFIELD( m_bEnableShadows, FIELD_BOOLEAN, "enableshadows" ),
 	DEFINE_KEYFIELD( m_bSimpleProjection, FIELD_BOOLEAN, "simpleprojection" ),
@@ -34,9 +38,23 @@ BEGIN_DATADESC( CEnvProjectedTexture )
 	DEFINE_KEYFIELD( m_flColorTransitionTime, FIELD_FLOAT, "colortransitiontime" ),
 	DEFINE_KEYFIELD( m_flProjectionSize, FIELD_FLOAT, "projection_size" ),
 	DEFINE_KEYFIELD( m_flRotation, FIELD_FLOAT, "projection_rotation" ),
+	DEFINE_KEYFIELD( m_flVolIntence, FIELD_FLOAT, "VolumetricIntence" ),
+	DEFINE_KEYFIELD( m_nCampfireColorChangeMode, FIELD_INTEGER, "campfirecolchangemode" ),
+	DEFINE_KEYFIELD( m_flCampfireSwayAmplitude, FIELD_FLOAT, "campfireamplitude" ),
+	DEFINE_KEYFIELD( m_flCampfireBrightnessAmp, FIELD_FLOAT, "campfirebrightnessamp" ),
+	DEFINE_KEYFIELD( m_flCampfireSwaySpeed, FIELD_FLOAT, "campfirespeed" ),
+	DEFINE_KEYFIELD( m_flCampfireColorChangeAmp, FIELD_FLOAT, "campfirecolamp" ),
+	DEFINE_KEYFIELD( m_flUberLightRoundness, FIELD_FLOAT, "uberlightroundness" ),
+	DEFINE_KEYFIELD( m_flUberLightFalloffdist, FIELD_FLOAT, "uberlightfalloffdist" ),
+	DEFINE_KEYFIELD( m_flUberLightWedge, FIELD_FLOAT, "uberlightwedge" ),
+	DEFINE_KEYFIELD( m_flUberLightHedge, FIELD_FLOAT, "uberlighthedge" ),
+	DEFINE_KEYFIELD( m_flUberLightShearx, FIELD_FLOAT, "uberlightshearx" ),
+	DEFINE_KEYFIELD( m_flUberLightSheary, FIELD_FLOAT, "uberlightsheary" ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOn", InputTurnOn ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOff", InputTurnOff ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "EnableVolumetrics", InputEnableVolumetrics ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "DisableVolumetrics", InputDisableVolumetrics ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "AlwaysUpdateOn", InputAlwaysUpdateOn ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "AlwaysUpdateOff", InputAlwaysUpdateOff ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "FOV", InputSetFOV ),
@@ -48,6 +66,9 @@ BEGIN_DATADESC( CEnvProjectedTexture )
 	DEFINE_INPUTFUNC( FIELD_COLOR32, "LightColor", InputSetLightColor ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "Ambient", InputSetAmbient ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "SpotlightTexture", InputSetSpotlightTexture ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT, "VolumetricIntence", InputSetVolumetricIntence ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "EnableUberLight", InputEnableUberLight ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "DisableUberLight", InputDisableUberLight ),
 	DEFINE_THINKFUNC( InitialThink ),
 END_DATADESC()
 
@@ -55,12 +76,15 @@ IMPLEMENT_SERVERCLASS_ST( CEnvProjectedTexture, DT_EnvProjectedTexture )
 	SendPropEHandle( SENDINFO( m_hTargetEntity ) ),
 	SendPropBool( SENDINFO( m_bState ) ),
 	SendPropBool( SENDINFO( m_bAlwaysUpdate ) ),
+	SendPropBool( SENDINFO( m_bUberLightEnabled ) ),
 	SendPropFloat( SENDINFO( m_flLightFOV ) ),
 	SendPropBool( SENDINFO( m_bEnableShadows ) ),
 	SendPropBool( SENDINFO( m_bSimpleProjection ) ),
 	SendPropBool( SENDINFO( m_bLightOnlyTarget ) ),
 	SendPropBool( SENDINFO( m_bLightWorld ) ),
 	SendPropBool( SENDINFO( m_bCameraSpace ) ),
+	SendPropBool( SENDINFO( m_bEnableVolumetrics ) ),
+	SendPropBool( SENDINFO( m_bEnableCampfireMode ) ),
 	SendPropFloat( SENDINFO( m_flBrightnessScale ) ),
 	SendPropInt( SENDINFO ( m_LightColor ),	32, SPROP_UNSIGNED, SendProxy_Color32ToInt32 ),
 	SendPropFloat( SENDINFO( m_flColorTransitionTime ) ),
@@ -72,6 +96,18 @@ IMPLEMENT_SERVERCLASS_ST( CEnvProjectedTexture, DT_EnvProjectedTexture )
 	SendPropInt( SENDINFO( m_nShadowQuality ), 1, SPROP_UNSIGNED ),  // Just one bit for now
 	SendPropFloat( SENDINFO( m_flProjectionSize ) ),
 	SendPropFloat( SENDINFO( m_flRotation ) ),
+	SendPropFloat( SENDINFO( m_flVolIntence), 0, SPROP_NOSCALE ),
+	SendPropInt( SENDINFO( m_nCampfireColorChangeMode ) ),
+	SendPropFloat( SENDINFO( m_flCampfireSwayAmplitude ) ),
+	SendPropFloat( SENDINFO( m_flCampfireBrightnessAmp ) ),
+	SendPropFloat( SENDINFO( m_flCampfireSwaySpeed ) ),
+	SendPropFloat( SENDINFO( m_flCampfireColorChangeAmp ) ),
+	SendPropFloat( SENDINFO( m_flUberLightRoundness ) ),
+	SendPropFloat( SENDINFO( m_flUberLightFalloffdist ) ),
+	SendPropFloat( SENDINFO( m_flUberLightWedge ) ),
+	SendPropFloat( SENDINFO( m_flUberLightHedge ) ),
+	SendPropFloat( SENDINFO( m_flUberLightShearx ) ),
+	SendPropFloat( SENDINFO( m_flUberLightSheary ) ),
 END_SEND_TABLE()
 
 //-----------------------------------------------------------------------------
@@ -79,16 +115,18 @@ END_SEND_TABLE()
 //-----------------------------------------------------------------------------
 CEnvProjectedTexture::CEnvProjectedTexture( void )
 {
-	m_bState = true;
+	m_bState = false;
 	m_bAlwaysUpdate = false;
+	m_bUberLightEnabled = false;
 	m_flLightFOV = 45.0f;
-	m_bEnableShadows = true;
+	m_bEnableShadows = false;
+	m_bEnableVolumetrics = false;
 	m_bSimpleProjection = false;
 	m_bLightOnlyTarget = false;
 	m_bLightWorld = true;
 	m_bCameraSpace = false;
+	m_bEnableCampfireMode = false;
 
-	Q_strcpy( m_SpotlightTextureName.GetForModify(), "effects/flashlight_border" );
 	Q_strcpy( m_SpotlightTextureName.GetForModify(), "effects/flashlight001" );
 
 	m_nSpotlightTextureFrame = 0;
@@ -101,6 +139,47 @@ CEnvProjectedTexture::CEnvProjectedTexture( void )
 	m_nShadowQuality = 0;
 	m_flProjectionSize = 500.0f;
 	m_flRotation = 0.0f;
+	m_flVolIntence = 1.0f;
+	m_nCampfireColorChangeMode = 0;
+	m_flCampfireSwayAmplitude = 0.0f;
+	m_flCampfireBrightnessAmp = 0.0f;
+	m_flCampfireSwaySpeed = 0.0f;
+	m_flCampfireColorChangeAmp = 0.0f;
+	m_flUberLightRoundness = 0.0f;
+	m_flUberLightFalloffdist = 0.0f;
+	m_flUberLightWedge = 0.0f;
+	m_flUberLightHedge = 0.0f;
+	m_flUberLightShearx = 0.0f;
+	m_flUberLightSheary = 0.0f;
+}
+
+void CEnvProjectedTexture::Spawn( void )
+{
+	m_bState = HasSpawnFlags( ENV_PROJECTEDTEXTURE_STARTON );
+	m_bEnableVolumetrics = ( ( GetSpawnFlags() & ENV_PROJECTEDTEXTURE_VOLUMETRIC ) != 0 );
+	m_bAlwaysUpdate = ( ( GetSpawnFlags() & ENV_PROJECTEDTEXTURE_ALWAYSUPDATE ) != 0 );
+	m_bEnableCampfireMode = ( ( GetSpawnFlags() & ENV_PROJECTEDTEXTURE_CAMPFIRE_MODE ) != 0 );
+	m_bUberLightEnabled = ( ( GetSpawnFlags() & ENV_PROJECTEDTEXTURE_UBERLIGHT ) != 0 );
+
+	BaseClass::Spawn();
+}
+
+void CEnvProjectedTexture::Activate( void )
+{
+	SetThink( &CEnvProjectedTexture::InitialThink );
+	SetNextThink( gpGlobals->curtime + 0.1f );
+
+	BaseClass::Activate();
+}
+
+void CEnvProjectedTexture::InitialThink( void )
+{
+	m_hTargetEntity = gEntList.FindEntityByName( NULL, m_target );
+}
+
+int CEnvProjectedTexture::UpdateTransmitState()
+{
+	return SetTransmitState( FL_EDICT_ALWAYS );
 }
 
 void UTIL_ColorStringToLinearFloatColor( Vector &color, const char *pString )
@@ -178,6 +257,21 @@ void CEnvProjectedTexture::InputTurnOff( inputdata_t &inputdata )
 	m_bState = false;
 }
 
+void CEnvProjectedTexture::InputDisableVolumetrics( inputdata_t &inputdata )
+{
+	m_bEnableVolumetrics = false;
+}
+
+void CEnvProjectedTexture::InputSetVolumetricIntence( inputdata_t &inputdata )
+{
+	m_flVolIntence = inputdata.value.Float();
+}
+
+void CEnvProjectedTexture::InputEnableVolumetrics( inputdata_t &inputdata )
+{
+	m_bEnableVolumetrics = true;
+}
+
 void CEnvProjectedTexture::InputAlwaysUpdateOn( inputdata_t &inputdata )
 {
 	m_bAlwaysUpdate = true;
@@ -233,45 +327,12 @@ void CEnvProjectedTexture::InputSetSpotlightTexture( inputdata_t &inputdata )
 	Q_strcpy( m_SpotlightTextureName.GetForModify(), inputdata.value.String() );
 }
 
-void CEnvProjectedTexture::Activate( void )
+void CEnvProjectedTexture::InputEnableUberLight( inputdata_t &inputdata )
 {
-	m_bState = ( ( GetSpawnFlags() & ENV_PROJECTEDTEXTURE_STARTON ) != 0 );
-	m_bAlwaysUpdate = ( ( GetSpawnFlags() & ENV_PROJECTEDTEXTURE_ALWAYSUPDATE ) != 0 );
-
-	SetThink( &CEnvProjectedTexture::InitialThink );
-	SetNextThink( gpGlobals->curtime + 0.1f );
-
-	BaseClass::Activate();
+	m_bUberLightEnabled = true;
 }
 
-void CEnvProjectedTexture::InitialThink( void )
+void CEnvProjectedTexture::InputDisableUberLight( inputdata_t &inputdata )
 {
-	m_hTargetEntity = gEntList.FindEntityByName( NULL, m_target );
+	m_bUberLightEnabled = false;
 }
-
-int CEnvProjectedTexture::UpdateTransmitState()
-{
-	return SetTransmitState( FL_EDICT_ALWAYS );
-}
-
-
-// Console command for creating env_projectedtexture entities
-void CC_CreateFlashlight( const CCommand &args )
-{
-	CBasePlayer *pPlayer = UTIL_GetCommandClient();
-	if( !pPlayer )
-		return;
-
-	QAngle angles = pPlayer->EyeAngles();
-	Vector origin = pPlayer->EyePosition();		
-
-	CEnvProjectedTexture *pFlashlight = dynamic_cast< CEnvProjectedTexture * >( CreateEntityByName("env_projectedtexture") );
-	if( args.ArgC() > 1 )
-	{
-		pFlashlight->SetName( AllocPooledString( args[1] ) );
-	}
-
-	pFlashlight->Teleport( &origin, &angles, NULL );
-
-}
-static ConCommand create_flashlight("create_flashlight", CC_CreateFlashlight, 0, FCVAR_CHEAT);

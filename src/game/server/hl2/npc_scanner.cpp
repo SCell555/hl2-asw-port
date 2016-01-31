@@ -145,7 +145,7 @@ BEGIN_DATADESC( CNPC_CScanner )
 	DEFINE_FIELD( m_nPoseFaceVert,			FIELD_INTEGER ),
 	DEFINE_FIELD( m_nPoseFaceHoriz,			FIELD_INTEGER ),
 
-	DEFINE_FIELD( m_bIsClawScanner,			FIELD_BOOLEAN ),
+	DEFINE_KEYFIELD( m_bIsClawScanner,		FIELD_BOOLEAN,	"IsClawScanner" ),
 	DEFINE_FIELD( m_bIsOpen,				FIELD_BOOLEAN ),
 
 	// DEFINE_FIELD( m_bHasSpoken,			FIELD_BOOLEAN ),
@@ -209,10 +209,6 @@ CNPC_CScanner::CNPC_CScanner()
 	{
 		// Streetwar scanners are claw scanners
 		m_bIsClawScanner = true;
-	}
-	else
-	{
-		m_bIsClawScanner = false;
 	}
 }
 

@@ -1091,6 +1091,12 @@ C_BaseEntity::C_BaseEntity() :
 	m_spawnflags = 0;
 
 	m_flCreateTime = 0.0f;
+
+	m_bIsClientCreated = false;
+
+#ifdef HL2WARS_DLL
+	m_NavObstacleRef = NAV_OBSTACLE_INVALID_INDEX;
+#endif // HL2WARS_DLL
 }
 
 
@@ -1114,15 +1120,17 @@ void C_BaseEntity::CleanUpAlphaProperty()
 //-----------------------------------------------------------------------------
 C_BaseEntity::~C_BaseEntity()
 {
-	Term();
-	CleanUpAlphaProperty();
-	ClearDataChangedEvent( m_DataChangeEventRef );
+	{	
+		Term();
+		CleanUpAlphaProperty();
+		ClearDataChangedEvent( m_DataChangeEventRef );
 #if !defined( NO_ENTITY_PREDICTION ) && defined( USE_PREDICTABLEID )
-	delete m_pPredictionContext;
+		delete m_pPredictionContext;
 #endif
-	for ( int i = 0; i < NUM_ENTITY_LISTS; i++ )
-	{
-		RemoveFromEntityList(entity_list_ids_t(i));
+		for ( int i = 0; i < NUM_ENTITY_LISTS; i++ )
+		{
+			RemoveFromEntityList(entity_list_ids_t(i));
+		}
 	}
 }
 
@@ -1187,6 +1195,7 @@ void C_BaseEntity::Clear( void )
 	// don't need it.
 	//AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
 
+ //m_LastShouldTransmitState = SHOULDTRANSMIT_END;
 	UpdateVisibility();
 }
 
@@ -1250,7 +1259,7 @@ bool C_BaseEntity::Init( int entnum, int iSerialNum )
 	m_nCreationTick = gpGlobals->tickcount;
 
 	m_hScriptInstance = NULL;
-	
+
 	return true;
 }
 					  
@@ -1287,6 +1296,8 @@ bool C_BaseEntity::InitializeAsClientEntity( const char *pszModelName, bool bRen
 //-----------------------------------------------------------------------------
 bool C_BaseEntity::InitializeAsClientEntityByIndex( int iIndex, bool bRenderWithViewModels )
 {
+	m_bIsClientCreated = true;
+
 	// Setup model data.
 	RenderWithViewModels( bRenderWithViewModels );
 
@@ -1294,8 +1305,11 @@ bool C_BaseEntity::InitializeAsClientEntityByIndex( int iIndex, bool bRenderWith
 	SetModelByIndex( iIndex );
 
 	// Add the client entity to the master entity list.
+	//if( !m_bDoNotRegisterEntity )
+	{
 	cl_entitylist->AddNonNetworkableEntity( GetIClientUnknown() );
 	Assert( GetClientHandle() != ClientEntityList().InvalidHandle() );
+	}
 
 	// Add the client entity to the spatial partition. (Collidable)
 	CollisionProp()->CreatePartitionHandle();
@@ -1386,10 +1400,8 @@ const CBaseHandle& C_BaseEntity::GetRefEHandle() const
 //-----------------------------------------------------------------------------
 void C_BaseEntity::Release()
 {
-	{
-		C_BaseAnimating::AutoAllowBoneAccess boneaccess( true, true );
-		UnlinkFromHierarchy();
-	}
+	C_BaseAnimating::AutoAllowBoneAccess boneaccess( true, true );
+	UnlinkFromHierarchy();
 
 	// Note that this must be called from here, not the destructor, because otherwise the
 	//  vtable is hosed and the derived classes function is not going to get called!!!
@@ -2372,6 +2384,7 @@ void C_BaseEntity::NotifyShouldTransmit( ShouldTransmitState_t state )
 	if ( entindex() < 0 )
 		return;
 	
+//	m_LastShouldTransmitState = state;
 	switch( state )
 	{
 	case SHOULDTRANSMIT_START:
@@ -3302,6 +3315,12 @@ void C_BaseEntity::MoveToLastReceivedPosition( bool force )
 
 bool C_BaseEntity::ShouldInterpolate()
 {
+#if defined(HL2WARS_DLL) || defined(SWARMKEEPER_DLL)
+	// Never bother interpolating client side entities
+	if( IsClientCreated() )
+		return false;
+#endif // HL2WARS_DLL || SWARMKEEPER_DLL
+
 	if ( IsViewEntity() )
 		return true;
 
@@ -4814,8 +4833,11 @@ const char *C_BaseEntity::GetClassname( void )
 	static char outstr[ 256 ];
 	outstr[ 0 ] = 0;
 	bool gotname = false;
+
+	
+
 #ifndef NO_ENTITY_PREDICTION
-	if ( GetPredDescMap() )
+	if ( !gotname && GetPredDescMap() )
 	{
 		const char *mapname =  GetClassMap().Lookup( GetPredDescMap()->dataClassName );
 		if ( mapname && mapname[ 0 ] ) 
@@ -4907,7 +4929,7 @@ bool C_BaseEntity::IsClientCreated( void ) const
 		return true;
 	}
 #endif
-	return false;
+	return m_bIsClientCreated;
 }
 
 //-----------------------------------------------------------------------------
@@ -4981,6 +5003,7 @@ C_BaseEntity *C_BaseEntity::CreatePredictedEntityByName( const char *classname, 
 	ent->m_nSplitUserPlayerPredictionSlot = slot;
 
 	// Add to client entity list
+	if( !m_bDoNotRegisterEntity )
 	ClientEntityList().AddNonNetworkableEntity( ent );
 
 	//  and predictables

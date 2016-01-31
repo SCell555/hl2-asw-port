@@ -6,6 +6,9 @@
 
 #define ENV_PROJECTEDTEXTURE_STARTON			(1<<0)
 #define ENV_PROJECTEDTEXTURE_ALWAYSUPDATE		(1<<1)
+#define ENV_PROJECTEDTEXTURE_VOLUMETRIC			(1<<2)
+#define ENV_PROJECTEDTEXTURE_CAMPFIRE_MODE		(1<<3)
+#define ENV_PROJECTEDTEXTURE_UBERLIGHT			(1<<4)
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -24,6 +27,7 @@ public:
 	// Always transmit to clients
 	virtual int UpdateTransmitState();
 	virtual void Activate( void );
+	virtual void Spawn( void );
 
 	void InputTurnOn( inputdata_t &inputdata );
 	void InputTurnOff( inputdata_t &inputdata );
@@ -38,6 +42,11 @@ public:
 	void InputSetLightColor( inputdata_t &inputdata );
 	void InputSetSpotlightTexture( inputdata_t &inputdata );
 	void InputSetAmbient( inputdata_t &inputdata );
+	void InputEnableVolumetrics( inputdata_t &inputdata );
+	void InputDisableVolumetrics( inputdata_t &inputdata );
+	void InputSetVolumetricIntence( inputdata_t &inputdata );
+	void InputEnableUberLight( inputdata_t &inputdata );
+	void InputDisableUberLight( inputdata_t &inputdata );
 
 	void InitialThink( void );
 
@@ -47,6 +56,7 @@ private:
 
 	CNetworkVar( bool, m_bState );
 	CNetworkVar( bool, m_bAlwaysUpdate );
+	CNetworkVar( bool, m_bUberLightEnabled );
 	CNetworkVar( float, m_flLightFOV );
 	CNetworkVar( bool, m_bEnableShadows );
 	CNetworkVar( bool, m_bSimpleProjection );
@@ -62,8 +72,22 @@ private:
 	CNetworkVar( float, m_flNearZ );
 	CNetworkVar( float, m_flFarZ );
 	CNetworkVar( int, m_nShadowQuality );
+	CNetworkVar( int, m_nCampfireColorChangeMode );
 	CNetworkVar( float, m_flProjectionSize );
 	CNetworkVar( float, m_flRotation );
+	CNetworkVar( float, m_flVolIntence );
+	CNetworkVar( float, m_flCampfireSwayAmplitude );
+	CNetworkVar( float, m_flCampfireBrightnessAmp );
+	CNetworkVar( float, m_flCampfireSwaySpeed );
+	CNetworkVar( float, m_flCampfireColorChangeAmp );
+	CNetworkVar( bool, m_bEnableVolumetrics );
+	CNetworkVar( bool, m_bEnableCampfireMode );
+	CNetworkVar( float, m_flUberLightRoundness );
+	CNetworkVar( float, m_flUberLightFalloffdist );
+	CNetworkVar( float, m_flUberLightWedge );
+	CNetworkVar( float, m_flUberLightHedge );
+	CNetworkVar( float, m_flUberLightShearx );
+	CNetworkVar( float, m_flUberLightSheary );
 };
 
 

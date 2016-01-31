@@ -84,9 +84,7 @@ dynpitchvol_t rgdpvpreset[CDPVPRESETMAX] =
 	{27,128,	 90,	10,		10,		10,		1,		20,		40,		1,		5,		10,		20,		0,		0,0,0,0,0,0,0,0,0,0}
 };
 
-#ifndef INFESTED_DLL
 LINK_ENTITY_TO_CLASS( ambient_generic, CAmbientGeneric );
-#endif
 
 BEGIN_DATADESC( CAmbientGeneric )
 
@@ -365,7 +363,7 @@ void CAmbientGeneric::Activate( void )
 			gpGlobals->eLoadType == MapLoad_LoadGame || 
 			g_pGameRules->InRoundRestart() )
 		{
-			flags = SND_NOFLAGS;
+			flags = SND_DELAY;
 		}
 
 		// Tracker 76119:  8/12/07 ywb: 

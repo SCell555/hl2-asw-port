@@ -10,6 +10,9 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#define ENV_GLOBALLIGHT_VOLUMETRIC			(1<<0)
+#define ENV_GLOBALLIGHT_MOVING				(1<<1)
+
 //------------------------------------------------------------------------------
 // FIXME: This really should inherit from something	more lightweight
 //------------------------------------------------------------------------------
@@ -32,11 +35,16 @@ public:
 	
 	// Inputs
 	void	InputSetAngles( inputdata_t &inputdata );
+	void	InputSetVolumetricIntence( inputdata_t &inputdata );
+	void	InputSetVolumetricNumPlanes( inputdata_t &inputdata );
 	void	InputEnable( inputdata_t &inputdata );
 	void	InputDisable( inputdata_t &inputdata );
+	void	InputEnableVolumetrics( inputdata_t &inputdata );
+	void	InputDisableVolumetrics( inputdata_t &inputdata );
 	void	InputSetTexture( inputdata_t &inputdata );
 	void	InputSetEnableShadows( inputdata_t &inputdata );
 	void	InputSetLightColor( inputdata_t &inputdata );
+	void	InputSetMoveSpeed( inputdata_t &inputdata );
 
 	virtual int	ObjectCaps( void ) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 
@@ -47,6 +55,8 @@ private:
 	CNetworkVector( m_shadowDirection );
 
 	CNetworkVar( bool, m_bEnabled );
+	CNetworkVar( bool, m_bVolumetricsEnabled );
+	CNetworkVar( bool, m_bMovingEnabled );
 	bool m_bStartDisabled;
 
 	CNetworkString( m_TextureName, MAX_PATH );
@@ -56,6 +66,9 @@ private:
 	CNetworkVar( float, m_flFOV );
 	CNetworkVar( float, m_flNearZ );
 	CNetworkVar( float, m_flNorthOffset );
+	CNetworkVar( float, m_flVolIntence );
+	CNetworkVar( float, m_flVolNumPlanes );
+	CNetworkVar( float, m_flMoveSpeed );
 	CNetworkVar( bool, m_bEnableShadows );
 };
 
@@ -69,10 +82,15 @@ BEGIN_DATADESC( CGlobalLight )
 	DEFINE_KEYFIELD( m_flSunDistance,	FIELD_FLOAT, "distance" ),
 	DEFINE_KEYFIELD( m_flFOV,	FIELD_FLOAT, "fov" ),
 	DEFINE_KEYFIELD( m_flNearZ,	FIELD_FLOAT, "nearz" ),
+	DEFINE_KEYFIELD( m_flVolIntence,	FIELD_FLOAT, "VolumetricIntence" ),
+	DEFINE_KEYFIELD( m_flVolNumPlanes,	FIELD_FLOAT, "VolumetricNumplanes" ),
 	DEFINE_KEYFIELD( m_flNorthOffset,	FIELD_FLOAT, "northoffset" ),
+	DEFINE_KEYFIELD( m_flMoveSpeed,	FIELD_FLOAT, "movespeed" ),
 	DEFINE_KEYFIELD( m_bEnableShadows, FIELD_BOOLEAN, "enableshadows" ),
 	DEFINE_FIELD( m_LightColor, FIELD_COLOR32 ), 
 	DEFINE_KEYFIELD( m_flColorTransitionTime, FIELD_FLOAT, "colortransitiontime" ),
+	DEFINE_FIELD( m_shadowDirection, FIELD_VECTOR ),	//fix entity position after save/load game
+	DEFINE_FIELD( m_bMovingEnabled, FIELD_BOOLEAN ),
 
 	// Inputs
 	DEFINE_INPUT( m_flSunDistance,		FIELD_FLOAT, "SetDistance" ),
@@ -84,8 +102,13 @@ BEGIN_DATADESC( CGlobalLight )
 	DEFINE_INPUTFUNC( FIELD_STRING, "SetAngles", InputSetAngles ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "EnableVolumetrics", InputEnableVolumetrics ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "DisableVolumetrics", InputDisableVolumetrics ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "SetTexture", InputSetTexture ),
 	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "EnableShadows", InputSetEnableShadows ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT, "VolumetricIntence", InputSetVolumetricIntence ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT, "VolumetricNumPlanes", InputSetVolumetricNumPlanes ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetMoveSpeed", InputSetMoveSpeed ),
 
 END_DATADESC()
 
@@ -93,6 +116,8 @@ END_DATADESC()
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CGlobalLight, DT_GlobalLight)
 	SendPropVector(SENDINFO(m_shadowDirection), -1,  SPROP_NOSCALE ),
 	SendPropBool(SENDINFO(m_bEnabled) ),
+	SendPropBool(SENDINFO(m_bVolumetricsEnabled) ),
+	SendPropBool(SENDINFO(m_bMovingEnabled) ),
 	SendPropString(SENDINFO(m_TextureName)),
 	SendPropInt(SENDINFO (m_LightColor ),	32, SPROP_UNSIGNED, SendProxy_Color32ToInt32 ),
 	SendPropFloat( SENDINFO( m_flColorTransitionTime ) ),
@@ -101,6 +126,9 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CGlobalLight, DT_GlobalLight)
 	SendPropFloat(SENDINFO(m_flNearZ), 0, SPROP_NOSCALE ),
 	SendPropFloat(SENDINFO(m_flNorthOffset), 0, SPROP_NOSCALE ),
 	SendPropBool( SENDINFO( m_bEnableShadows ) ),
+	SendPropFloat(SENDINFO(m_flVolNumPlanes), 0, SPROP_NOSCALE ),
+	SendPropFloat(SENDINFO(m_flMoveSpeed), 0, SPROP_NOSCALE ),
+	SendPropFloat(SENDINFO(m_flVolIntence), 0, SPROP_NOSCALE ),
 END_SEND_TABLE()
 
 
@@ -116,6 +144,10 @@ CGlobalLight::CGlobalLight()
 	m_flSunDistance = 10000.0f;
 	m_flFOV = 5.0f;
 	m_bEnableShadows = false;
+	m_flVolIntence = 1.0f;
+	m_flVolNumPlanes = 64;
+	m_flMoveSpeed = 1.0f;
+	m_bMovingEnabled = false;
 }
 
 
@@ -197,6 +229,9 @@ void CGlobalLight::Spawn( void )
 	Precache();
 	SetSolid( SOLID_NONE );
 
+	m_bVolumetricsEnabled = ( ( GetSpawnFlags() & ENV_GLOBALLIGHT_VOLUMETRIC ) != 0 );
+	m_bMovingEnabled = ( ( GetSpawnFlags() & ENV_GLOBALLIGHT_MOVING ) != 0 );
+
 	if( m_bStartDisabled )
 	{
 		m_bEnabled = false;
@@ -235,11 +270,28 @@ void CGlobalLight::InputDisable( inputdata_t &inputdata )
 	m_bEnabled = false;
 }
 
+void CGlobalLight::InputEnableVolumetrics( inputdata_t &inputdata )
+{
+	m_bVolumetricsEnabled = true;
+}
+
+void CGlobalLight::InputDisableVolumetrics( inputdata_t &inputdata )
+{
+	m_bVolumetricsEnabled = false;
+}
+
 void CGlobalLight::InputSetTexture( inputdata_t &inputdata )
 {
 	Q_strcpy( m_TextureName.GetForModify(), inputdata.value.String() );
 }
-
+void CGlobalLight::InputSetVolumetricIntence( inputdata_t &inputdata )
+{
+	m_flVolIntence = inputdata.value.Float();
+}
+void CGlobalLight::InputSetVolumetricNumPlanes( inputdata_t &inputdata )
+{
+	m_flVolNumPlanes = inputdata.value.Float();
+}
 void CGlobalLight::InputSetEnableShadows( inputdata_t &inputdata )
 {
 	m_bEnableShadows = inputdata.value.Bool();
@@ -248,4 +300,8 @@ void CGlobalLight::InputSetEnableShadows( inputdata_t &inputdata )
 void CGlobalLight::InputSetLightColor( inputdata_t &inputdata )
 {
 	m_LightColor = inputdata.value.Color32();
+}
+void CGlobalLight::InputSetMoveSpeed( inputdata_t &inputdata )
+{
+	m_flMoveSpeed = inputdata.value.Float();
 }

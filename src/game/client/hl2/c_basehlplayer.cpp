@@ -73,6 +73,11 @@ C_BaseHLPlayer::C_BaseHLPlayer()
 	m_flSpeedMod		= cl_forwardspeed.GetFloat();
 }
 
+void C_BaseHLPlayer::Spawn()
+{
+	BaseClass::Spawn();
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : updateType - 

@@ -1626,6 +1626,61 @@ void CTempEnts::Sprite_Smoke( C_LocalTempEntity *pTemp, float scale )
 
 }
 
+ConVar ae_brass_time("brass_time", "1.0", 0, "Amount of time brass/shell casings remain after being fired.");
+extern ConVar cl_ejectbrass;
+
+void CTempEnts::EjectBrass( const Vector &pos1, const QAngle &angles, const QAngle &gunAngles, int type )
+{
+	if ( cl_ejectbrass.GetBool() == false )
+		return;
+
+	const model_t *pModel = m_pShells[type];
+	
+	if ( pModel == NULL )
+		return;
+
+	C_LocalTempEntity	*pTemp = TempEntAlloc(pos1, (model_t*)pModel );
+
+	if ( pTemp == NULL )
+		return;
+
+	//Keep track of shell type
+	if ( type == 2 )
+	{
+		pTemp->hitSound = BOUNCE_SHOTSHELL;
+	}
+	else
+	{
+		pTemp->hitSound = BOUNCE_SHELL;
+	}
+
+	pTemp->SetBody(0);
+
+	pTemp->flags |= ( FTENT_COLLIDEWORLD | FTENT_FADEOUT | FTENT_GRAVITY | FTENT_ROTATE );
+
+	pTemp->m_vecTempEntAngVelocity[0] = random->RandomFloat(-1024,1024);
+	pTemp->m_vecTempEntAngVelocity[1] = random->RandomFloat(-1024,1024);
+	pTemp->m_vecTempEntAngVelocity[2] = random->RandomFloat(-1024,1024);
+
+	//Face forward
+	pTemp->SetAbsAngles( gunAngles );
+
+	pTemp->SetRenderMode( kRenderNormal );
+	pTemp->tempent_renderamt = 255;		// Set this for fadeout
+
+	Vector	dir;
+
+	AngleVectors( angles, &dir );
+
+	dir *= random->RandomFloat( 150.0f, 200.0f );
+
+	pTemp->SetVelocity( Vector(dir[0] + random->RandomFloat(-64,64),
+						dir[1] + random->RandomFloat(-64,64),
+						dir[2] + random->RandomFloat(  0,64) ) );
+
+	pTemp->die = gpGlobals->curtime + ae_brass_time.GetFloat() + random->RandomFloat( 0.0f, 1.0f );	// Add an extra 0-1 secs of life	
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Create some simple physically simulated models
@@ -1798,7 +1853,7 @@ void CTempEnts::MuzzleFlash( const Vector& pos1, const QAngle& angles, int type,
 	
 	default:
 		// There's no supported muzzle flash for the type specified!
-		Warning( "Attempted to use an unsupported muzzle flash type.. new particle effect needed here!\n" );
+		Warning( "Attempted to use an unsupported muzzle flash type %i .. new particle effect needed here!\n", type );
 		break;
 	}
 }

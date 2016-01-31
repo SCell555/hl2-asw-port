@@ -5,7 +5,6 @@
 //=============================================================================
 
 #include "cbase.h"
-
 #include "c_env_projectedtexture.h"
 #include "shareddefs.h"
 #include "materialsystem/imesh.h"
@@ -16,23 +15,23 @@
 #include "texture_group_names.h"
 #include "tier0/icommandline.h"
 
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 float C_EnvProjectedTexture::m_flVisibleBBoxMinHeight = -FLT_MAX;
 
-
 IMPLEMENT_CLIENTCLASS_DT( C_EnvProjectedTexture, DT_EnvProjectedTexture, CEnvProjectedTexture )
 	RecvPropEHandle( RECVINFO( m_hTargetEntity )	),
 	RecvPropBool(	 RECVINFO( m_bState )			),
 	RecvPropBool(	 RECVINFO( m_bAlwaysUpdate )	),
+	RecvPropBool(	 RECVINFO( m_bUberLightEnabled ) ),
 	RecvPropFloat(	 RECVINFO( m_flLightFOV )		),
 	RecvPropBool(	 RECVINFO( m_bEnableShadows )	),
 	RecvPropBool(	 RECVINFO( m_bSimpleProjection )	),
 	RecvPropBool(	 RECVINFO( m_bLightOnlyTarget ) ),
 	RecvPropBool(	 RECVINFO( m_bLightWorld )		),
 	RecvPropBool(	 RECVINFO( m_bCameraSpace )		),
+	RecvPropBool(	 RECVINFO( m_bEnableCampfireMode )	),
 	RecvPropFloat(	 RECVINFO( m_flBrightnessScale )	),
 	RecvPropInt(	 RECVINFO( m_LightColor ), 0, RecvProxy_Int32ToColor32 ),
 	RecvPropFloat(	 RECVINFO( m_flColorTransitionTime )		),
@@ -44,6 +43,19 @@ IMPLEMENT_CLIENTCLASS_DT( C_EnvProjectedTexture, DT_EnvProjectedTexture, CEnvPro
 	RecvPropInt(	 RECVINFO( m_nShadowQuality )	),
 	RecvPropFloat(	 RECVINFO( m_flProjectionSize )	),
 	RecvPropFloat(	 RECVINFO( m_flRotation )	),
+	RecvPropFloat(	 RECVINFO( m_flVolIntence )	),
+	RecvPropBool(	 RECVINFO( m_bEnableVolumetrics )	),
+	RecvPropInt( RECVINFO( m_nCampfireColorChangeMode ) ),
+	RecvPropFloat( RECVINFO( m_flCampfireSwayAmplitude ) ),
+	RecvPropFloat( RECVINFO( m_flCampfireBrightnessAmp ) ),
+	RecvPropFloat( RECVINFO( m_flCampfireSwaySpeed ) ),
+	RecvPropFloat( RECVINFO( m_flCampfireColorChangeAmp ) ),
+	RecvPropFloat( RECVINFO( m_flUberLightRoundness ) ),
+	RecvPropFloat( RECVINFO( m_flUberLightFalloffdist ) ),
+	RecvPropFloat( RECVINFO( m_flUberLightWedge ) ),
+	RecvPropFloat( RECVINFO( m_flUberLightHedge ) ),
+	RecvPropFloat( RECVINFO( m_flUberLightShearx ) ),
+	RecvPropFloat( RECVINFO( m_flUberLightSheary ) ),
 END_RECV_TABLE()
 
 C_EnvProjectedTexture *C_EnvProjectedTexture::Create( )
@@ -63,13 +75,28 @@ C_EnvProjectedTexture *C_EnvProjectedTexture::Create( )
 	pEnt->m_LightColor.b = 255;
 	pEnt->m_LightColor.a = 255;
 	pEnt->m_bEnableShadows = false;
+	pEnt->m_bEnableVolumetrics = false;
 	pEnt->m_flColorTransitionTime = 1.0f;
 	pEnt->m_bCameraSpace = false;
 	pEnt->SetAbsAngles( QAngle( 90, 0, 0 ) );
 	pEnt->m_bAlwaysUpdate = true;
 	pEnt->m_bState = true;
+	pEnt->m_bUberLightEnabled = false;
 	pEnt->m_flProjectionSize = 500.0f;
 	pEnt->m_flRotation = 0.0f;
+	pEnt->m_flVolIntence = 1.0f;
+	pEnt->m_bEnableCampfireMode = false;
+	pEnt->m_nCampfireColorChangeMode = 0;
+	pEnt->m_flCampfireBrightnessAmp = 0.0f;
+	pEnt->m_flCampfireColorChangeAmp = 0.0f;
+	pEnt->m_flCampfireSwayAmplitude = 0.0f;
+	pEnt->m_flCampfireSwaySpeed = 0.0f;
+	pEnt->m_flUberLightRoundness = 1.0f;
+	pEnt->m_flUberLightFalloffdist = 128.0f;
+	pEnt->m_flUberLightWedge = 0.05f;
+	pEnt->m_flUberLightHedge = 0.0f;
+	pEnt->m_flUberLightShearx = 0.0f;
+	pEnt->m_flUberLightSheary = 0.0f;
 
 	return pEnt;
 }
@@ -78,7 +105,20 @@ C_EnvProjectedTexture::C_EnvProjectedTexture( void )
 {
 	m_LightHandle = CLIENTSHADOW_INVALID_HANDLE;
 	m_bForceUpdate = true;
+	bFlickFirstTime = true;
 	m_pMaterial = NULL;
+
+	flTargetXFlickerPos = 0.0f;
+	flTargetZFlickerPos = 0.0f;
+	flTargetBrightness = 0.0f;
+	flOriginalBrightness = 0.0f;
+	flColorY = 0.0f;
+
+	iTargetColorY = 0;
+
+	vecOriginalPos = GetAbsOrigin();	// Basically, I can redo that and make an ability to parent flickering projectedtexture, but we don't need that 
+										// feature for now, so I just don't want to waste my time;
+
 	AddToEntityList( ENTITY_LIST_SIMULATE );
 }
 
@@ -151,7 +191,6 @@ void C_EnvProjectedTexture::OnDataChanged( DataUpdateType_t updateType )
 	BaseClass::OnDataChanged( updateType );
 }
 
-static ConVar asw_perf_wtf("asw_perf_wtf", "0", FCVAR_DEVELOPMENTONLY, "Disable updating of projected shadow textures from UpdateLight" );
 void C_EnvProjectedTexture::UpdateLight( void )
 {
 	VPROF("C_EnvProjectedTexture::UpdateLight");
@@ -160,7 +199,7 @@ void C_EnvProjectedTexture::UpdateLight( void )
 	Vector vLinearFloatLightColor( m_LightColor.r, m_LightColor.g, m_LightColor.b );
 	float flLinearFloatLightAlpha = m_LightColor.a;
 
-	if ( m_bAlwaysUpdate )
+	if ( m_bAlwaysUpdate || m_bEnableCampfireMode )
 	{
 		m_bForceUpdate = true;
 	}
@@ -192,7 +231,105 @@ void C_EnvProjectedTexture::UpdateLight( void )
 
 	if ( m_LightHandle == CLIENTSHADOW_INVALID_HANDLE || m_hTargetEntity != NULL || m_bForceUpdate )
 	{
+		bool doflameflicker = m_bEnableCampfireMode;
+
 		Vector vForward, vRight, vUp, vPos = GetAbsOrigin();
+
+		if( doflameflicker )
+		{
+			if( bFlickFirstTime )
+			{
+				vecOriginalPos = GetAbsOrigin();
+
+				// properly init our random values
+				flTargetZFlickerPos = vPos.z + random->RandomFloat( -m_flCampfireSwayAmplitude, m_flCampfireSwayAmplitude );
+				flTargetXFlickerPos = vPos.x + random->RandomFloat( -m_flCampfireSwayAmplitude, m_flCampfireSwayAmplitude );
+
+				flOriginalBrightness = m_flBrightnessScale;
+				flTargetBrightness = m_flBrightnessScale + random->RandomFloat( -m_flCampfireBrightnessAmp, m_flCampfireBrightnessAmp );
+
+				flColorY = m_CurrentLinearFloatLightColor.y;
+				iTargetColorY = m_CurrentLinearFloatLightColor.y + random->RandomFloat( -m_flCampfireColorChangeAmp, m_flCampfireColorChangeAmp );
+
+				bFlickFirstTime = false;
+			}
+
+			// catch up our origin, don't let us go too far away from spawn point
+			if( ( vPos - vecOriginalPos ).Length() > m_flCampfireSwayAmplitude )
+			{
+				flTargetZFlickerPos = vecOriginalPos.z;
+				flTargetXFlickerPos = vecOriginalPos.x;
+			}
+
+			// smoothly and randomly modify our origin
+			if( vPos.z != flTargetZFlickerPos )
+			{
+				vPos.z = Approach( flTargetZFlickerPos, vPos.z, gpGlobals->frametime * m_flCampfireSwaySpeed );
+			}
+			else
+			{
+				flTargetZFlickerPos = vPos.z + random->RandomFloat( -m_flCampfireSwayAmplitude, m_flCampfireSwayAmplitude );
+			}
+			
+			if( vPos.x != flTargetXFlickerPos )
+			{
+				vPos.x = Approach( flTargetXFlickerPos, vPos.x, gpGlobals->frametime * m_flCampfireSwaySpeed );
+			}
+			else
+			{
+				flTargetXFlickerPos = vPos.x + random->RandomFloat( -m_flCampfireSwayAmplitude, m_flCampfireSwayAmplitude );
+			}
+			
+			SetAbsOrigin( vPos );
+
+			// color flicker
+			if( m_nCampfireColorChangeMode > 0 )
+			{
+				if( flColorY != iTargetColorY )
+				{
+					if( ( iTargetColorY - flColorY ) > m_flCampfireColorChangeAmp || ( flColorY - iTargetColorY ) > m_flCampfireColorChangeAmp )
+					{
+						iTargetColorY = m_CurrentLinearFloatLightColor.y;
+					}
+				
+					flColorY = Approach( (float) iTargetColorY, flColorY, gpGlobals->frametime * m_flCampfireSwaySpeed * 2 );
+				}
+				else
+				{
+					float randomfloat = 0;
+
+					if( m_nCampfireColorChangeMode < 3 )
+					{
+						randomfloat = m_nCampfireColorChangeMode > 1 ? random->RandomFloat( -m_flCampfireColorChangeAmp, 0 ) : random->RandomFloat( 0, m_flCampfireColorChangeAmp );
+					}
+					else
+					{
+						randomfloat = random->RandomFloat( -m_flCampfireColorChangeAmp, m_flCampfireColorChangeAmp );
+					}
+
+					iTargetColorY = m_CurrentLinearFloatLightColor.y + randomfloat;
+				}
+			}
+
+			// brightness flicker
+			if( m_flCampfireBrightnessAmp > 0 )
+			{
+				if( flTargetBrightness != m_flBrightnessScale )
+				{
+					if( ( flTargetBrightness - flOriginalBrightness ) > m_flCampfireBrightnessAmp || ( flOriginalBrightness - flTargetBrightness ) > m_flCampfireBrightnessAmp )
+					{
+						flTargetBrightness = flOriginalBrightness;
+					}
+
+					m_flBrightnessScale = Approach( flTargetBrightness, m_flBrightnessScale, gpGlobals->frametime * m_flCampfireSwaySpeed / 10 );
+				}
+				else
+				{
+					flTargetBrightness = m_flBrightnessScale + random->RandomFloat( -m_flCampfireBrightnessAmp, m_flCampfireBrightnessAmp );
+				}
+			}
+		}
+
 		FlashlightState_t state;
 
 		if ( m_hTargetEntity != NULL )
@@ -202,6 +339,7 @@ void C_EnvProjectedTexture::UpdateLight( void )
 				const QAngle &angles = GetLocalAngles();
 
 				C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+
 				if( pPlayer )
 				{
 					const QAngle playerAngles = pPlayer->GetAbsAngles();
@@ -337,15 +475,15 @@ void C_EnvProjectedTexture::UpdateLight( void )
 
 		float flAlpha = m_flCurrentLinearFloatLightAlpha * ( 1.0f / 255.0f );
 
-		state.m_fQuadraticAtten = 0.0;
+		state.m_fQuadraticAtten = 1.0;
 		state.m_fLinearAtten = 100;
-		state.m_fConstantAtten = 0.0f;
+		state.m_fConstantAtten = 1.0f;
 		state.m_FarZAtten = m_flFarZ;
 		state.m_fBrightnessScale = m_flBrightnessScale;
 		state.m_Color[0] = m_CurrentLinearFloatLightColor.x * ( 1.0f / 255.0f ) * flAlpha;
-		state.m_Color[1] = m_CurrentLinearFloatLightColor.y * ( 1.0f / 255.0f ) * flAlpha;
+		state.m_Color[1] = ( doflameflicker ? flColorY : m_CurrentLinearFloatLightColor.y ) * ( 1.0f / 255.0f ) * flAlpha;
 		state.m_Color[2] = m_CurrentLinearFloatLightColor.z * ( 1.0f / 255.0f ) * flAlpha;
-		state.m_Color[3] = 0.0f; // fixme: need to make ambient work m_flAmbient;
+		state.m_Color[3] = m_flAmbient;
 		state.m_flShadowSlopeScaleDepthBias = g_pMaterialSystemHardwareConfig->GetShadowSlopeScaleDepthBias();
 		state.m_flShadowDepthBias = g_pMaterialSystemHardwareConfig->GetShadowDepthBias();
 		state.m_bEnableShadows = m_bEnableShadows;
@@ -355,8 +493,26 @@ void C_EnvProjectedTexture::UpdateLight( void )
 		state.m_flProjectionSize = m_flProjectionSize;
 		state.m_flProjectionRotation = m_flRotation;
 
-		state.m_bUberlight = true;
-		state.m_bVolumetric = true;
+		//volumetric light tweaks
+		state.m_bVolumetric = m_bEnableVolumetrics;
+		state.m_flVolumetricIntensity = m_flVolIntence;
+		
+		state.m_bUberlight = m_bUberLightEnabled;
+
+		if( m_bUberLightEnabled )
+		{
+			state.m_uberlightState.m_fRoundness = m_flUberLightRoundness;
+			state.m_uberlightState.m_fNearEdge = m_flNearZ;
+			state.m_uberlightState.m_fFarEdge = m_flFarZ;
+			state.m_uberlightState.m_fWidth = m_flLightFOV / 90;
+			state.m_uberlightState.m_fHeight = m_flLightFOV / 90;
+			state.m_uberlightState.m_fCutOff = m_flFarZ + m_flUberLightFalloffdist;
+			state.m_uberlightState.m_fCutOn = m_flNearZ;
+			state.m_uberlightState.m_fWedge = m_flUberLightWedge;
+			state.m_uberlightState.m_fHedge = m_flUberLightHedge;
+			state.m_uberlightState.m_fShearx = m_flUberLightShearx;
+			state.m_uberlightState.m_fSheary = m_flUberLightSheary;
+		}
 
 		state.m_nShadowQuality = m_nShadowQuality; // Allow entity to affect shadow quality
 
@@ -419,7 +575,7 @@ void C_EnvProjectedTexture::UpdateLight( void )
 
 	g_pClientShadowMgr->SetFlashlightLightWorld( m_LightHandle, m_bLightWorld );
 
-	if ( !asw_perf_wtf.GetBool() && !m_bForceUpdate )
+	if ( !m_bForceUpdate )
 	{
 		g_pClientShadowMgr->UpdateProjectedTexture( m_LightHandle, true );
 	}

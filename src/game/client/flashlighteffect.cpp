@@ -30,6 +30,7 @@ extern ConVar r_flashlightdepthres;
 
 extern ConVar r_flashlightdepthtexture;
 
+static ConVar r_flashlightvolumetrics( "r_flashlightvolumetrics", "0" );
 static ConVar r_swingflashlight( "r_swingflashlight", "1", FCVAR_CHEAT );
 static ConVar r_flashlightlockposition( "r_flashlightlockposition", "0", FCVAR_CHEAT );
 static ConVar r_flashlightfov( "r_flashlightfov", "53.0", FCVAR_CHEAT );
@@ -38,15 +39,15 @@ ConVar r_flashlightoffsety( "r_flashlightoffsetup", "-5.0", FCVAR_CHEAT );
 ConVar r_flashlightoffsetz( "r_flashlightoffsetforward", "0.0", FCVAR_CHEAT );
 static ConVar r_flashlightnear( "r_flashlightnear", "4.0", FCVAR_CHEAT );
 static ConVar r_flashlightfar( "r_flashlightfar", "750.0", FCVAR_CHEAT );
-static ConVar r_flashlightconstant( "r_flashlightconstant", "0.0", FCVAR_CHEAT );
+static ConVar r_flashlightconstant( "r_flashlightconstant", "1.0", FCVAR_CHEAT );
 static ConVar r_flashlightlinear( "r_flashlightlinear", "100.0", FCVAR_CHEAT );
-static ConVar r_flashlightquadratic( "r_flashlightquadratic", "0.0", FCVAR_CHEAT );
+static ConVar r_flashlightquadratic( "r_flashlightquadratic", "1.0", FCVAR_CHEAT );
 static ConVar r_flashlightvisualizetrace( "r_flashlightvisualizetrace", "0", FCVAR_CHEAT );
 static ConVar r_flashlightambient( "r_flashlightambient", "0.0", FCVAR_CHEAT );
 static ConVar r_flashlightshadowatten( "r_flashlightshadowatten", "0.35", FCVAR_CHEAT );
 static ConVar r_flashlightladderdist( "r_flashlightladderdist", "40.0", FCVAR_CHEAT );
-static ConVar r_flashlight_topdown( "r_flashlight_topdown", "0" );
-
+static ConVar r_flashlightAO ( "r_flashlightAO", "0", FCVAR_CHEAT);
+static ConVar r_flashlightuberlight ( "r_flashlightuberlight", "0" );
 static ConVar r_flashlightnearoffsetscale( "r_flashlightnearoffsetscale", "1.0", FCVAR_CHEAT );
 static ConVar r_flashlighttracedistcutoff( "r_flashlighttracedistcutoff", "128" );
 static ConVar r_flashlightbacktraceoffset( "r_flashlightbacktraceoffset", "0.4", FCVAR_CHEAT );
@@ -181,98 +182,6 @@ void C_BasePlayer::GetFlashlightOffset( const Vector &vecForward, const Vector &
 
 ConVar r_flashlightmuzzleflashfov( "r_flashlightmuzzleflashfov", "120", FCVAR_CHEAT );
 
-
-//-----------------------------------------------------------------------------
-// Purpose: Update the flashlight for top down camera view
-//  (flashlight origin doesn't move around when you get near things)
-//-----------------------------------------------------------------------------
-void CFlashlightEffect::UpdateLightTopDown(const Vector &vecPos, const Vector &vecForward, const Vector &vecRight, const Vector &vecUp )
-{
-	VPROF_BUDGET( "CFlashlightEffect::UpdateLightTopDown", VPROF_BUDGETGROUP_SHADOW_DEPTH_TEXTURING );
-
-	FlashlightState_t state;
-
-	state.m_vecLightOrigin = vecPos;
-
-	Vector vTarget = vecPos + vecForward * r_flashlightfar.GetFloat();
-
-	// Work with these local copies of the basis for the rest of the function
-	Vector vDir   = vTarget - vecPos;
-	Vector vRight = vecRight;
-	Vector vUp    = vecUp;
-	VectorNormalize( vDir   );
-	VectorNormalize( vRight );
-	VectorNormalize( vUp    );
-
-	// Orthonormalize the basis, since the flashlight texture projection will require this later...
-	vUp -= DotProduct( vDir, vUp ) * vDir;
-	VectorNormalize( vUp );
-	vRight -= DotProduct( vDir, vRight ) * vDir;
-	VectorNormalize( vRight );
-	vRight -= DotProduct( vUp, vRight ) * vUp;
-	VectorNormalize( vRight );
-
-	AssertFloatEquals( DotProduct( vDir, vRight ), 0.0f, 1e-3 );
-	AssertFloatEquals( DotProduct( vDir, vUp    ), 0.0f, 1e-3 );
-	AssertFloatEquals( DotProduct( vRight, vUp  ), 0.0f, 1e-3 );
-
-	BasisToQuaternion( vDir, vRight, vUp, state.m_quatOrientation );
-
-	state.m_fConstantAtten = r_flashlightconstant.GetFloat();
-	state.m_fQuadraticAtten = r_flashlightquadratic.GetFloat();
-	state.m_fLinearAtten = r_flashlightlinear.GetFloat();
-	state.m_fHorizontalFOVDegrees = r_flashlightfov.GetFloat();
-	state.m_fVerticalFOVDegrees = r_flashlightfov.GetFloat();
-
-	state.m_Color[0] = 1.0f;
-	state.m_Color[1] = 1.0f;
-	state.m_Color[2] = 1.0f;
-	state.m_Color[3] = r_flashlightambient.GetFloat();
-	state.m_NearZ = r_flashlightnear.GetFloat() + m_flCurrentPullBackDist;		// Push near plane out so that we don't clip the world when the flashlight pulls back 
-	state.m_FarZ = state.m_FarZAtten = r_flashlightfar.GetFloat();	// Strictly speaking, these are different, but the game can treat them the same
-	state.m_bEnableShadows = state.m_bEnableShadows && r_flashlightdepthtexture.GetBool();
-	state.m_flShadowMapResolution = r_flashlightdepthres.GetInt();
-
-	state.m_pSpotlightTexture = m_FlashlightTexture;
-	state.m_nSpotlightTextureFrame = 0;
-
-	state.m_flShadowAtten = r_flashlightshadowatten.GetFloat();
-	state.m_flShadowSlopeScaleDepthBias = g_pMaterialSystemHardwareConfig->GetShadowSlopeScaleDepthBias();
-	state.m_flShadowDepthBias = g_pMaterialSystemHardwareConfig->GetShadowDepthBias();
-
-	if( m_FlashlightHandle == CLIENTSHADOW_INVALID_HANDLE )
-	{
-		m_FlashlightHandle = g_pClientShadowMgr->CreateFlashlight( state );
-	}
-	else
-	{
-		if( !r_flashlightlockposition.GetBool() )
-		{
-			g_pClientShadowMgr->UpdateFlashlightState( m_FlashlightHandle, state );
-		}
-	}
-
-	g_pClientShadowMgr->UpdateProjectedTexture( m_FlashlightHandle, true );
-
-	// Kill the old flashlight method if we have one.
-	// FIXME: This doesn't compile
-//	LightOffOld();
-
-#ifndef NO_TOOLFRAMEWORK
-	if ( clienttools->IsInRecordingMode() )
-	{
-		KeyValues *msg = new KeyValues( "FlashlightState" );
-		msg->SetFloat( "time", gpGlobals->curtime );
-		msg->SetInt( "entindex", m_nEntIndex );
-		msg->SetInt( "flashlightHandle", m_FlashlightHandle );
-		msg->SetPtr( "flashlightState", &state );
-		ToolFramework_PostToolMessage( HTOOLHANDLE_INVALID, msg );
-		msg->deleteThis();
-	}
-#endif
-}
-
-
 //-----------------------------------------------------------------------------
 // Purpose: Do the headlight
 //-----------------------------------------------------------------------------
@@ -280,13 +189,6 @@ void CFlashlightEffect::UpdateLight(	int nEntIdx, const Vector &vecPos, const Ve
 										const Vector &vecUp, float flFov, float flFarZ, float flLinearAtten, bool castsShadows, const char* pTextureName )
 {
 	VPROF_BUDGET( __FUNCTION__, VPROF_BUDGETGROUP_SHADOW_DEPTH_TEXTURING );
-
-
-	if ( r_flashlight_topdown.GetBool() )
-	{
-		UpdateLightTopDown( vecPos, vecForward, vecRight, vecUp );
-		return;
-	}
 
 	m_nEntIndex = nEntIdx;
 	m_flFov = flFov;
@@ -511,6 +413,10 @@ bool CFlashlightEffect::UpdateDefaultFlashlightState( FlashlightState_t& state, 
 	}
 	state.m_bEnableShadows = castsShadows && r_flashlightdepthtexture.GetBool();
 	state.m_flShadowMapResolution = r_flashlightdepthres.GetInt();
+	state.m_flShadowFilterSize = 3.0f;		// default value
+	// uberlight
+	state.m_bUberlight = r_flashlightuberlight.GetBool();
+	state.m_uberlightState.m_fRoundness = 1.0f;
 
 	if ( m_bMuzzleFlashEnabled )
 	{
@@ -532,6 +438,9 @@ bool CFlashlightEffect::UpdateDefaultFlashlightState( FlashlightState_t& state, 
 	state.m_flShadowSlopeScaleDepthBias = g_pMaterialSystemHardwareConfig->GetShadowSlopeScaleDepthBias();
 	state.m_flShadowDepthBias = g_pMaterialSystemHardwareConfig->GetShadowDepthBias();
 
+	state.m_bVolumetric = r_flashlightvolumetrics.GetBool();
+	state.m_flAmbientOcclusion = r_flashlightAO.GetFloat();
+	
 	return true;
 }
 

@@ -50,7 +50,9 @@
 #include "iclientmode.h"
 #include "vgui_int.h"
 
-
+#ifdef ENABLE_CEF
+#include "cef/src_cef.h"
+#endif // ENABLE_CEF
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -907,3 +909,27 @@ bool CBaseViewport::IsFullscreenViewport() const
 {
 	return m_bFullscreenViewport;
 }
+
+#ifdef ENABLE_CEF
+extern ConVar g_cef_draw;
+extern ConVar cl_drawhud;
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseViewport::PostChildPaint()
+{
+	BaseClass::PostChildPaint();
+
+	if (!g_cef_draw.GetBool() || !cl_drawhud.GetBool())
+		return;
+
+	SrcCefBrowser *pBrowser = CEFSystem().FindBrowserByName("CefViewPort");
+	if (pBrowser && pBrowser->GetPanel())
+	{
+		SrcCefVGUIPanel *pPanel = pBrowser->GetPanel();
+		pPanel->SetDoNotDraw(true); // we draw it here and not in Paint
+		pPanel->DrawWebview();
+	}
+}
+#endif // ENABLE_CEF

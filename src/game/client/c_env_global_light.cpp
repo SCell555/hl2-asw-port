@@ -5,7 +5,7 @@
 // $NoKeywords: $
 //=============================================================================//
 #include "cbase.h"
- 
+
 #include "c_baseplayer.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -16,7 +16,7 @@ extern ConVar cl_sunlight_ortho_size;
 extern ConVar cl_sunlight_depthbias;
 
 ConVar cl_globallight_enabled( "cl_globallight_enabled", "0", FCVAR_ARCHIVE);
-ConVar cl_globallight_freeze( "cl_globallight_freeze", "0" );
+ConVar cl_globallight_freeze( "cl_globallight_freeze", "0" ); //debug
 ConVar cl_globallight_xoffset( "cl_globallight_xoffset", "0" );
 ConVar cl_globallight_yoffset( "cl_globallight_yoffset", "0" );
 ConVar cl_globallight_drawfrustum( "cl_globallight_drawfrustum", "0" );
@@ -32,9 +32,10 @@ class C_GlobalLight : public C_BaseEntity
 {
 public:
 	DECLARE_CLASS( C_GlobalLight, C_BaseEntity );
-
+	DECLARE_DATADESC();
 	DECLARE_CLIENTCLASS();
 
+	C_GlobalLight();
 	virtual ~C_GlobalLight();
 
 	void OnDataChanged( DataUpdateType_t updateType );
@@ -45,7 +46,11 @@ public:
 
 private:
 	Vector m_shadowDirection;
+	Vector m_vMoveDirection;
 	bool m_bEnabled;
+	bool m_bVolumetricsEnabled;
+	bool m_bMovingEnabled;
+	bool m_bInitMoveVars;
 	char m_TextureName[ MAX_PATH ];
 	CTextureReference m_SpotlightTexture;
 	color32	m_LightColor;
@@ -56,8 +61,13 @@ private:
 	float m_flFOV;
 	float m_flNearZ;
 	float m_flNorthOffset;
+	float m_flVolIntence;
+	float m_flVolNumPlanes;
+	float m_flMoveSpeed;
 	bool m_bEnableShadows;
 	bool m_bOldEnableShadows;
+
+	QAngle movangles;
 
 	static ClientShadowHandle_t m_LocalFlashlightHandle;
 };
@@ -69,6 +79,8 @@ ClientShadowHandle_t C_GlobalLight::m_LocalFlashlightHandle = CLIENTSHADOW_INVAL
 IMPLEMENT_CLIENTCLASS_DT(C_GlobalLight, DT_GlobalLight, CGlobalLight)
 	RecvPropVector(RECVINFO(m_shadowDirection)),
 	RecvPropBool(RECVINFO(m_bEnabled)),
+	RecvPropBool(RECVINFO(m_bVolumetricsEnabled)),
+	RecvPropBool(RECVINFO(m_bMovingEnabled)),
 	RecvPropString(RECVINFO(m_TextureName)),
 	RecvPropInt(RECVINFO(m_LightColor), 0, RecvProxy_Int32ToColor32),
 	RecvPropFloat(RECVINFO(m_flColorTransitionTime)),
@@ -76,9 +88,24 @@ IMPLEMENT_CLIENTCLASS_DT(C_GlobalLight, DT_GlobalLight, CGlobalLight)
 	RecvPropFloat(RECVINFO(m_flFOV)),
 	RecvPropFloat(RECVINFO(m_flNearZ)),
 	RecvPropFloat(RECVINFO(m_flNorthOffset)),
+	RecvPropFloat(RECVINFO(m_flVolIntence)),
+	RecvPropFloat(RECVINFO(m_flVolNumPlanes)),
+	RecvPropFloat(RECVINFO(m_flMoveSpeed)),
 	RecvPropBool(RECVINFO(m_bEnableShadows)),
 END_RECV_TABLE()
 
+BEGIN_DATADESC( C_GlobalLight )
+	DEFINE_FIELD( m_vMoveDirection, FIELD_VECTOR ),
+	DEFINE_FIELD( m_bInitMoveVars, FIELD_BOOLEAN ),
+	DEFINE_FIELD( movangles, FIELD_VECTOR ),
+END_DATADESC()
+
+C_GlobalLight::C_GlobalLight()
+{
+	m_bInitMoveVars = true;
+
+	movangles = QAngle( 0, 0, 0 );
+}
 
 C_GlobalLight::~C_GlobalLight()
 {
@@ -120,19 +147,10 @@ void C_GlobalLight::ClientThink()
 {
 	VPROF("C_GlobalLight::ClientThink");
 
-	bool bSupressWorldLights = false;
-
-	if ( cl_globallight_freeze.GetBool() == true )	
-	{
-			return;
-	}
-	//let us turn this shit on and off ingame
-	m_bEnabled = cl_globallight_enabled.GetBool();
-
-	if ( m_bEnabled )
-	{
-		Vector vLinearFloatLightColor( m_LightColor.r, m_LightColor.g, m_LightColor.b );
-		float flLinearFloatLightAlpha = m_LightColor.a;
+	if ( m_bEnabled && cl_globallight_enabled.GetBool())
+		{
+			Vector vLinearFloatLightColor( m_LightColor.r, m_LightColor.g, m_LightColor.b );
+			float flLinearFloatLightAlpha = m_LightColor.a;
 
 		if ( m_CurrentLinearFloatLightColor != vLinearFloatLightColor || m_flCurrentLinearFloatLightAlpha != flLinearFloatLightAlpha )
 		{
@@ -146,7 +164,30 @@ void C_GlobalLight::ClientThink()
 
 		FlashlightState_t state;
 
-		Vector vDirection = m_shadowDirection;
+		// moving light (like sun or moon)
+		// convert shadow direction vector to angles
+		// then add a special value to pitch
+		// then convert angles back to shadow direction vector
+		if( m_bMovingEnabled )
+		{
+			if( m_bInitMoveVars )
+			{
+				VectorAngles( m_shadowDirection, movangles );
+
+				m_bInitMoveVars = false;
+			}
+
+			movangles.x = Approach( movangles.x + 1, movangles.x, gpGlobals->frametime * m_flMoveSpeed );
+
+			if( movangles.x == 180 )
+			{
+				movangles.x = -180;
+			}
+
+			AngleVectors( movangles, &m_vMoveDirection );
+		}
+
+		Vector vDirection = m_bMovingEnabled ? m_vMoveDirection : m_shadowDirection;
 		VectorNormalize( vDirection );
 
 		//Vector vViewUp = Vector( 0.0f, 1.0f, 0.0f );
@@ -163,23 +204,29 @@ void C_GlobalLight::ClientThink()
 		float flZNear, flZFar, flFov;
 
 		C_BasePlayer::GetLocalPlayer()->CalcView( vPos, EyeAngles, flZNear, flZFar, flFov );
-//		Vector vPos = C_BasePlayer::GetLocalPlayer()->GetAbsOrigin();
+//		vPos = C_BasePlayer::GetLocalPlayer()->GetAbsOrigin();
 		
 //		vPos = Vector( 0.0f, 0.0f, 500.0f );
 		vPos = ( vPos + vSunDirection2D * m_flNorthOffset ) - vDirection * m_flSunDistance;
 		vPos += Vector( cl_globallight_xoffset.GetFloat(), cl_globallight_yoffset.GetFloat(), 0.0f );
 		
-		if (cl_globallight_showpos.GetBool() == true){	//ËÀË ß ÒÓÒÀ ÍÅÌÍÎÃÎ ÍÀØÊÎÄÈË, ÍÅ ÐÓÃÀÉÒÈÑ ÏËÇ ËÀÍÑÏÑ
-			if (cl_globallight_xpos.GetFloat() !=0 &&  cl_globallight_ypos.GetFloat() !=0) {
-			DevMsg("X = %3.0f\n Y = %3.0f\n", cl_globallight_xpos.GetFloat(), cl_globallight_ypos.GetFloat());
+		if (cl_globallight_showpos.GetBool() == true)
+		{
+			if (cl_globallight_xpos.GetFloat() !=0 &&  cl_globallight_ypos.GetFloat() !=0) 
+			{
+				DevMsg("X = %3.0f\n Y = %3.0f\n", cl_globallight_xpos.GetFloat(), cl_globallight_ypos.GetFloat());
 			}
 			else 
-			DevMsg("X = %3.0f\n Y = %3.0f\n", vPos.x, vPos.y);
+				DevMsg("X = %3.0f\n Y = %3.0f\n", vPos.x, vPos.y);
 		}
-		if (cl_globallight_xpos.GetFloat() !=0 &&  cl_globallight_ypos.GetFloat() !=0) {
+		if (cl_globallight_xpos.GetFloat() !=0 &&  cl_globallight_ypos.GetFloat() !=0) 
+		{
 			vPos.x = cl_globallight_xpos.GetFloat();
 			vPos.y = cl_globallight_ypos.GetFloat();
 		}
+		if (cl_globallight_freeze.GetBool())
+			return;
+
 		QAngle angAngles;
 		VectorAngles( vDirection, angAngles );
 
@@ -192,9 +239,9 @@ void C_GlobalLight::ClientThink()
 		state.m_vecLightOrigin = vPos;
 		BasisToQuaternion( vForward, vRight, vUp, state.m_quatOrientation );
 
-		state.m_fQuadraticAtten = 0.0f;
+		state.m_fQuadraticAtten = 1.0f;
 		state.m_fLinearAtten = m_flSunDistance * 2.0f;
-		state.m_fConstantAtten = 0.0f;
+		state.m_fConstantAtten = 1.0f;
 		state.m_FarZAtten = m_flSunDistance * 2.0f;
 		state.m_Color[0] = m_CurrentLinearFloatLightColor.x * ( 1.0f / 255.0f ) * m_flCurrentLinearFloatLightAlpha;
 		state.m_Color[1] = m_CurrentLinearFloatLightColor.y * ( 1.0f / 255.0f ) * m_flCurrentLinearFloatLightAlpha;
@@ -221,15 +268,21 @@ void C_GlobalLight::ClientThink()
 		}
 
 		state.m_bDrawShadowFrustum = cl_globallight_drawfrustum.GetBool();
-		state.m_flShadowSlopeScaleDepthBias =  1.0f;
-		state.m_flShadowDepthBias = g_pMaterialSystemHardwareConfig->GetShadowDepthBias();
+		state.m_flShadowSlopeScaleDepthBias = 2;// g_pMaterialSystemHardwareConfig->GetShadzowSlopeScaleDepthBias();
+		state.m_flShadowDepthBias = 0.0005f;	// g_pMaterialSystemHardwareConfig->GetShadowDepthBias();
 		state.m_bEnableShadows = m_bEnableShadows;
 		state.m_pSpotlightTexture = m_SpotlightTexture;
 		state.m_pProjectedMaterial = NULL; // don't complain cause we aren't using simple projection in this class
 		state.m_nSpotlightTextureFrame = 0;
 		state.m_flShadowFilterSize = 0.2f;
-		//state.m_nShadowQuality = 1; // Allow entity to affect shadow quality
+		state.m_nShadowQuality = 1; // Allow entity to affect shadow quality
 		state.m_bShadowHighRes = true;
+		state.m_flShadowAtten = 0.8f;
+
+		//volumetric light tweaks
+		state.m_bVolumetric = m_bVolumetricsEnabled;
+		state.m_nNumPlanes = m_flVolNumPlanes;
+		state.m_flVolumetricIntensity = m_flVolIntence;
 
 		if ( m_bOldEnableShadows != m_bEnableShadows )
 		{
@@ -252,14 +305,11 @@ void C_GlobalLight::ClientThink()
 			g_pClientShadowMgr->UpdateFlashlightState( m_LocalFlashlightHandle, state );
 			g_pClientShadowMgr->UpdateProjectedTexture( m_LocalFlashlightHandle, true );
 		}
-
-		bSupressWorldLights = m_bEnableShadows;
 	}
 	else if ( m_LocalFlashlightHandle != CLIENTSHADOW_INVALID_HANDLE )
 	{
 		g_pClientShadowMgr->DestroyFlashlight( m_LocalFlashlightHandle );
 		m_LocalFlashlightHandle = CLIENTSHADOW_INVALID_HANDLE;
 	}
-
 	BaseClass::ClientThink();
 }

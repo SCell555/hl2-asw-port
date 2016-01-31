@@ -239,6 +239,22 @@ END_DATADESC()
 
 float CNPC_MetroPolice::gm_flTimeLastSpokePeek;
 
+const char* const m_sModelNames[] = 
+{
+	"models/DPFilms/Metropolice/biopolice.mdl",
+	"models/DPFilms/Metropolice/c08cop.mdl",
+	"models/DPFilms/Metropolice/civil_medic.mdl",
+	"models/DPFilms/Metropolice/elite_police.mdl",
+	"models/DPFilms/Metropolice/female_police.mdl",
+	"models/DPFilms/Metropolice/hdpolice.mdl",
+	"models/DPFilms/Metropolice/hl2beta_police.mdl",
+	"models/DPFilms/Metropolice/hl2concept.mdl",
+	"models/DPFilms/Metropolice/policetrench.mdl",
+	"models/DPFilms/Metropolice/police_bt.mdl",
+	"models/DPFilms/Metropolice/rtb_police.mdl",
+	"models/DPFilms/Metropolice/urban_police.mdl"
+};
+
 //------------------------------------------------------------------------------
 // Purpose 
 //------------------------------------------------------------------------------
@@ -551,6 +567,7 @@ bool CNPC_MetroPolice::OverrideMoveFacing( const AILocalMoveGoal_t &move, float 
 		return BaseClass::OverrideMoveFacing( move, flInterval );
   	
 	// ROBIN: Disabled at request of mapmakers for now
+	// Why does this lag?
 	/*
   	// If we're moving during a police sequence, always face our target
 	if ( m_PolicingBehavior.IsEnabled() )
@@ -562,24 +579,30 @@ bool CNPC_MetroPolice::OverrideMoveFacing( const AILocalMoveGoal_t &move, float 
 			AddFacingTarget( pTarget, pTarget->WorldSpaceCenter(), 1.0f, 0.2f );
 		}
 	}
-	*/
+	//*/
 
 	return BaseClass::OverrideMoveFacing( move, flInterval );
 }
+
+ConVar g_debugMetroCop("g_debugMetroCopModel", "-1", FCVAR_DEVELOPMENTONLY);
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CNPC_MetroPolice::Precache( void )
 {
-	if ( HasSpawnFlags( SF_NPC_START_EFFICIENT ) )
+	if (g_debugMetroCop.GetInt() == -1)
+		SetModelName(AllocPooledString(m_sModelNames[random->RandomInt(0, ARRAYSIZE(m_sModelNames) - 1)]));
+	else
+		SetModelName(AllocPooledString(m_sModelNames[Clamp(g_debugMetroCop.GetInt(), 0, (int)ARRAYSIZE(m_sModelNames) - 1)]));
+	/*if ( HasSpawnFlags( SF_NPC_START_EFFICIENT ) )
 	{
 		SetModelName( AllocPooledString("models/police_cheaple.mdl" ) );
 	}
 	else
 	{
 		SetModelName( AllocPooledString("models/police.mdl") );
-	}
+	}*/
 
 	PrecacheModel( STRING( GetModelName() ) );
 
@@ -622,7 +645,11 @@ void CNPC_MetroPolice::Spawn( void )
 #endif // _XBOX
 
 	SetModel( STRING( GetModelName() ) );
-
+	if (Q_strstr(STRING(GetModelName()), "biopolice"))
+	{
+		m_nSkin = 1;
+		SetBodygroup(1, 3);
+	}
 	SetHullType(HULL_HUMAN);
 	SetHullSizeNormal();
 

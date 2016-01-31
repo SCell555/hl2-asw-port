@@ -99,15 +99,32 @@ void CNPC_CombineS::Precache()
 	if( !Q_stricmp( pModelName, "models/combine_super_soldier.mdl" ) )
 	{
 		m_fIsElite = true;
+		SetModelName( MAKE_STRING( "models/bloocobalt/combine/combine_e.mdl" ) );
 	}
 	else
 	{
 		m_fIsElite = false;
 	}
 
-	if( !GetModelName() )
+	bool isPrisonGuard = !Q_stricmp(pModelName, "models/combine_soldier_prisonguard.mdl");
+
+	if ( !GetModelName() || isPrisonGuard || !Q_stricmp(pModelName, "models/combine_soldier.mdl") )
 	{
-		SetModelName( MAKE_STRING( "models/combine_soldier.mdl" ) );
+		SetModelName( MAKE_STRING( "models/bloocobalt/combine/combine_s.mdl" ) );
+	}
+
+	if (!IsElite())
+	{
+		if (isPrisonGuard)
+			m_nSkin = 3;
+		else if (m_nSkin == 1)
+			m_nSkin += random->RandomInt(0, 1);
+		else if (m_nSkin == 0 && random->RandomFloat() > 0.5f)
+			m_nSkin = random->RandomInt(4, 7);	
+	}
+	else
+	{
+		m_nSkin = random->RandomInt(0, 3);
 	}
 
 	PrecacheModel( STRING( GetModelName() ) );

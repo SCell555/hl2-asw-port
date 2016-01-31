@@ -114,6 +114,11 @@ enum SCOND_t
 
 	COND_BEHAVIOR_PARAMETERS_CHANGED,
 
+	// Commander stuff
+	COND_PLAYER_SELECTED,
+	COND_PLAYER_UNSELECTED,
+	COND_RECEIVED_ORDERS,
+
 	// ======================================
 	// IMPORTANT: This must be the last enum
 	// ======================================

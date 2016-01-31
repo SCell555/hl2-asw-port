@@ -42,7 +42,7 @@ static ConVar cl_drawleaf("cl_drawleaf", "-1", FCVAR_CHEAT );
 static ConVar r_PortalTestEnts( "r_PortalTestEnts", "1", FCVAR_CHEAT, "Clip entities against portal frustums." );
 static ConVar r_portalsopenall( "r_portalsopenall", "0", FCVAR_CHEAT, "Open all portals" );
 
-static ConVar r_shadows_on_renderables_enable( "r_shadows_on_renderables_enable", "0", 0, "Support casting RTT shadows onto other renderables" );
+static ConVar r_shadows_on_renderables_enable( "r_shadows_on_renderables_enable", "1", 0, "Support casting RTT shadows onto other renderables" );
 
 static ConVar cl_leafsystemvis( "cl_leafsystemvis", "0", FCVAR_CHEAT );
 
@@ -1125,7 +1125,10 @@ void CClientLeafSystem::SetSubSystemDataInLeaf( int leaf, int nSubSystemIdx, CCl
 CClientLeafSubSystemData *CClientLeafSystem::GetSubSystemDataInLeaf( int leaf, int nSubSystemIdx )
 {
 	assert( nSubSystemIdx < N_CLSUBSYSTEMS );
-	return m_Leaf[leaf].m_pSubSystemData[nSubSystemIdx];
+	if(m_Leaf.IsValidIndex(leaf))	//I always think that my code is the best until someone proves me that it's bullshit
+		return m_Leaf[leaf].m_pSubSystemData[nSubSystemIdx];
+	else
+		return NULL;	//so while it doesn't happen - this fix is the best!
 }
 
 //-----------------------------------------------------------------------------
@@ -2188,7 +2191,7 @@ int CClientLeafSystem::ComputeTranslucency( int nFrameNumber, int nViewID, int n
 	}
 
 	// If we're taking devshots, don't fade props at all
-	bool bFadeProps = true;
+	bool bFadeProps = false;
 #ifdef _DEBUG
 	bFadeProps = r_FadeProps.GetBool();
 #endif

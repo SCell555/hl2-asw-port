@@ -28,8 +28,8 @@ class CBoneAccessor;
 #include "vcollide_parse.h"
 
 // UNDONE: Remove and make dynamic?
-#define RAGDOLL_MAX_ELEMENTS	32
-#define RAGDOLL_INDEX_BITS		5			// NOTE 1<<RAGDOLL_INDEX_BITS >= RAGDOLL_MAX_ELEMENTS
+#define RAGDOLL_MAX_ELEMENTS	128
+#define RAGDOLL_INDEX_BITS		7			// NOTE 1<<RAGDOLL_INDEX_BITS >= RAGDOLL_MAX_ELEMENTS
 
 #define CORE_DISSOLVE_FADE_START 0.2f
 #define CORE_DISSOLVE_MODEL_FADE_START 0.1f
@@ -136,6 +136,11 @@ extern CRagdollLowViolenceManager g_RagdollLVManager;
 
 bool RagdollCreate( ragdoll_t &ragdoll, const ragdollparams_t &params, IPhysicsEnvironment *pPhysEnv );
 
+//Lost Squad Top Secret Tech
+bool RagdollCreateDestr( ragdoll_t &ragdoll, const ragdollparams_t &params, IPhysicsEnvironment *pPhysEnv );
+
+//Lost Squad Top Secret Destruction Tech
+void RagdollActivateDestr( ragdoll_t &ragdoll, vcollide_t *pCollide, int modelIndex, bool bForceWake = true );
 void RagdollActivate( ragdoll_t &ragdoll, vcollide_t *pCollide, int modelIndex, bool bForceWake = true );
 void RagdollSetupCollisions( ragdoll_t &ragdoll, vcollide_t *pCollide, int modelIndex );
 void RagdollDestroy( ragdoll_t &ragdoll );

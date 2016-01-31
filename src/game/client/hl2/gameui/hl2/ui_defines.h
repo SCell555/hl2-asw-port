@@ -46,29 +46,50 @@ static const char *g_ppszRandomMenuMovies[] =
 #ifdef USING_HL2EM
 	"media/background.bik",
 #endif
-	"media/bg_03.bik",
-	"media/bg_02.bik",
-	"media/bg_04.bik",
-	"media/bg_01.bik",
+	//"media/bg_03.bik",
+	//"media/bg_02.bik",
+	//"media/bg_04.bik",
+	//"media/bg_01.bik",
+	"media/back.bik"
 };
 
 // --- Random Loading Backgrounds (all path are inherited from materials/vgui/)
 static const char g_ppszRandomLoadingBackgrounds[][64] = 
 {
-	"swarm/loading/BGFX01",
+	//"swarm/loading/BGFX01",
 	"../console/background01",
 	"../console/background02",
 	"../console/background03",
-	"../console/background04"
+	"../console/background04",
+	"../console/background05",
+	"../console/background06",
+	"../console/background07",
+	"../console/ep1_background01",
+	"../console/ep1_background01a",
+	"../console/ep1_background02",
+	"../console/ep2_background01",
+	"../console/ep2_background01a",
+	"../console/ep2_background02",
+	"../console/ep2_background03"
 };
 // !!! WIDESCREEN ARRAY SHOULD ALWAYS BE THE SAME SIZE AS REGULAR ONE
 static const char g_ppszRandomLoadingBackgrounds_widescreen[][64] = 
 {
-	"swarm/loading/BGFX01_wide",
+	//"swarm/loading/BGFX01_wide",
 	"../console/background01_widescreen",
 	"../console/background02_widescreen",
 	"../console/background03_widescreen",
-	"../console/background04_widescreen"
+	"../console/background04_widescreen",
+	"../console/background05_widescreen",
+	"../console/background06_widescreen",
+	"../console/background07_widescreen",
+	"../console/ep1_background01_widescreen",
+	"../console/ep1_background01a_widescreen",
+	"../console/ep1_background02_widescreen",
+	"../console/ep2_background01_widescreen",
+	"../console/ep2_background01a_widescreen",
+	"../console/ep2_background02_widescreen",
+	"../console/ep2_background03_widescreen"
 };
 
 // --- !NON!-Random Loading Backgrounds

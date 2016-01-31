@@ -34,6 +34,10 @@ public:
 	virtual void RunFrame();
 	virtual void PostInit();
 
+#ifdef ENABLE_CEF
+	void ShutdownCEFMenu();
+#endif // ENABLE_CEF
+
 	// plays the startup mp3 when GameUI starts
 	void PlayGameStartupSound();
 

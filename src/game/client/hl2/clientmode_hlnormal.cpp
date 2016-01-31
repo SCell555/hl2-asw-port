@@ -21,6 +21,10 @@
 #include "panelmetaclassmgr.h"
 //#include "nb_header_footer.h"
 
+#ifdef ENABLE_CEF
+#include "cef/src_cef.h"
+#endif // ENABLE_CEF
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -317,4 +321,9 @@ void ClientModeHLNormal::SDK_CloseAllWindowsFrom(vgui::Panel* pPanel)
 void ClientModeHLNormal::DoPostScreenSpaceEffects( const CViewSetup *pSetup )
 {
 
+}
+
+int ClientModeHLNormal::KeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding )
+{
+	return BaseClass::KeyInput(down, keynum, pszCurrentBinding);
 }

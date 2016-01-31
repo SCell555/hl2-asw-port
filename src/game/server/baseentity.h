@@ -1874,10 +1874,6 @@ public:
 	{
 		return s_bAbsQueriesValid;
 	}
-
-public:
-
-
 };
 
 // Send tables exposed in this module.
@@ -2754,7 +2750,6 @@ inline void CBaseEntity::DecrementTransmitStateOwnedCounter()
 	Assert( m_nTransmitStateOwnedCounter != 0 );
 	m_nTransmitStateOwnedCounter--;
 }
-
 
 //-----------------------------------------------------------------------------
 // Bullet firing (legacy)...

@@ -14,7 +14,6 @@
 #include "c_baseentity.h"
 #include "basetypes.h"
 
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -56,12 +55,16 @@ private:
 
 	bool		m_bState;
 	bool		m_bAlwaysUpdate;
+	bool		m_bUberLightEnabled;
 	float		m_flLightFOV;
 	bool		m_bEnableShadows;
 	bool		m_bSimpleProjection;
 	bool		m_bLightOnlyTarget;
+	bool		m_bEnableVolumetrics;
 	bool		m_bLightWorld;
 	bool		m_bCameraSpace;
+	bool		m_bEnableCampfireMode;
+	bool		bFlickFirstTime;
 	float		m_flBrightnessScale;
 	color32		m_LightColor;
 	Vector		m_CurrentLinearFloatLightColor;
@@ -74,14 +77,35 @@ private:
 	CTextureReference m_SpotlightTexture;
 	int			m_nSpotlightTextureFrame;
 	int			m_nShadowQuality;
+	int			iTargetColorY;
+	// campfire shadows flicker effect
+	float		flTargetZFlickerPos;
+	float		flTargetXFlickerPos;
+	float		flTargetBrightness;
+	float		flOriginalBrightness;
+	float		flColorY;
+	float		m_flCampfireSwayAmplitude;
+	float		m_flCampfireBrightnessAmp;
+	float		m_flCampfireSwaySpeed;
+	float		m_flCampfireColorChangeAmp;
+	float		m_flUberLightRoundness;
+	float		m_flUberLightFalloffdist;
+	float		m_flUberLightWedge;
+	float		m_flUberLightHedge;
+	float		m_flUberLightShearx;
+	float		m_flUberLightSheary;
+
+	int			m_nCampfireColorChangeMode;
 
 	// simple projection
 	IMaterial	*m_pMaterial;
 	float		m_flProjectionSize;
 	float		m_flRotation;
+	float		m_flVolIntence;
 
 	Vector	m_vecExtentsMin;
 	Vector	m_vecExtentsMax;
+	Vector	vecOriginalPos;
 
 	static float m_flVisibleBBoxMinHeight;
 };

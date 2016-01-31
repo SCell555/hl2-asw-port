@@ -192,6 +192,7 @@ void C_BaseCombatWeapon::DrawCrosshair()
 {
 #ifndef INFESTED_DLL
 	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+	CBaseCombatWeapon *pWeapon = player->GetActiveWeapon();
 	if ( !player )
 		return;
 
@@ -233,6 +234,11 @@ void C_BaseCombatWeapon::DrawCrosshair()
 	
 	if ( player->GetFOV() >= 90 )
 	{ 
+		if(pWeapon && (FClassnameIs(pWeapon, "weapon_rpg" ) || FClassnameIs(pWeapon, "weapon_crossbow" )) )
+			crosshair->SetVisible(false);
+		if(pWeapon && (FClassnameIs(pWeapon, "weapon_shotgun" ) /*|| FClassnameIs(pWeapon, "weapon_357" )*/) )
+			crosshair->SetCrosshair(HudIcons().GetIcon("crosshair_rounded"), Color(255, 255, 255, 255));
+
 		// normal crosshairs
 		if ( bOnTarget && GetWpnData().iconAutoaim )
 		{

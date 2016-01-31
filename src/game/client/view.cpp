@@ -41,6 +41,8 @@
 #include "ScreenSpaceEffects.h"
 #include "vgui_int.h"
 #include "engine/sndinfo.h"
+#include "renderparm.h"
+
 #ifdef GAMEUI_UISYSTEM2_ENABLED
 #include "gameui.h"
 #endif
@@ -133,6 +135,9 @@ static ConVar cl_demoviewoverride( "cl_demoviewoverride", "0", 0, "Override view
 
 static Vector s_DemoView;
 static QAngle s_DemoAngle;
+
+// @TODO: move this parameter to an entity property rather than convar
+ConVar mat_dest_alpha_range( "mat_dest_alpha_range", "16384", 0, "Amount to scale depth values before writing into destination alpha ([0,1] range)." );
 
 static void CalcDemoViewOverride( Vector &origin, QAngle &angles )
 {
@@ -550,6 +555,9 @@ void CViewRender::OnRenderStart()
 	m_bAllowViewAccess = false;
 
 	IterateRemoteSplitScreenViewSlots_Pop();
+
+	CMatRenderContextPtr pRenderContext( materials );
+	pRenderContext->SetFloatRenderingParameter( FLOAT_RENDERPARM_DEST_ALPHA_DEPTH_SCALE, mat_dest_alpha_range.GetFloat() );
 }
 
 

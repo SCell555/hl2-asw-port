@@ -41,7 +41,7 @@
 //-----------------------------------------------------------------------------
 #ifdef _DEBUG
 
-ConVar r_FadeProps( "r_FadeProps", "1" );
+ConVar r_FadeProps( "r_FadeProps", "0" );
 
 #endif
 bool g_MakingDevShots = false;
@@ -978,6 +978,8 @@ unsigned char UTIL_ComputeEntityFade( C_BaseEntity *pEntity, float flMinDist, fl
 
 #ifdef _DEBUG
 	if ( r_FadeProps.GetBool() )
+#else
+	if (false)
 #endif
 	{
 		nAlpha = ComputeDistanceFade( pEntity, flMinDist, flMaxDist );

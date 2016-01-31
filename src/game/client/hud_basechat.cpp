@@ -1760,6 +1760,7 @@ void CBaseHudChat::ChatPrintf( int iPlayerIndex, int iFilter, const char *fmt, .
 	if ( !*pmsg )
 		return;
 
+#if 1
 	CBaseHudChatLine *line = (CBaseHudChatLine *)FindUnusedChatLine();
 	if ( !line )
 	{
@@ -1836,6 +1837,7 @@ void CBaseHudChat::ChatPrintf( int iPlayerIndex, int iFilter, const char *fmt, .
 
 		line->InsertAndColorizeText( wbuf, iPlayerIndex );
 	}
+#endif
 }
 
 //-----------------------------------------------------------------------------

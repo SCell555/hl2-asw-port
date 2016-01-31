@@ -21,6 +21,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#define SF_CAN_JUMP		( 1 << 15 )		// zombies and zombines usually can't jump, right?
+
 // ACT_FLINCH_PHYSICS
 
 
@@ -98,6 +100,7 @@ public:
 	void MoanSound( envelopePoint_t *pEnvelope, int iEnvelopeSize );
 	bool ShouldBecomeTorso( const CTakeDamageInfo &info, float flDamageThreshold );
 	bool CanBecomeLiveTorso() { return !m_fIsHeadless; }
+	bool IsJumpLegal( const Vector &startPos, const Vector &apex, const Vector &endPos, float maxUp, float maxDown, float maxDist ) const;
 
 	void GatherConditions( void );
 
@@ -544,6 +547,14 @@ bool CZombie::ShouldBecomeTorso( const CTakeDamageInfo &info, float flDamageThre
 
 	return BaseClass::ShouldBecomeTorso( info, flDamageThreshold );
 }
+
+//---------------------------------------------------------
+//
+//---------------------------------------------------------
+bool CZombie::IsJumpLegal( const Vector &startPos, const Vector &apex, const Vector &endPos, float maxUp, float maxDown, float maxDist ) const
+{ 
+	return HasSpawnFlags( SF_CAN_JUMP ) ? BaseClass::IsJumpLegal( startPos, apex, endPos, maxUp, maxDown, maxDist ) : false;
+};
 
 //---------------------------------------------------------
 //---------------------------------------------------------

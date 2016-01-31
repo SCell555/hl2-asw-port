@@ -52,7 +52,6 @@ protected:
 	void LightOff();
 
 	void UpdateFlashlightTexture( const char* pTextureName );
-	void UpdateLightTopDown(const Vector &vecPos, const Vector &vecDir, const Vector &vecRight, const Vector &vecUp);
 
 	bool m_bIsOn;
 	int m_nEntIndex;

@@ -1896,6 +1896,7 @@
     <ClCompile Include="..\shared\hl2\survival_gamerules.cpp">
       <Filter>Source Files\HL2 Server\Gamerules</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\mountsteamcontent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\achievement_saverestore.h">
@@ -3710,6 +3711,7 @@
     <ClInclude Include="..\..\public\appframework\AppFramework.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\mountsteamcontent.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="spawn_helper.nut">

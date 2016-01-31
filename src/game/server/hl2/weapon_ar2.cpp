@@ -124,10 +124,11 @@ void CWeaponAR2::Precache( void )
 {
 	BaseClass::Precache();
 
-	PrecacheEffect( "AR2Impact" );
-	PrecacheEffect( "AR2Tracer" );
 	UTIL_PrecacheOther( "prop_combine_ball" );
 	UTIL_PrecacheOther( "env_entity_dissolver" );
+
+	PrecacheEffect("AR2Impact");
+	PrecacheParticleSystem("AR2Tracer");
 }
 
 //-----------------------------------------------------------------------------

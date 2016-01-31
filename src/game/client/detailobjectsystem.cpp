@@ -24,10 +24,8 @@
 #include "tier1/callqueue.h"
 #include "c_world.h"
 
-#ifdef USE_DETAIL_SHAPES
 #include "engine/ivdebugoverlay.h"
 #include "playerenumerator.h"
-#endif
 
 #include "materialsystem/imaterialsystemhardwareconfig.h"
 
@@ -41,13 +39,12 @@
 //-----------------------------------------------------------------------------
 struct model_t;
 
+ 
+ConVar cl_detail_max_sway( "cl_detail_max_sway", "5", FCVAR_ARCHIVE, "Amplitude of the detail prop sway" );
+ConVar cl_detail_avoid_radius( "cl_detail_avoid_radius", "16", FCVAR_ARCHIVE, "radius around detail sprite to avoid players" );
+ConVar cl_detail_avoid_force( "cl_detail_avoid_force", "1", FCVAR_ARCHIVE, "force with which to avoid players ( in units, percentage of the width of the detail sprite )" );
+ConVar cl_detail_avoid_recover_speed( "cl_detail_avoid_recover_speed", "1", FCVAR_ARCHIVE, "how fast to recover position after avoiding players" );
 
-#if defined( USE_DETAIL_SHAPES ) 
-ConVar cl_detail_max_sway( "cl_detail_max_sway", "0", FCVAR_ARCHIVE, "Amplitude of the detail prop sway" );
-ConVar cl_detail_avoid_radius( "cl_detail_avoid_radius", "0", FCVAR_ARCHIVE, "radius around detail sprite to avoid players" );
-ConVar cl_detail_avoid_force( "cl_detail_avoid_force", "0", FCVAR_ARCHIVE, "force with which to avoid players ( in units, percentage of the width of the detail sprite )" );
-ConVar cl_detail_avoid_recover_speed( "cl_detail_avoid_recover_speed", "0", FCVAR_ARCHIVE, "how fast to recover position after avoiding players" );
-#endif
 
 ConVar r_FlashlightDetailProps( "r_FlashlightDetailProps", "1", 0, "Enable a flashlight drawing pass on detail props. 0 = off, 1 = single pass, 2 = multipass (multipass is PC ONLY)" );
 ConVar r_ThreadedDetailProps( "r_threadeddetailprops", "1", 0, "enable threading of detail prop drawing" );
@@ -218,7 +215,8 @@ public:
 	void DrawTypeSprite( CMeshBuilder &meshBuilder, uint8 nAlpha );
 
 
-#ifdef USE_DETAIL_SHAPES
+
+
 	void DrawTypeShapeCross( CMeshBuilder &meshBuilder, uint8 nAlpha );
 	void DrawTypeShapeTri( CMeshBuilder &meshBuilder, uint8 nAlpha );
 
@@ -231,7 +229,7 @@ public:
 
 	void DrawSwayingQuad( CMeshBuilder &meshBuilder, Vector vecOrigin, Vector vecSway, Vector2D texul, Vector2D texlr, unsigned char *color,
 		Vector width, Vector height );
-#endif
+
 
 	int GetType() const { return m_Type; }
 
@@ -271,10 +269,8 @@ protected:
 	};
 #pragma warning( default : 4201 )
 
-#ifdef USE_DETAIL_SHAPES
 	// pointer to advanced properties
 	DetailModelAdvInfo_t *m_pAdvInfo;
-#endif
 };
 
 static ConVar mat_fullbright( "mat_fullbright", "0", FCVAR_CHEAT ); // hook into engine's cvars..
@@ -430,6 +426,11 @@ public:
 	void RenderTranslucentDetailObjectsInLeaf( const DistanceFadeInfo_t &info, const Vector &viewOrigin, const Vector &viewForward, const Vector &viewRight, const Vector &viewUp, int nLeaf, const Vector *pVecClosestPoint );
 	void RenderFastTranslucentDetailObjectsInLeaf( CFastDetailLeafSpriteList *pData, const DistanceFadeInfo_t &info, const Vector &viewOrigin, const Vector &viewForward, const Vector &viewRight, const Vector &viewUp, int nLeaf, const Vector &vecClosestPoint, bool bFirstLeaf );
 
+	virtual bool ShouldReceiveProjectedTextures( int flags )
+	{
+		return true;
+	}
+
 	// Call this before rendering translucent detail objects
 	void BeginTranslucentDetailRendering( );
 
@@ -537,8 +538,8 @@ static void DetailFadeCallback( IConVar *var, const char *pOldValue, float flOld
 	s_DetailObjectSystem.UpdateDetailFadeValues();
 }
 								   
-ConVar cl_detaildist( "cl_detaildist", "1200", 0, "Distance at which detail props are no longer visible", DetailFadeCallback );
-ConVar cl_detailfade( "cl_detailfade", "400", 0, "Distance across which detail props fade in", DetailFadeCallback );
+ConVar cl_detaildist( "cl_detaildist", "1280", 0, "Distance at which detail props are no longer visible", DetailFadeCallback );
+ConVar cl_detailfade( "cl_detailfade", "512", 0, "Distance across which detail props fade in", DetailFadeCallback );
 
 
 //-----------------------------------------------------------------------------
@@ -656,7 +657,7 @@ void CDetailModel::GetRenderBoundsWorldspace( Vector& mins, Vector& maxs )
 
 bool CDetailModel::ShouldReceiveProjectedTextures( int flags )
 {
-	return false;
+	return true;
 }
 
 int CDetailModel::GetRenderFlags( void )
@@ -759,9 +760,7 @@ CDetailModel::CDetailModel()
 	m_bHasLightStyle = 0;
 	m_bIsTranslucent = false;
 
-#ifdef USE_DETAIL_SHAPES
 	m_pAdvInfo = NULL;
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -769,14 +768,12 @@ CDetailModel::CDetailModel()
 //-----------------------------------------------------------------------------
 CDetailModel::~CDetailModel()
 {
-#ifdef USE_DETAIL_SHAPES
 	// delete advanced
 	if ( m_pAdvInfo )
 	{
 		delete m_pAdvInfo;
 		m_pAdvInfo = NULL;
 	}
-#endif
 
 	if ( m_bHasLightStyle )
 		gm_LightStylesMap.Remove( this );
@@ -827,7 +824,6 @@ bool CDetailModel::InitSprite( int index, bool bFlipped, const Vector& org, cons
 	m_SpriteInfo.m_flScale.SetFloat( flScale );
 	m_bIsTranslucent = true;
 
-#ifdef USE_DETAIL_SHAPES
 	m_pAdvInfo = NULL;
 	Assert( type <= 3 );
 	// precalculate angles for shapes
@@ -837,13 +833,11 @@ bool CDetailModel::InitSprite( int index, bool bFlipped, const Vector& org, cons
 		InitShapedSprite( shapeAngle, shapeSize, swayAmount);
 	}
 
-#endif
 
 	m_bFlipped = bFlipped;
 	return InitCommon( index, org, angles );
 }
 
-#ifdef USE_DETAIL_SHAPES
 void CDetailModel::InitShapedSprite( unsigned char shapeAngle, unsigned char shapeSize, unsigned char swayAmount )
 {
 	// Set up pointer to advanced shape properties object ( per instance )
@@ -907,7 +901,6 @@ void CDetailModel::InitShapeCross( void )
 		&m_pAdvInfo->m_vecAnglesRight[0],
 		&m_pAdvInfo->m_vecAnglesUp[0] );
 }
-#endif
 
 //-----------------------------------------------------------------------------
 // Color, alpha modulation
@@ -1007,7 +1000,6 @@ void CDetailModel::DrawSprite( CMeshBuilder &meshBuilder, uint8 nAlpha )
 {
 	switch( m_Type )
 	{
-#ifdef USE_DETAIL_SHAPES
 	case DETAIL_PROP_TYPE_SHAPE_CROSS:
 		DrawTypeShapeCross( meshBuilder, nAlpha );
 		break;
@@ -1015,7 +1007,6 @@ void CDetailModel::DrawSprite( CMeshBuilder &meshBuilder, uint8 nAlpha )
 	case DETAIL_PROP_TYPE_SHAPE_TRI:
 		DrawTypeShapeTri( meshBuilder, nAlpha );
 		break;
-#endif
 	case DETAIL_PROP_TYPE_SPRITE:
 		DrawTypeSprite( meshBuilder, nAlpha );
 		break;
@@ -1053,7 +1044,6 @@ void CDetailModel::DrawTypeSprite( CMeshBuilder &meshBuilder, uint8 nAlpha )
 	Vector2DMultiply( dict.m_UL, scale, ul );
 	Vector2DMultiply( dict.m_LR, scale, lr );
 
-#ifdef USE_DETAIL_SHAPES
 	UpdatePlayerAvoid();
 
 	Vector vecSway = vec3_origin;
@@ -1068,7 +1058,6 @@ void CDetailModel::DrawTypeSprite( CMeshBuilder &meshBuilder, uint8 nAlpha )
 			vecSway += dx * sin(gpGlobals->curtime+m_Origin.x) * flSwayAmplitude;
 		}
 	}
-#endif
 
 	VectorMA( m_Origin, ul.x, dx, vecOrigin );
 	VectorMA( vecOrigin, ul.y, dy, vecOrigin );
@@ -1085,11 +1074,9 @@ void CDetailModel::DrawTypeSprite( CMeshBuilder &meshBuilder, uint8 nAlpha )
 		texlr.x = dict.m_TexUL.x;
 	}
 
-#ifndef USE_DETAIL_SHAPES
-	meshBuilder.Position3fv( vecOrigin.Base() );
-#else
+
+	//meshBuilder.Position3fv( vecOrigin.Base() );
 	meshBuilder.Position3fv( (vecOrigin+vecSway).Base() );
-#endif
 
 	meshBuilder.Color4ubv( color );
 	meshBuilder.TexCoord2fv( 0, texul.Base() );
@@ -1111,11 +1098,8 @@ void CDetailModel::DrawTypeSprite( CMeshBuilder &meshBuilder, uint8 nAlpha )
 	meshBuilder.AdvanceVertex();
 
 	vecOrigin -= dy;
-#ifndef USE_DETAIL_SHAPES
-	meshBuilder.Position3fv( vecOrigin.Base() );
-#else
+	//meshBuilder.Position3fv( vecOrigin.Base() );
 	meshBuilder.Position3fv( (vecOrigin+vecSway).Base() );
-#endif
 	meshBuilder.Color4ubv( color );
 	meshBuilder.TexCoord2f( 0, texlr.x, texul.y );
 	meshBuilder.Normal3fv( &dz.x );
@@ -1126,7 +1110,6 @@ void CDetailModel::DrawTypeSprite( CMeshBuilder &meshBuilder, uint8 nAlpha )
 // draws a procedural model, cross shape
 // two perpendicular sprites
 //-----------------------------------------------------------------------------
-#ifdef USE_DETAIL_SHAPES
 void CDetailModel::DrawTypeShapeCross( CMeshBuilder &meshBuilder, uint8 nAlpha )
 {
 	Assert( m_Type == DETAIL_PROP_TYPE_SHAPE_CROSS );
@@ -1235,12 +1218,10 @@ void CDetailModel::DrawTypeShapeCross( CMeshBuilder &meshBuilder, uint8 nAlpha )
 			iBranch = 0;
 	}	
 }
-#endif
 
 //-----------------------------------------------------------------------------
 // draws a procedural model, tri shape
 //-----------------------------------------------------------------------------
-#ifdef USE_DETAIL_SHAPES
 void CDetailModel::DrawTypeShapeTri( CMeshBuilder &meshBuilder, uint8 nAlpha )
 {
 	Assert( m_Type == DETAIL_PROP_TYPE_SHAPE_TRI );
@@ -1321,12 +1302,10 @@ void CDetailModel::DrawTypeShapeTri( CMeshBuilder &meshBuilder, uint8 nAlpha )
 			iBranch = 0;
 	}	
 }
-#endif
 
 //-----------------------------------------------------------------------------
 // checks for nearby players and pushes the detail to the side
 //-----------------------------------------------------------------------------
-#ifdef USE_DETAIL_SHAPES
 void CDetailModel::UpdatePlayerAvoid( void )
 {
 	float flForce = cl_detail_avoid_force.GetFloat();
@@ -1389,13 +1368,11 @@ void CDetailModel::UpdatePlayerAvoid( void )
 	m_pAdvInfo->m_vecCurrentAvoid[1] = Approach( vecMaxAvoid[1], m_pAdvInfo->m_vecCurrentAvoid[1], flRecoverSpeed );
 	m_pAdvInfo->m_vecCurrentAvoid[2] = Approach( vecMaxAvoid[2], m_pAdvInfo->m_vecCurrentAvoid[2], flRecoverSpeed );
 }
-#endif
 
 //-----------------------------------------------------------------------------
 // draws a quad that sways on the top two vertices
 // pass vecOrigin as the top left vertex position
 //-----------------------------------------------------------------------------
-#ifdef USE_DETAIL_SHAPES
 void CDetailModel::DrawSwayingQuad( CMeshBuilder &meshBuilder, Vector vecOrigin, Vector vecSway, Vector2D texul, Vector2D texlr, unsigned char *color,
 								   Vector width, Vector height )
 {
@@ -1422,7 +1399,6 @@ void CDetailModel::DrawSwayingQuad( CMeshBuilder &meshBuilder, Vector vecOrigin,
 	meshBuilder.Color4ubv( color );
 	meshBuilder.AdvanceVertex();
 }
-#endif
 
 //-----------------------------------------------------------------------------
 // constructor, destructor
@@ -2080,7 +2056,6 @@ int CDetailObjectSystem::CountFastSpritesInLeafList( int nLeafCount, LeafIndex_t
 //-----------------------------------------------------------------------------
 int CDetailObjectSystem::CountSpriteQuadsInLeafList( int nLeafCount, LeafIndex_t *pLeafList ) const
 {
-#ifdef USE_DETAIL_SHAPES
 	VPROF_BUDGET( "CDetailObjectSystem::CountSpritesInLeafList", VPROF_BUDGETGROUP_DETAILPROP_RENDERING );
 	int nQuadCount = 0;
 	int nFirstDetailObject, nDetailObjectCount;
@@ -2096,9 +2071,7 @@ int CDetailObjectSystem::CountSpriteQuadsInLeafList( int nLeafCount, LeafIndex_t
 	}
 
 	return nQuadCount;
-#else
-	return CountSpritesInLeafList( nLeafCount, pLeafList );
-#endif
+//	return CountSpritesInLeafList( nLeafCount, pLeafList );
 }
 
 

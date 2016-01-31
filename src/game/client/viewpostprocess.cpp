@@ -2052,12 +2052,12 @@ EXPOSE_MATERIAL_PROXY( CMotionBlurMaterialProxy, MotionBlur );
 //=====================================================================================================================
 ConVar mat_motion_blur_enabled( "mat_motion_blur_enabled", "1" );
 
-ConVar mat_motion_blur_forward_enabled( "mat_motion_blur_forward_enabled", "0" );
+ConVar mat_motion_blur_forward_enabled( "mat_motion_blur_forward_enabled", "1" );
 ConVar mat_motion_blur_falling_min( "mat_motion_blur_falling_min", "10.0" );
 
 ConVar mat_motion_blur_falling_max( "mat_motion_blur_falling_max", "20.0" );
 ConVar mat_motion_blur_falling_intensity( "mat_motion_blur_falling_intensity", "1.0" );
-//ConVar mat_motion_blur_roll_intensity( "mat_motion_blur_roll_intensity", "1.0" );
+ConVar mat_motion_blur_roll_intensity( "mat_motion_blur_roll_intensity", "0.3" );
 ConVar mat_motion_blur_rotation_intensity( "mat_motion_blur_rotation_intensity", "1.0" );
 ConVar mat_motion_blur_strength( "mat_motion_blur_strength", "1.0" );
 
@@ -2102,7 +2102,7 @@ void DoImageSpaceMotionBlur( const CViewSetup &view )
 	// Get these convars here to make it easier to remove them later and to default each client differently //
 	//======================================================================================================//
 	float flMotionBlurRotationIntensity = mat_motion_blur_rotation_intensity.GetFloat() * 0.15f; // The default is to not blur past 15% of the range
-	float flMotionBlurRollIntensity = 0.3f; // * mat_motion_blur_roll_intensity.GetFloat(); // The default is to not blur past 30% of the range
+	float flMotionBlurRollIntensity = mat_motion_blur_roll_intensity.GetFloat(); // The default is to not blur past 30% of the range
 	float flMotionBlurFallingIntensity = mat_motion_blur_falling_intensity.GetFloat();
 	float flMotionBlurFallingMin = mat_motion_blur_falling_min.GetFloat();
 	float flMotionBlurFallingMax = mat_motion_blur_falling_max.GetFloat();
@@ -2497,7 +2497,14 @@ ConVar mat_dof_far_focus_depth( "mat_dof_far_focus_depth", "250.0" );
 ConVar mat_dof_far_blur_depth( "mat_dof_far_blur_depth", "1000.0" );
 ConVar mat_dof_near_blur_radius( "mat_dof_near_blur_radius", "10.0" );
 ConVar mat_dof_far_blur_radius( "mat_dof_far_blur_radius", "5.0" );
+ConVar mat_dof_always_update_focal_target ( "mat_dof_always_update_focal_target", "0" );
 ConVar mat_dof_quality( "mat_dof_quality", "0" );
+ConVar mat_dof_delay( "mat_dof_delay", "5" );
+
+extern ConVar mat_dest_alpha_range;
+
+//wait until dynamic dof starts working
+float wait = gpGlobals->curtime + mat_dof_delay.GetFloat();
 
 static float GetNearBlurDepth()
 {
@@ -2529,6 +2536,75 @@ static float GetFarBlurRadius()
 	return mat_dof_override.GetBool() ? mat_dof_far_blur_radius.GetFloat() : g_flDOFFarBlurRadius;
 }
 
+static void UpdateFocalTarget()
+{
+	if( mat_dof_always_update_focal_target.GetBool() )
+	{
+		C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+
+		if( pPlayer )
+		{
+			int maxrange = 156;
+
+			trace_t tr;
+			Vector vecForward, vecor, vecend;
+
+			vecor = pPlayer->GetAbsOrigin();
+			QAngle viewangles = pPlayer->GetAbsAngles();
+			AngleVectors( viewangles, &vecForward );
+			vecend = vecor + vecForward*maxrange;
+
+			UTIL_TraceLine( vecor, vecend, MASK_SOLID | MASK_VISIBLE_AND_NPCS, pPlayer, COLLISION_GROUP_NONE, &tr );
+
+			if( tr.m_pEnt )
+			{
+				int flDistToFocus = ( tr.endpos - pPlayer->EyePosition() ).Length();
+
+				// to avoid dividing by zero
+				if( flDistToFocus < 1 )
+				{
+					flDistToFocus = 1;
+				}
+				// Not mathematecally accurate algorithm, but we don't need anything more advanced than this for now.
+				float depthalpharangefactor = mat_dest_alpha_range.GetInt();
+				float blurscalefactor = maxrange / flDistToFocus;
+				float nearblurscalefactor = flDistToFocus / (float)maxrange * 10;	// blurscalefactor inversed
+				float depthfactorscale = depthalpharangefactor / 16384 * 10;		// 16384 - is default depth
+				
+				if( blurscalefactor <= 0 )
+				{
+					blurscalefactor = 1;
+				}
+
+				if( blurscalefactor >= 10 )
+				{
+					blurscalefactor = 10;
+				}
+
+				// blur scaling
+				mat_dof_far_blur_radius.SetValue( blurscalefactor );
+				mat_dof_near_blur_radius.SetValue( nearblurscalefactor );
+
+				// near blur
+				mat_dof_near_blur_depth.SetValue( nearblurscalefactor );	
+				mat_dof_near_focus_depth.SetValue( flDistToFocus / depthfactorscale * 2 );
+
+				// far blur
+				mat_dof_far_blur_depth.SetValue( ( 16384 / depthalpharangefactor ) * ( 20 * flDistToFocus ) );	// magic
+				mat_dof_far_focus_depth.SetValue( flDistToFocus * 1.5f );
+				
+			}
+			else
+			{
+				wait = gpGlobals->curtime + mat_dof_delay.GetFloat();
+
+				mat_dof_near_blur_radius.SetValue(0);
+				mat_dof_far_blur_radius.SetValue(0);
+			}
+		}
+	}
+}
+
 bool IsDepthOfFieldEnabled()
 {
 	const CViewSetup *pViewSetup = view->GetViewSetup();
@@ -2536,8 +2612,8 @@ bool IsDepthOfFieldEnabled()
 		return false;
 
 	// We need high-precision depth, which we currently only get in float HDR mode
-	if ( g_pMaterialSystemHardwareConfig->GetHDRType() != HDR_TYPE_FLOAT )
-		return false;
+	//if ( g_pMaterialSystemHardwareConfig->GetHDRType() != HDR_TYPE_FLOAT )
+	//	return false;
 
 	if ( g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 92 )
 		return false;
@@ -2548,6 +2624,13 @@ bool IsDepthOfFieldEnabled()
 
 	if ( !mat_dof_enabled.GetBool() )
 		return false;
+
+	//use our dynamic dof always until it disabled
+	if(!g_bDOFEnabled && mat_dof_always_update_focal_target.GetBool())
+	{
+		mat_dof_override.SetValue(1);
+		return mat_dof_enabled.GetBool();
+	}
 
 	if ( mat_dof_override.GetBool() == true )
 	{
@@ -2696,6 +2779,8 @@ void DoDepthOfField( const CViewSetup &view )
 		SetMaterialVarFloat( pMatDOF, "$farBlurRadius", GetFarBlurRadius() );
 		SetMaterialVarInt( pMatDOF, "$quality", mat_dof_quality.GetInt() );
 	}
+
+	UpdateFocalTarget();	//do dynamic focusing
 
 	pRenderContext->DrawScreenSpaceRectangle(
 		pMatDOF,

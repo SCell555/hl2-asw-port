@@ -2907,7 +2907,7 @@ bool CNPC_PlayerCompanion::OverrideMove( float flInterval )
 			// Handle each type
 			if ( pEntity->m_iClassname == iszEnvFire )
 			{
-				/*Vector vMins, vMaxs;
+				Vector vMins, vMaxs;
 				if ( FireSystem_GetFireDamageDimensions( pEntity, &vMins, &vMaxs ) )
 				{
 					UTIL_TraceLine( WorldSpaceCenter(), pEntity->WorldSpaceCenter(), MASK_FIRE_SOLID, pEntity, COLLISION_GROUP_NONE, &tr );
@@ -2915,7 +2915,7 @@ bool CNPC_PlayerCompanion::OverrideMove( float flInterval )
 					{
 						GetLocalNavigator()->AddObstacle( pEntity->GetAbsOrigin(), ( ( vMaxs.x - vMins.x ) * 1.414 * 0.5 ) + 6.0, AIMST_AVOID_DANGER );
 					}
-				}*/
+				}
 			}
 #ifdef HL2_EPISODIC			
 			else if ( pEntity->m_iClassname == iszNPCTurretFloor )

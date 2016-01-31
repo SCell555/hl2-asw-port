@@ -750,8 +750,6 @@ CBaseEntity::CBaseEntity( bool bServerOnly )
 	m_flCreateTime = 0.0f;
 
 	m_pEvent = NULL;
-
-
 }
 
 //-----------------------------------------------------------------------------
@@ -775,32 +773,34 @@ extern bool g_bDisableEhandleAccess;
 //-----------------------------------------------------------------------------
 // Purpose: See note below
 //-----------------------------------------------------------------------------
-CBaseEntity::~CBaseEntity( )
+CBaseEntity::~CBaseEntity()
 {
-	// FIXME: This can't be called from UpdateOnRemove! There's at least one
-	// case where friction sounds are added between the call to UpdateOnRemove + ~CBaseEntity
-	PhysCleanupFrictionSounds( this );
-
-	// In debug make sure that we don't call delete on an entity without setting
-	//  the disable flag first!
-	// EHANDLE accessors will check, in debug, for access to entities during destruction of
-	//  another entity.
-	// That kind of operation should only occur in UpdateOnRemove calls
-	// Deletion should only occur via UTIL_Remove(Immediate) calls, not via naked delete calls
-	Assert( g_bDisableEhandleAccess );
-
-	VPhysicsDestroyObject();
-
-	// Need to remove references to this entity before EHANDLES go null
 	{
-		g_bDisableEhandleAccess = false;
-		CBaseEntity::PhysicsRemoveTouchedList( this );
-		CBaseEntity::PhysicsRemoveGroundList( this );
-		DestroyAllDataObjects();
-		g_bDisableEhandleAccess = true;
+		// FIXME: This can't be called from UpdateOnRemove! There's at least one
+		// case where friction sounds are added between the call to UpdateOnRemove + ~CBaseEntity
+		PhysCleanupFrictionSounds(this);
 
-		// Remove this entity from the ent list (NOTE:  This Makes EHANDLES go NULL)
-		gEntList.RemoveEntity( GetRefEHandle() );
+		// In debug make sure that we don't call delete on an entity without setting
+		//  the disable flag first!
+		// EHANDLE accessors will check, in debug, for access to entities during destruction of
+		//  another entity.
+		// That kind of operation should only occur in UpdateOnRemove calls
+		// Deletion should only occur via UTIL_Remove(Immediate) calls, not via naked delete calls
+		Assert(g_bDisableEhandleAccess);
+
+		VPhysicsDestroyObject();
+
+		// Need to remove references to this entity before EHANDLES go null
+		{
+			g_bDisableEhandleAccess = false;
+			CBaseEntity::PhysicsRemoveTouchedList(this);
+			CBaseEntity::PhysicsRemoveGroundList(this);
+			DestroyAllDataObjects();
+			g_bDisableEhandleAccess = true;
+
+			// Remove this entity from the ent list (NOTE:  This Makes EHANDLES go NULL)
+			gEntList.RemoveEntity(GetRefEHandle());
+		}
 	}
 }
 
@@ -2385,6 +2385,7 @@ BEGIN_DATADESC_NO_BASE( CBaseEntity )
 	// DEFINE_FIELD( m_fDataObjectTypes, FIELD_INTEGER ),
 
 	DEFINE_KEYFIELD( m_bLagCompensate, FIELD_BOOLEAN, "LagCompensate" ),
+
 END_DATADESC()
 
 BEGIN_ENT_SCRIPTDESC_ROOT( CBaseEntity, "Root class of all server-side entities" )
@@ -8425,6 +8426,102 @@ bool CBaseEntity::ShouldLagCompensate() const
 //------------------------------------------------------------------------------
 // Purpose: Create an NPC of the given type
 //------------------------------------------------------------------------------
+struct ClassNamePrefix_t
+{
+	ClassNamePrefix_t(const char *pszPrefix, bool bKeepPrefix) : m_pszPrefix(pszPrefix), m_bKeepPrefix(bKeepPrefix)
+	{
+		m_nLength = strlen(pszPrefix);
+	}
+
+	const char *m_pszPrefix;
+	size_t m_nLength;
+	bool m_bKeepPrefix;
+};
+
+
+// Add class name prefixes to show in the "give" command autocomplete here
+static ClassNamePrefix_t s_pEntityPrefixes[] =
+{
+	ClassNamePrefix_t("npc_", true),
+};
+
+
+static int StringSortFunc(const void *p1, const void *p2)
+{
+	const char *psz1 = (const char *)p1;
+	const char *psz2 = (const char *)p2;
+
+	return V_stricmp(psz1, psz2);
+}
+
+
+int EntCreateAutocomplete(const char *partial, char commands[COMMAND_COMPLETION_MAXITEMS][COMMAND_COMPLETION_ITEM_LENGTH])
+{
+	// Find the first space in our input
+	const char *firstSpace = V_strstr(partial, " ");
+	if (!firstSpace)
+		return 0;
+
+	int commandLength = firstSpace - partial;
+
+	// Extract the command name from the input
+	char commandName[COMMAND_COMPLETION_ITEM_LENGTH];
+	V_StrSlice(partial, 0, commandLength, commandName, sizeof(commandName));
+
+	// Calculate the length of the command string (minus the command name)
+	partial += commandLength + 1;
+	int partialLength = V_strlen(partial);
+
+	// Grab the factory dictionary
+	if (!EntityFactoryDictionary())
+		return 0;
+
+	const EntityFactoryDict_t &factoryDict = EntityFactoryDictionary()->GetFactoryDictionary();
+	int numMatches = 0;
+
+	// Iterate through all entity factories
+	for (int i = factoryDict.First(); i != factoryDict.InvalidIndex() && numMatches < COMMAND_COMPLETION_MAXITEMS; i = factoryDict.Next(i))
+	{
+		const char *pszClassName = factoryDict.GetElementName(i);
+
+		// See if this entity classname has a prefix that we show in the
+		// autocomplete
+		// TODO: optimise by caching all autocompletable classnames into a hash
+		// table on first run
+		int j;
+		const ClassNamePrefix_t *pPrefix = NULL;
+
+		for (j = 0; j < ARRAYSIZE(s_pEntityPrefixes); ++j)
+		{
+			pPrefix = &s_pEntityPrefixes[j];
+
+			if (Q_strncmp(pszClassName, pPrefix->m_pszPrefix, pPrefix->m_nLength))
+				continue;
+
+			break;
+		}
+
+		// If this entity factory had no prefixes, we could not find the prefix, skip this entity
+		if (j == ARRAYSIZE(s_pEntityPrefixes))
+			continue;
+
+		// Skip past the prefix if it shouldn't be kept
+		if (!pPrefix->m_bKeepPrefix)
+			pszClassName += pPrefix->m_nLength;
+
+		// Does this entity match our partial completion?
+		if (Q_strnicmp(pszClassName, partial, partialLength))
+			continue;
+
+		Q_snprintf(commands[numMatches++], COMMAND_COMPLETION_ITEM_LENGTH, "%s %s", commandName, pszClassName);
+	}
+
+	// Sort the commands alphabetically
+	qsort(commands, numMatches, COMMAND_COMPLETION_ITEM_LENGTH, StringSortFunc);
+
+	return numMatches;
+}
+
 void CC_Ent_Create( const CCommand& args )
 {
 	MDLCACHE_CRITICAL_SECTION();
@@ -8432,8 +8529,29 @@ void CC_Ent_Create( const CCommand& args )
 	bool allowPrecache = CBaseEntity::IsPrecacheAllowed();
 	CBaseEntity::SetAllowPrecache( true );
 
+	char pszClassName[64];
+	Q_strncpy(pszClassName, args.Arg(1), sizeof(pszClassName));
+
+	for (int i = 0; i < ARRAYSIZE(s_pEntityPrefixes) && !CanCreateEntityClass(pszClassName); ++i)
+	{
+		// If we keep the prefix in the autocomplete, there's no point
+		// checking this prefix
+		if (s_pEntityPrefixes[i].m_bKeepPrefix)
+			continue;
+
+		Q_snprintf(pszClassName, sizeof(pszClassName), "%s%s", s_pEntityPrefixes[i].m_pszPrefix, args.Arg(1));
+	}
+
+	// If this is class name does not have an entity factory, complain to the
+	// client
+	if (!CanCreateEntityClass(pszClassName))
+	{
+		ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, UTIL_VarArgs("ent_create: Unknown entity \"%s\"\n", args.Arg(1)));
+		return;
+	}
+	
 	// Try to create entity
-	CBaseEntity *entity = dynamic_cast< CBaseEntity * >( CreateEntityByName(args[1]) );
+	CBaseEntity *entity = dynamic_cast< CBaseEntity * >( CreateEntityByName(pszClassName) );
 	if (entity)
 	{
 		if ( entity->IsPlayer() )
@@ -8465,7 +8583,7 @@ void CC_Ent_Create( const CCommand& args )
 	}
 	CBaseEntity::SetAllowPrecache( allowPrecache );
 }
-static ConCommand ent_create("ent_create", CC_Ent_Create, "Creates an entity of the given type where the player is looking.", FCVAR_GAMEDLL | FCVAR_CHEAT);
+static ConCommand ent_create("ent_create", CC_Ent_Create, "Creates an entity of the given type where the player is looking.", FCVAR_GAMEDLL | FCVAR_CHEAT, EntCreateAutocomplete);
 
 //------------------------------------------------------------------------------
 // Purpose: Teleport a specified entity to where the player is looking

@@ -45,6 +45,7 @@ public:
 	virtual void	DoPostScreenSpaceEffects( const CViewSetup *pSetup );
 	virtual void SDK_CloseAllWindows();
 	virtual void SDK_CloseAllWindowsFrom(vgui::Panel* pPanel);	
+	virtual int		KeyInput(int down, ButtonCode_t keynum, const char *pszCurrentBinding);
 };
 
 extern IClientMode *GetClientModeNormal();

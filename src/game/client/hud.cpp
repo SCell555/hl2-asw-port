@@ -757,11 +757,14 @@ void CHud::AddHudElement( CHudElement *pHudElement )
 	// Add the hud element to the end of the array
 	GetHudList().AddToTail( pHudElement );
 
-	vgui::Panel *pPanel = dynamic_cast< vgui::Panel * >( pHudElement );
-	if ( !pPanel )
+	vgui::Panel *pPanel;
+
+	pPanel = dynamic_cast< vgui::Panel * >(pHudElement);
+	if (!pPanel)
 	{
-		Error( "All hud elements must derive from vgui::Panel * (%s)\n", pHudElement->GetName() );
+		Error("All hud elements must derive from vgui::Panel * (%s)\n", pHudElement->GetName());
 	}
+	
 	
 	GetHudPanelList().AddToTail( pPanel );
 
@@ -775,7 +778,9 @@ void CHud::AddHudElement( CHudElement *pHudElement )
 void CHud::RemoveHudElement( CHudElement *pHudElement ) 
 {
 	GetHudList().FindAndRemove( pHudElement );
-	GetHudPanelList().FindAndRemove( dynamic_cast< vgui::Panel * >( pHudElement ) );
+	
+	GetHudPanelList().FindAndRemove(dynamic_cast< vgui::Panel * >(pHudElement));
+	
 }
 
 //-----------------------------------------------------------------------------

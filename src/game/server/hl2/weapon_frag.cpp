@@ -82,6 +82,8 @@ END_DATADESC()
 acttable_t	CWeaponFrag::m_acttable[] = 
 {
 	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SLAM, true },
+	{ ACT_IDLE,			 ACT_IDLE_GRENADE, true		}
+
 };
 
 IMPLEMENT_ACTTABLE(CWeaponFrag);

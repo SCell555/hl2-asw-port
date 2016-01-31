@@ -136,7 +136,11 @@ void CHL2_Background_Movie::Update()
 		if ( nGameState != m_nLastGameState )
 		{
 			// todo: whats this? [str]
-#ifdef ASW_BINK_MOVIES
+#ifdef UI_USING_RANDOMMENUMOVIES
+			int nMovieIndex = 0;
+			nMovieIndex = random->RandomInt(0, ARRAYSIZE(g_ppszRandomMenuMovies)-1); 
+			SetCurrentMovie( g_ppszRandomMenuMovies[nMovieIndex] );
+#elif ASW_BINK_MOVIES
 			SetCurrentMovie( "media/BGFX_01.bik" );
 #else
 			SetCurrentMovie( "media/test.avi" );
@@ -151,7 +155,7 @@ void CHL2_Background_Movie::Update()
 		{
 #ifdef UI_USING_RANDOMMENUMOVIES
 			int nMovieIndex = 0;
-			nMovieIndex = random->RandomInt(0, ARRAYSIZE(g_ppszRandomMenuMovies)); 
+			nMovieIndex = random->RandomInt(0, ARRAYSIZE(g_ppszRandomMenuMovies)-1); 
 			SetCurrentMovie( g_ppszRandomMenuMovies[nMovieIndex] );
 #else
 #ifdef ASW_BINK_MOVIES

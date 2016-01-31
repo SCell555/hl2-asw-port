@@ -33,6 +33,7 @@ public:
 
 	DISPATCHFUNCTION	factory;
 	int					size;
+	
 private:
 	char				mapname[ 40 ];
 };
@@ -102,15 +103,15 @@ C_BaseEntity *CClassMap::CreateEntity( const char *mapname )
 		if ( Q_stricmp( lookup->GetMapName(), mapname ) )
 			continue;
 
-		if ( !lookup->factory )
+
+		if (!lookup->factory)
 		{
 #if defined( _DEBUG )
-			Msg( "No factory for %s/%s\n", lookup->GetMapName(), m_ClassDict.GetElementName( i ) );
+			Msg("No factory for %s/%s\n", lookup->GetMapName(), m_ClassDict.GetElementName(i));
 #endif
 			continue;
 		}
-
-		return ( *lookup->factory )();
+		return (*lookup->factory)();
 	}
 
 	return NULL;

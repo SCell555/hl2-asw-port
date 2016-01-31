@@ -277,12 +277,12 @@ void CHalfLife2::CreateStandardEntities( void )
 
 CHalfLife2::CHalfLife2()
 {
-	Msg("C_HalfLife2 created\n");
+	DevMsg("C_HalfLife2 created\n");
 }
 
 CHalfLife2::~CHalfLife2()
 {
-	Msg("C_HalfLife2 destroyed\n");
+	DevMsg("C_HalfLife2 destroyed\n");
 }
 
 #else
@@ -309,7 +309,7 @@ CHalfLife2::~CHalfLife2()
 	//-----------------------------------------------------------------------------
 	CHalfLife2::CHalfLife2()
 	{
-		Msg("CHalfLife2 created\n");
+		DevMsg("CHalfLife2 created\n");
 
 		m_bMegaPhysgun = false;
 		
@@ -319,7 +319,7 @@ CHalfLife2::~CHalfLife2()
 
 	CHalfLife2::~CHalfLife2()
 	{
-		Msg("CHalfLife2 destroyed\n");
+		DevMsg("CHalfLife2 destroyed\n");
 	}
 
 	//-----------------------------------------------------------------------------

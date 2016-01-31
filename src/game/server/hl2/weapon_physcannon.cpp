@@ -1007,6 +1007,10 @@ void CPlayerPickupController::Init( CBasePlayer *pPlayer, CBaseEntity *pObject )
 	// Holster player's weapon
 	if ( pPlayer->GetActiveWeapon() )
 	{
+		//Всех люблю!!! Особенно десткие пальчики :))))))))))
+		pPlayer->RestartGesture( pPlayer->Weapon_TranslateActivity( ACT_VM_HOLSTER ), true, false);
+		pPlayer->Weapon_SetActivity( pPlayer->Weapon_TranslateActivity( ACT_VM_HOLSTER),0);
+
 		if ( !pPlayer->GetActiveWeapon()->CanHolster() || !pPlayer->GetActiveWeapon()->Holster() )
 		{
 			Shutdown();
@@ -1075,6 +1079,9 @@ void CPlayerPickupController::Shutdown( bool bThrown )
 		m_pPlayer->SetUseEntity( NULL );
 		if ( m_pPlayer->GetActiveWeapon() )
 		{
+			//deal with it
+			m_pPlayer->RemoveGesture(m_pPlayer->Weapon_TranslateActivity( ACT_VM_HOLSTER ));
+
 			if ( !m_pPlayer->GetActiveWeapon()->Deploy() )
 			{
 				// We tried to restore the player's weapon, but we couldn't.

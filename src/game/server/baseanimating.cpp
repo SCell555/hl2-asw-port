@@ -32,8 +32,6 @@
 #include "collisionutils.h"
 #include "toolframework/itoolframework.h"
 
-
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -308,7 +306,7 @@ CBaseAnimating::CBaseAnimating()
 
 CBaseAnimating::~CBaseAnimating()
 {
-	Studio_DestroyBoneCache( m_boneCacheHandle );
+	Studio_DestroyBoneCache(m_boneCacheHandle);
 	delete m_pIk;
 	UnlockStudioHdr();
 	delete m_pStudioHdr;
@@ -1406,7 +1404,6 @@ bool CBaseAnimating::HasPoseParameter( int iSequence, int iParameter )
 //=========================================================
 void	CBaseAnimating::PopulatePoseParameters( void )
 {
-
 }
 
 //=========================================================
