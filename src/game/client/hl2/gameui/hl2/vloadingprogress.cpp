@@ -187,7 +187,7 @@ void LoadingProgress::PaintBackground()
 	int screenWide, screenTall;
 	surface()->GetScreenSize( screenWide, screenTall );
 
-	if ( m_bDrawBackground && m_pBGImage )
+	if ( m_bDrawBackground && m_pBGImage && m_pBGImage->GetImage() )
 	{
 		int x, y, wide, tall;
 		m_pBGImage->GetBounds( x, y, wide, tall );

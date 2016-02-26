@@ -15,34 +15,34 @@
 #define CONSTBOXEXTENT_LIGHT 1000
 #define CONSTBOXEXTENT_COL 500
 
-static ConVar gcluster_objectsPerHint( "grasscluster_objects_per_hint", "8" );
+static ConVar gcluster_objectsPerHint( "grasscluster_objects_per_hint", "5" );
 static ConVar gcluster_debug( "grasscluster_debug", "0" );
 static ConVar gcluster_enable( "grasscluster_enable", "1" );
 static ConVar gcluster_enable_flashlight( "grasscluster_enable_flashlightSupport", "1" );
-static ConVar gcluster_enable_morph( "grasscluster_enable_morph", "1" );
+static ConVar gcluster_enable_morph( "grasscluster_enable_morph", "0" );
 static ConVar gcluster_cullDist( "grasscluster_cullDist", "4096" );
 
 static ConVar gcluster_LOD_enable( "grasscluster_LOD_enable", "1" );
 static ConVar gcluster_LOD_transitionDist( "grasscluster_LOD_transitionDist", "2048" );
 static ConVar gcluster_LOD_objects_per_hint( "grasscluster_LOD_objects_per_hint", "1" );
 
-static ConVar gcluster_grass_height_small_min( "grasscluster_grass_height_small_min", "20" );
-static ConVar gcluster_grass_height_small_max( "grasscluster_grass_height_small_max", "30" );
-static ConVar gcluster_grass_height_med_min( "grasscluster_grass_height_med_min", "30" );
-static ConVar gcluster_grass_height_med_max( "grasscluster_grass_height_med_max", "50" );
-static ConVar gcluster_grass_height_huge_min( "grasscluster_grass_height_huge_min", "50" );
-static ConVar gcluster_grass_height_huge_max( "grasscluster_grass_height_huge_max", "70" );
+static ConVar gcluster_grass_height_small_Min( "grasscluster_grass_height_small_Min", "8" );
+static ConVar gcluster_grass_height_small_max( "grasscluster_grass_height_small_max", "12" );
+static ConVar gcluster_grass_height_med_Min( "grasscluster_grass_height_med_Min", "10" );
+static ConVar gcluster_grass_height_med_max( "grasscluster_grass_height_med_max", "15" );
+static ConVar gcluster_grass_height_huge_Min( "grasscluster_grass_height_huge_Min", "12" );
+static ConVar gcluster_grass_height_huge_max( "grasscluster_grass_height_huge_max", "25" );
 
-static ConVar gcluster_grass_width_small_min( "grasscluster_grass_width_small_min", "25" );
-static ConVar gcluster_grass_width_small_max( "grasscluster_grass_width_small_max", "35" );
-static ConVar gcluster_grass_width_med_min( "grasscluster_grass_width_med_min", "40" );
-static ConVar gcluster_grass_width_med_max( "grasscluster_grass_width_med_max", "60" );
-static ConVar gcluster_grass_width_huge_min( "grasscluster_grass_width_huge_min", "60" );
-static ConVar gcluster_grass_width_huge_max( "grasscluster_grass_width_huge_max", "80" );
+static ConVar gcluster_grass_width_small_Min( "grasscluster_grass_width_small_Min", "10" );
+static ConVar gcluster_grass_width_small_max( "grasscluster_grass_width_small_max", "15" );
+static ConVar gcluster_grass_width_med_Min( "grasscluster_grass_width_med_Min", "15" );
+static ConVar gcluster_grass_width_med_max( "grasscluster_grass_width_med_max", "20" );
+static ConVar gcluster_grass_width_huge_Min( "grasscluster_grass_width_huge_Min", "20" );
+static ConVar gcluster_grass_width_huge_max( "grasscluster_grass_width_huge_max", "30" );
 
 static ConVar gcluster_clusterMaxQuads( "grasscluster_grass_clusterMaxQuads", "-1" );
 
-static ConVar gcluster_grass_type_huge_oddness( "grasscluster_grass_type_huge_oddness", "20" );
+static ConVar gcluster_grass_type_huge_oddness( "grasscluster_grass_type_huge_oddness", "17" );
 static ConVar gcluster_grass_type_small_oddness( "grasscluster_grass_type_small_oddness", "2" );
 
 static ConVar gcluster_grass_meadow_scale( "grasscluster_grass_meadow_scale", "1" );
@@ -52,11 +52,11 @@ static ConVar gcluster_grass_wind_strength( "grasscluster_grass_wind_strength", 
 
 static ConVar gcluster_sprite_index( "grasscluster_sprite_index", "0" );
 
-static ConVar gcluster_grass_morph_delay( "grasscluster_grass_meadow_morph_delay", "5" );
+static ConVar gcluster_grass_morph_delay( "grasscluster_grass_meadow_morph_delay", "1" );
 static ConVar gcluster_grass_morph_framelag( "grasscluster_grass_meadow_morph_framelag", "0.1" );
 static ConVar gcluster_grass_morph_speed( "grasscluster_grass_meadow_morph_speed", "1" );
 
-static ConVar gcluster_grass_terrain_offset_min( "grasscluster_grass_terrain_offset_min", "20" );
+static ConVar gcluster_grass_terrain_offset_Min( "grasscluster_grass_terrain_offset_Min", "20" );
 static ConVar gcluster_grass_terrain_offset_exp( "grasscluster_grass_terrain_offset_exp", "0.5" );
 static ConVar gcluster_grass_terrain_offset_multi( "grasscluster_grass_terrain_offset_multi", "2" );
 
@@ -77,9 +77,9 @@ CON_COMMAND( grasscluster_flush, "" )
 
 CON_COMMAND( grasscluster_preset_density_high, "" )
 {
-	gcluster_grass_type_huge_oddness.Revert();
-	gcluster_objectsPerHint.Revert();
-	gcluster_LOD_objects_per_hint.Revert();
+	gcluster_grass_type_huge_oddness.SetValue(20);
+	gcluster_objectsPerHint.SetValue(2);
+	gcluster_LOD_objects_per_hint.SetValue(1);
 	gcluster_cullDist.Revert();
 	CGrassClusterManager::GetInstance()->ClearClusterData();
 }
@@ -102,87 +102,87 @@ CON_COMMAND( grasscluster_preset_density_low, "" )
 
 CON_COMMAND( grasscluster_preset_height_monstrous, "" )
 {
-	gcluster_grass_height_small_min.SetValue( 50 );
+	gcluster_grass_height_small_Min.SetValue( 50 );
 	gcluster_grass_height_small_max.SetValue( 60 );
-	gcluster_grass_height_med_min.SetValue( 80 );
+	gcluster_grass_height_med_Min.SetValue( 80 );
 	gcluster_grass_height_med_max.SetValue( 95 );
-	gcluster_grass_height_huge_min.SetValue( 100 );
+	gcluster_grass_height_huge_Min.SetValue( 100 );
 	gcluster_grass_height_huge_max.SetValue( 130 );
 
-	gcluster_grass_width_small_min.SetValue( 60 );
+	gcluster_grass_width_small_Min.SetValue( 60 );
 	gcluster_grass_width_small_max.SetValue( 70 );
-	gcluster_grass_width_med_min.SetValue( 85 );
+	gcluster_grass_width_med_Min.SetValue( 85 );
 	gcluster_grass_width_med_max.SetValue( 100 );
-	gcluster_grass_width_huge_min.SetValue( 110 );
+	gcluster_grass_width_huge_Min.SetValue( 110 );
 	gcluster_grass_width_huge_max.SetValue( 140 );
 	CGrassClusterManager::GetInstance()->ClearClusterData();
 }
 CON_COMMAND( grasscluster_preset_height_high, "" )
 {
-	gcluster_grass_height_small_min.SetValue( gcluster_grass_height_small_min.GetDefault() );
-	gcluster_grass_height_small_max.SetValue( gcluster_grass_height_small_max.GetDefault() );
-	gcluster_grass_height_med_min.SetValue( gcluster_grass_height_med_min.GetDefault() );
-	gcluster_grass_height_med_max.SetValue( gcluster_grass_height_med_max.GetDefault() );
-	gcluster_grass_height_huge_min.SetValue( gcluster_grass_height_huge_min.GetDefault() );
-	gcluster_grass_height_huge_max.SetValue( gcluster_grass_height_huge_max.GetDefault() );
+	gcluster_grass_height_small_Min.SetValue(20);
+	gcluster_grass_height_small_max.SetValue(30);
+	gcluster_grass_height_med_Min.SetValue(30);
+	gcluster_grass_height_med_max.SetValue(50);
+	gcluster_grass_height_huge_Min.SetValue(50);
+	gcluster_grass_height_huge_max.SetValue(70);
 
-	gcluster_grass_width_small_min.SetValue( gcluster_grass_width_small_min.GetDefault() );
-	gcluster_grass_width_small_max.SetValue( gcluster_grass_width_small_max.GetDefault() );
-	gcluster_grass_width_med_min.SetValue( gcluster_grass_width_med_min.GetDefault() );
-	gcluster_grass_width_med_max.SetValue( gcluster_grass_width_med_max.GetDefault() );
-	gcluster_grass_width_huge_min.SetValue( gcluster_grass_width_huge_min.GetDefault() );
-	gcluster_grass_width_huge_max.SetValue( gcluster_grass_width_huge_max.GetDefault() );
+	gcluster_grass_width_small_Min.SetValue(25);
+	gcluster_grass_width_small_max.SetValue(35);
+	gcluster_grass_width_med_Min.SetValue(40);
+	gcluster_grass_width_med_max.SetValue(60);
+	gcluster_grass_width_huge_Min.SetValue(60);
+	gcluster_grass_width_huge_max.SetValue(80);
 	CGrassClusterManager::GetInstance()->ClearClusterData();
 }
 CON_COMMAND( grasscluster_preset_height_med, "" )
 {
-	gcluster_grass_height_small_min.SetValue( 10 );
+	gcluster_grass_height_small_Min.SetValue( 10 );
 	gcluster_grass_height_small_max.SetValue( 15 );
-	gcluster_grass_height_med_min.SetValue( 15 );
+	gcluster_grass_height_med_Min.SetValue( 15 );
 	gcluster_grass_height_med_max.SetValue( 30 );
-	gcluster_grass_height_huge_min.SetValue( 25 );
+	gcluster_grass_height_huge_Min.SetValue( 25 );
 	gcluster_grass_height_huge_max.SetValue( 45 );
 
-	gcluster_grass_width_small_min.SetValue( 15 );
+	gcluster_grass_width_small_Min.SetValue( 15 );
 	gcluster_grass_width_small_max.SetValue( 20 );
-	gcluster_grass_width_med_min.SetValue( 20 );
+	gcluster_grass_width_med_Min.SetValue( 20 );
 	gcluster_grass_width_med_max.SetValue( 35 );
-	gcluster_grass_width_huge_min.SetValue( 30 );
+	gcluster_grass_width_huge_Min.SetValue( 30 );
 	gcluster_grass_width_huge_max.SetValue( 50 );
 	CGrassClusterManager::GetInstance()->ClearClusterData();
 }
 CON_COMMAND( grasscluster_preset_height_low, "" )
 {
-	gcluster_grass_height_small_min.SetValue( 8 );
+	gcluster_grass_height_small_Min.SetValue( 8 );
 	gcluster_grass_height_small_max.SetValue( 12 );
-	gcluster_grass_height_med_min.SetValue( 10 );
+	gcluster_grass_height_med_Min.SetValue( 10 );
 	gcluster_grass_height_med_max.SetValue( 15 );
-	gcluster_grass_height_huge_min.SetValue( 12 );
+	gcluster_grass_height_huge_Min.SetValue( 12 );
 	gcluster_grass_height_huge_max.SetValue( 25 );
 
-	gcluster_grass_width_small_min.SetValue( 10 );
+	gcluster_grass_width_small_Min.SetValue( 10 );
 	gcluster_grass_width_small_max.SetValue( 15 );
-	gcluster_grass_width_med_min.SetValue( 15 );
+	gcluster_grass_width_med_Min.SetValue( 15 );
 	gcluster_grass_width_med_max.SetValue( 20 );
-	gcluster_grass_width_huge_min.SetValue( 20 );
+	gcluster_grass_width_huge_Min.SetValue( 20 );
 	gcluster_grass_width_huge_max.SetValue( 30 );
 	CGrassClusterManager::GetInstance()->ClearClusterData();
 }
 
 CON_COMMAND( grasscluster_preset_meadow_ultra, "" )
 {
-	gcluster_grass_height_small_min.SetValue( 8 );
+	gcluster_grass_height_small_Min.SetValue( 8 );
 	gcluster_grass_height_small_max.SetValue( 12 );
-	gcluster_grass_height_med_min.SetValue( 10 );
+	gcluster_grass_height_med_Min.SetValue( 10 );
 	gcluster_grass_height_med_max.SetValue( 15 );
-	gcluster_grass_height_huge_min.SetValue( 12 );
+	gcluster_grass_height_huge_Min.SetValue( 12 );
 	gcluster_grass_height_huge_max.SetValue( 25 );
 
-	gcluster_grass_width_small_min.SetValue( 10 );
+	gcluster_grass_width_small_Min.SetValue( 10 );
 	gcluster_grass_width_small_max.SetValue( 15 );
-	gcluster_grass_width_med_min.SetValue( 15 );
+	gcluster_grass_width_med_Min.SetValue( 15 );
 	gcluster_grass_width_med_max.SetValue( 20 );
-	gcluster_grass_width_huge_min.SetValue( 20 );
+	gcluster_grass_width_huge_Min.SetValue( 20 );
 	gcluster_grass_width_huge_max.SetValue( 30 );
 
 	gcluster_grass_type_huge_oddness.SetValue( 100 );
@@ -322,7 +322,7 @@ void _grassClusterData::Destroy()
 int _grassClusterData::Draw()
 {
 	const bool bDrawLOD = pLOD != NULL &&
-		(MainViewOrigin() - pos).LengthSqr() > iNextLodThreshold;
+		(MainViewOrigin(0) - pos).LengthSqr() > iNextLodThreshold;
 
 	if ( bDrawLOD )
 		return pLOD->Draw();
@@ -380,7 +380,7 @@ void _grassClusterData::CreateLightingPatch( const CUtlVector< _grassClusterInfo
 
 			light.Init( 0, 0, 0 );
 			int l = 0;
-			for ( ; l < min( localHints.Count(), 20 ); l++ )
+			for ( ; l < Min( localHints.Count(), 20 ); l++ )
 				light += localHints[l].color.AsVector3D();
 
 			if ( l )
@@ -388,7 +388,7 @@ void _grassClusterData::CreateLightingPatch( const CUtlVector< _grassClusterInfo
 
 			//Vector sample = FetchLightSamples( pos + Vector( 0, 0, 40 ) );
 			//for ( int i = 0; i < 3; i++ )
-			//	light[i] = min( light[i], sample[i] );
+			//	light[i] = Min( light[i], sample[i] );
 			//light = ( light +  ) * 0.5f;
 
 			float intensity = (light.x+light.y+light.z) * 0.333334f;
@@ -421,11 +421,11 @@ const Vector _grassClusterData::GetLightingForPoint( const Vector &pos )
 	float interp_x = clamp( ( delta_x - x0 * flLPatchStep_x ) / flLPatchStep_x, 0, 1 );
 	float interp_y = clamp( ( delta_y - y0 * flLPatchStep_y ) / flLPatchStep_y, 0, 1 );
 
-	x0 = max( 0, min( x0, iLPatchSize_x - 2 ) );
-	y0 = max( 0, min( y0, iLPatchSize_y - 2 ) );
+	x0 = Max( 0, Min( x0, iLPatchSize_x - 2 ) );
+	y0 = Max( 0, Min( y0, iLPatchSize_y - 2 ) );
 
-	int x1 = min( x0 + 1, iLPatchSize_x - 1 );
-	int y1 = min( y0 + 1, iLPatchSize_y - 1 );
+	int x1 = Min( x0 + 1, iLPatchSize_x - 1 );
+	int y1 = Min( y0 + 1, iLPatchSize_y - 1 );
 
 	Assert( x1 + iLPatchSize_x * y1 < iLPatchSize_x * iLPatchSize_y );
 
@@ -497,7 +497,7 @@ IMaterialVar *clusterMaterial::GetVarAng()
 }
 
 
-void ReleaseGrassCluster()
+void ReleaseGrassCluster(int)
 {
 	CGrassClusterManager::GetInstance()->ClearClusterData();
 }
@@ -555,6 +555,8 @@ IMaterial *CGrassClusterManager::GetActiveMaterial()
 
 void CGrassClusterManager::LevelInitPostEntity()
 {
+	gcluster_sprite_index.SetValue(random->RandomInt(0, iSpriteMaterialCount - 1));
+
 	delete [] m_refMaterials;
 	m_refMaterials = new clusterMaterial[ iSpriteMaterialCount ];
 
@@ -656,7 +658,7 @@ void CGrassClusterManager::PostRender()
 			efficiency_avg = numQuads / (float)m_hClusterData.Count() / m_iDrawnPerDrawcall * 100.0f;
 
 		engine->Con_NPrintf( 13, "current efficiency: %3.1f%% // average efficiency: %3.1f%%", efficiency_cur, efficiency_avg );
-		engine->Con_NPrintf( 14, "engine max quads: %i // cluster max quads: %i", m_iDrawnEngineMax, m_iDrawnPerDrawcall );
+		engine->Con_NPrintf( 14, "engine Max quads: %i // cluster Max quads: %i", m_iDrawnEngineMax, m_iDrawnPerDrawcall );
 
 		engine->Con_NPrintf( 16, "morphing took: %3.3f msec", m_flMorphTime );
 	}
@@ -693,7 +695,7 @@ void CGrassClusterManager::RenderClusters( bool bShadowDepth )
 		vOverride.m_fDistToAreaPortalTolerance = FLT_MAX;
 		render->BuildWorldLists( pWorldRenderList, pListInfo, -1, &vOverride );
 
-		ClientLeafSystem()->EnumerateShadowsInLeaves( pListInfo->m_LeafCount, pListInfo->m_pLeafList, &enumList );
+		ClientLeafSystem()->EnumerateShadowsInLeaves( pListInfo->m_LeafCount, pListInfo->m_pLeafDataList, &enumList );
 		for ( int i = 0; i < enumList.shadowList.Count(); i++ )
 			flashlightFrusta.AddToTail( shadowmgr->GetFlashlightFrustum( enumList.shadowList[i] ) );
 
@@ -769,7 +771,7 @@ void CGrassClusterManager::RenderClusters( bool bShadowDepth )
 
 			for ( int c = 0; c < m_hClusterData.Count(); c++ )
 			{
-				if ( R_CullBox( m_hClusterData[c].extents_min, m_hClusterData[c].extents_max, flashlightFrusta[i] ) )
+				if ( flashlightFrusta[i].CullBox(m_hClusterData[c].extents_min, m_hClusterData[c].extents_max) )
 					continue;
 
 				//m_hClusterData[ c ].pGrassMesh->Draw();
@@ -832,8 +834,8 @@ void CGrassClusterManager::UpdateMorphInfo()
 		}
 	}
 
-	float flGrassColScale = ( gcluster_grass_width_med_min.GetFloat() +
-		( gcluster_grass_width_med_max.GetFloat() - gcluster_grass_width_med_min.GetFloat() ) * 0.5f ) / 50.0f;
+	float flGrassColScale = ( gcluster_grass_width_med_Min.GetFloat() +
+		( gcluster_grass_width_med_max.GetFloat() - gcluster_grass_width_med_Min.GetFloat() ) * 0.5f ) / 50.0f;
 	flGrassColScale = clamp( flGrassColScale, 0.3f, 1.6f );
 
 	C_BasePlayer *pLocal = C_BasePlayer::GetLocalPlayer();
@@ -881,7 +883,7 @@ void CGrassClusterManager::UpdateMorphInfo()
 			pEnt->GetClientVehicle() != NULL )
 			colMax *= 0.25f;
 
-		const float flBoundsSqr = max( 1500, colMax.LengthSqr() * flGrassColScale );
+		const float flBoundsSqr = Max( 1500.0f, colMax.LengthSqr() * flGrassColScale );
 		const float flLenSqr = vVel.LengthSqr();
 
 		if ( flLenSqr < 10 )
@@ -1014,7 +1016,7 @@ void CGrassClusterManager::GenerateClusterData()
 	int maxQuads = m_iDrawnEngineMax;
 
 	if ( gcluster_clusterMaxQuads.GetInt() > 0 )
-		maxQuads = min( maxQuads, gcluster_clusterMaxQuads.GetInt() );
+		maxQuads = Min( maxQuads, gcluster_clusterMaxQuads.GetInt() );
 
 	int maxClusterHints = maxQuads / ( 3 * m_iCurObjectsPerHint );
 
@@ -1044,7 +1046,7 @@ void CGrassClusterManager::GenerateClusterData()
 		hClusterInfoLocal.Sort( GrassInfoSort );
 
 		hClusterInfoSorted.Purge();
-		int count = min( maxClusterHints, hClusterInfoLocal.Count() );
+		int count = Min( maxClusterHints, hClusterInfoLocal.Count() );
 		for ( int i = 0; i < count; i++ )
 		{
 			hClusterInfoSorted.AddToTail( hClusterInfoLocal[i] );
@@ -1105,7 +1107,7 @@ void CGrassClusterManager::GenerateClusterData()
 		if ( gcluster_LOD_enable.GetInt() )
 		{
 			_grassClusterData *dataLOD = new _grassClusterData();
-			BuildClusterMesh( *dataLOD, hClusterInfoSorted, min( m_iCurObjectsPerHint, gcluster_LOD_objects_per_hint.GetInt() ) );
+			BuildClusterMesh( *dataLOD, hClusterInfoSorted, Min( m_iCurObjectsPerHint, gcluster_LOD_objects_per_hint.GetInt() ) );
 			dataLOD->pos = avgPos;
 			data.iNextLodThreshold = gcluster_LOD_transitionDist.GetInt() * gcluster_LOD_transitionDist.GetInt();
 			data.pLOD = dataLOD;
@@ -1170,10 +1172,10 @@ void CGrassClusterManager::BuildClusterMesh( _grassClusterData &data, const CUtl
 	data.extents_max = hints[0].orig;
 	for ( int i = 1; i < hintCount; i++ )
 		for ( int v = 0; v < 3; v++ )
-			data.extents_min[v] = min( data.extents_min[v], hints[i].orig[v] );
+			data.extents_min[v] = Min( data.extents_min[v], hints[i].orig[v] );
 	for ( int i = 1; i < hintCount; i++ )
 		for ( int v = 0; v < 3; v++ )
-			data.extents_max[v] = max( data.extents_max[v], hints[i].orig[v] );
+			data.extents_max[v] = Max( data.extents_max[v], hints[i].orig[v] );
 	data.extents_max.z += 60;
 	data.extents_min -= Vector( 40, 40, 40 );
 	data.extents_max += Vector( 40, 40, 40 );
@@ -1182,7 +1184,7 @@ void CGrassClusterManager::BuildClusterMesh( _grassClusterData &data, const CUtl
 	CMeshBuilder pMeshBuilder;
 
 	VertexFormat_t format = VERTEX_POSITION | VERTEX_NORMAL | VERTEX_COLOR |
-		VERTEX_FORMAT_VERTEX_SHADER | VERTEX_TEXCOORD_SIZE( 0, 2 ) | VERTEX_TEXCOORD_SIZE( 1, 3 ) | VERTEX_TEXCOORD_SIZE( 2, 3 );
+		 VERTEX_TEXCOORD_SIZE( 0, 2 ) | VERTEX_TEXCOORD_SIZE( 1, 3 ) | VERTEX_TEXCOORD_SIZE( 2, 3 );
 	IMesh *pMesh = pRenderContext->CreateStaticMesh( format, TEXTURE_GROUP_OTHER, GetActiveMaterial() );
 	Assert( pMesh );
 
@@ -1230,8 +1232,8 @@ void CGrassClusterManager::BuildSingleGrassObject( CMeshBuilder &builder, _grass
 
 	const float ranExp = gcluster_grass_terrain_offset_exp.GetFloat();
 
-	const float min_Dist = gcluster_grass_terrain_offset_min.GetFloat();
-	const float max_Dist = max( min_Dist, avgDist ) * gcluster_grass_terrain_offset_multi.GetFloat();
+	const float Min_Dist = gcluster_grass_terrain_offset_Min.GetFloat();
+	const float max_Dist = Max( Min_Dist, avgDist ) * gcluster_grass_terrain_offset_multi.GetFloat();
 	const float maxAng = cos( DEG2RAD( 60.0f ) );
 
 	int attempts = 0;
@@ -1244,8 +1246,8 @@ void CGrassClusterManager::BuildSingleGrassObject( CMeshBuilder &builder, _grass
 		orient.z += RandomFloat( 0, 360.0f );
 		AngleVectors( orient, NULL, &right, &up );
 		//VectorVectors( normal, right, up );
-		right *= RandomFloatExp( min_Dist, max_Dist, ranExp ) * (RandomInt(0,1)?-1:1);
-		up *= RandomFloatExp( min_Dist, max_Dist, ranExp ) * (RandomInt(0,1)?-1:1);
+		right *= RandomFloatExp( Min_Dist, max_Dist, ranExp ) * (RandomInt(0,1)?-1:1);
+		up *= RandomFloatExp( Min_Dist, max_Dist, ranExp ) * (RandomInt(0,1)?-1:1);
 
 		Vector tr_start = hint.orig + normal, tr_end = hint.orig + normal * 50;
 		UTIL_TraceLine( tr_start, tr_end, MASK_ALL, &filter, &tr );
@@ -1266,17 +1268,17 @@ void CGrassClusterManager::BuildSingleGrassObject( CMeshBuilder &builder, _grass
 		break;
 	}
 
-	Assert( attempts < maxAttempts );
+	Assert( attempts <= maxAttempts );
 
 	const bool bSmall = !RandomInt( 0, gcluster_grass_type_small_oddness.GetInt() );
 	const bool bHuge = !RandomInt( 0, gcluster_grass_type_huge_oddness.GetInt() );
-	const float flSize_up = bHuge ?		RandomFloat( gcluster_grass_height_huge_min.GetFloat(), gcluster_grass_height_huge_max.GetFloat() )	:	
-		bSmall ?	RandomFloat( gcluster_grass_height_small_min.GetFloat(), gcluster_grass_height_small_max.GetFloat() ) : 
-		RandomFloat( gcluster_grass_height_med_min.GetFloat(), gcluster_grass_height_med_max.GetFloat() );
+	const float flSize_up = bHuge ?		RandomFloat( gcluster_grass_height_huge_Min.GetFloat(), gcluster_grass_height_huge_max.GetFloat() )	:	
+		bSmall ?	RandomFloat( gcluster_grass_height_small_Min.GetFloat(), gcluster_grass_height_small_max.GetFloat() ) : 
+		RandomFloat( gcluster_grass_height_med_Min.GetFloat(), gcluster_grass_height_med_max.GetFloat() );
 
-	const float flSize_side = bHuge ?		RandomFloat( gcluster_grass_width_huge_min.GetFloat(), gcluster_grass_width_huge_max.GetFloat() )	:	
-		bSmall ?	RandomFloat( gcluster_grass_width_small_min.GetFloat(), gcluster_grass_width_small_max.GetFloat() ) : 
-		RandomFloat( gcluster_grass_width_med_min.GetFloat(), gcluster_grass_width_med_max.GetFloat() );
+	const float flSize_side = bHuge ?		RandomFloat( gcluster_grass_width_huge_Min.GetFloat(), gcluster_grass_width_huge_max.GetFloat() )	:	
+		bSmall ?	RandomFloat( gcluster_grass_width_small_Min.GetFloat(), gcluster_grass_width_small_max.GetFloat() ) : 
+		RandomFloat( gcluster_grass_width_med_Min.GetFloat(), gcluster_grass_width_med_max.GetFloat() );
 
 	if ( pMorphInfo != NULL )
 	{
@@ -1302,7 +1304,7 @@ void CGrassClusterManager::BuildSingleGrassObject( CMeshBuilder &builder, _grass
 	{
 		//col = FetchLightSamples( orig ) * 1.4f; //engine->GetLightForPoint( orig, false );
 		//for ( int i = 0; i < 3; i++ )
-		//	col[i] = min( col[i], hint.color[i] );
+		//	col[i] = Min( col[i], hint.color[i] );
 		//col = ( col + hint.color.AsVector3D() * 1.5f ) * 0.5f;
 		//col = clusterData.GetLightingForPoint( orig );
 		//AverageColor.Init( col.x, col.y, col.z, 1 );

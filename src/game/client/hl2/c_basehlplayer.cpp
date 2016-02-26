@@ -11,6 +11,7 @@
 #include "c_ai_basenpc.h"
 #include "in_buttons.h"
 #include "collisionutils.h"
+#include "ShaderEditor/ShaderEditorSystem.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -71,6 +72,7 @@ C_BaseHLPlayer::C_BaseHLPlayer()
 	m_flZoomRate		= 0.0f;
 	m_flZoomStartTime	= 0.0f;
 	m_flSpeedMod		= cl_forwardspeed.GetFloat();
+	m_bLastNVState		= false;
 }
 
 void C_BaseHLPlayer::Spawn()
@@ -91,6 +93,20 @@ void C_BaseHLPlayer::OnDataChanged( DataUpdateType_t updateType )
 	}
 
 	BaseClass::OnDataChanged( updateType );
+}
+
+void C_BaseHLPlayer::Think()
+{
+	if ( m_bLastNVState != m_HL2Local.m_bIsNightVisionOn )
+	{
+		m_bLastNVState = m_HL2Local.m_bIsNightVisionOn;
+
+		engine->ClientCmd("sedit_debug_toggle_ppe ppe_night");
+		DevMsg("toggled nightvision.\n");
+		//g_ShaderEditorSystem->SetPPEEnabled("ppe_night", m_bLastNVState);
+	}
+
+	BaseClass::Think();
 }
 
 //-----------------------------------------------------------------------------

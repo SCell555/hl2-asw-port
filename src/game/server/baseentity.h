@@ -1760,7 +1760,7 @@ private:
 // Methods shared by client and server
 public:
 	void							SetSize( const Vector &vecMin, const Vector &vecMax ); // UTIL_SetSize( this, mins, maxs );
-	static int						PrecacheModel( const char *name ); 
+	static int						PrecacheModel( const char *name, bool bPreload = true );
 	static bool						PrecacheSound( const char *name );
 	static void						PrefetchSound( const char *name );
 	void							Remove( ); // UTIL_Remove( this );

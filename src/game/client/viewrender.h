@@ -75,6 +75,7 @@ enum view_id_t
 	VIEW_INTRO_PLAYER = 5,
 	VIEW_INTRO_CAMERA = 6,
 	VIEW_SHADOW_DEPTH_TEXTURE = 7,
+	VIEW_SSAO = 8,
 	VIEW_ID_COUNT
 };
 view_id_t CurrentViewID();
@@ -234,7 +235,7 @@ protected:
 	void			DrawWorld( float waterZAdjust );
 
 	// Draws all opaque/translucent renderables in leaves that were rendered
-	void			DrawOpaqueRenderables( bool bShadowDepth );
+	void			DrawOpaqueRenderables( bool bShadowDepth, bool bSSAO = false );
 	void			DrawTranslucentRenderables( bool bInSkybox, bool bShadowDepth );
 
 	// Renders all translucent entities in the render list
@@ -442,6 +443,10 @@ protected:
 	void			ViewDrawScene( bool bDrew3dSkybox, SkyboxVisibility_t nSkyboxVisible, const CViewSetup &view, int nClearFlags, view_id_t viewID, bool bDrawViewModel = false, int baseDrawFlags = 0, ViewCustomVisibility_t *pCustomVisibility = NULL );
 
 	void			DrawMonitors( const CViewSetup &cameraView );
+
+	void			SSAO_DepthPass(const CViewSetup &viewSet);
+	void			DrawBokehDepthOfField();
+	void			SSAO_DrawResults();
 
 	bool			DrawOneMonitor( ITexture *pRenderTarget, int cameraNum, C_PointCamera *pCameraEnt, const CViewSetup &cameraView, C_BasePlayer *localPlayer, 
 						int x, int y, int width, int height );

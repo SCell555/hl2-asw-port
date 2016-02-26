@@ -20,4 +20,24 @@
 		"rt_size_x"		"256"
 		"rt_size_y"		"256"
 	}
+	"rt_02"
+	{
+		"rt_name"		"_rt_ssao_0"
+		"rt_imgformat"		"8"
+		"rt_sizemode"		"7"
+		"rt_depthmode"		"2"
+		"rt_flags"		"32780"
+		"rt_size_x"		"640"
+		"rt_size_y"		"300"
+	}
+	"rt_03"
+	{
+		"rt_name"		"_rt_ssao_1"
+		"rt_imgformat"		"8"
+		"rt_sizemode"		"7"
+		"rt_depthmode"		"2"
+		"rt_flags"		"32780"
+		"rt_size_x"		"640"
+		"rt_size_y"		"300"
+	}
 }

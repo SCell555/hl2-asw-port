@@ -1,0 +1,88 @@
+"canvas"
+{
+	"cfmt_version"		"canvasver#003"
+	"flowgraph_type"		"4"
+	"config_ppe"
+	{
+		"updatefbcopy"		"1"
+	}
+	"Nodes"
+	{
+		"Node_000"
+		{
+			"iType"		"2010"
+			"szName"		"night"
+			"pos_x"		"-267.894592"
+			"pos_y"		"-109.143272"
+			"size_x"		"80.000000"
+			"size_y"		"-17.000000"
+			"iPreview"		"0"
+			"iInline"		"1"
+			"szVMTString_num_strings"		"1"
+			"szVMTString_partial_00"		"\'EDITOR_SHADER\'\r\n{\r\n	\'$SHADERNAME\'	\'post_night\'\r\n\r\n	\'$BaseTexture\'	\'_rt_fullframefb\'\r\n}"
+		}
+		"Node_001"
+		{
+			"iType"		"2004"
+			"pos_x"		"-54.189266"
+			"pos_y"		"-64.654114"
+			"size_x"		"160.000000"
+			"size_y"		"-80.000000"
+			"iPreview"		"1"
+			"bridges"
+			{
+				"jackIn_00"
+				{
+					"iTarget_node"		"3"
+					"iTarget_jack"		"0"
+				}
+				"jackIn_01"
+				{
+					"iTarget_node"		"0"
+					"iTarget_jack"		"0"
+				}
+			}
+			"iSizingMode_Tg"		"0"
+			"iSizingMode_Src"		"0"
+			"iPushTg"		"1"
+			"iSHEETHINT_enable_tg"		"0"
+			"iSHEETHINT_enable_src"		"0"
+			"iDst_x"		"0"
+			"iDst_y"		"0"
+			"iDst_w"		"0"
+			"iDst_h"		"0"
+			"flSrcUV_x0"		"0.000000"
+			"flSrcUV_y0"		"0.000000"
+			"flSrcUV_x"		"0.000000"
+			"flSrcUV_y"		"0.000000"
+			"iSrc_w"		"0"
+			"iSrc_h"		"0"
+		}
+		"Node_002"
+		{
+			"iType"		"2002"
+			"pos_x"		"245.150787"
+			"pos_y"		"-56.377556"
+			"size_x"		"55.000000"
+			"size_y"		"-17.000000"
+			"iPreview"		"0"
+			"bridges"
+			{
+				"jackIn_00"
+				{
+					"iTarget_node"		"1"
+					"iTarget_jack"		"0"
+				}
+			}
+		}
+		"Node_003"
+		{
+			"iType"		"2001"
+			"pos_x"		"-317.393372"
+			"pos_y"		"-35.798878"
+			"size_x"		"55.000000"
+			"size_y"		"-17.000000"
+			"iPreview"		"0"
+		}
+	}
+}

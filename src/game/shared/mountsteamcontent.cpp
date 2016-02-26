@@ -9,7 +9,39 @@
 #include "KeyValues.h"
 #include "mountsteamcontent.h"
 // Andrew; grab only what we need from Open Steamworks.
-#include "Open Steamworks/SteamTypes.h"
+//#include "Open Steamworks/SteamTypes.h"
+#include "Open Steamworks\TSteamApp.h"
+#include "Open Steamworks\ESteamError.h"
+#define STEAM_MAX_PATH	(255)
+#include "Open Steamworks\TSteamError.h"
+#include "Open Steamworks\TSteamAppDependencyInfo.h"
+#include "Open Steamworks\TSteamElemInfo.h"
+#include "Open Steamworks\ESteamNotify.h"
+//HACK!!!
+class SteamCallHandle_t;
+enum ESteamBufferMethod;
+class TSteamOfflineStatus;
+typedef unsigned int SteamHandle_t;
+class TSteamProgress;
+enum ESteamSeekMethod;
+enum ESteamFindFilter;
+class TSteamAppStats;
+class TSteamSubscriptionStats;
+class TSteamSubscriptionBillingInfo;
+class TSteamSubscriptionReceipt;
+class TSteamGlobalUserID;
+class TSteamSubscription;
+class TSteamSubscriptionDiscount;
+class TSteamDiscountQualifier;
+class TSteamAppLaunchOption;
+class TSteamAppVersion;
+typedef void(*KeyValueIteratorCallback_t)(const char* key, const char* value, void* kv);
+typedef void(*SteamNotificationCallback_t)(ESteamNotify eEvent, unsigned int nData);
+class TSteamPaymentCardInfo;
+enum ESteamAppUpdateStatsQueryType;
+class TSteamUpdateStats;
+class ESteamServerType;
+typedef int unknown_ret;
 #include "Open Steamworks/ISteam006.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -19,17 +51,19 @@ bool Steam_MountSteamContent( int nExtraAppId )
 {
 	CreateInterfaceFn CreateInterface = Sys_GetFactory( "Steam.dll" );
 	if( !CreateInterface ) {
-		Error( "MountingContent: Cannot load Steam.dll\n"); return false;}
+		Warning( "MountingContent: Cannot load Steam.dll\n"); return false;}
 
 	int nStatus = 0;
 
 	IAppSystem* pAppSystem = (IAppSystem *)CreateInterface( "SteamDLLAppsystem001", &nStatus );
 	if( !pAppSystem ) {
-		Error( "MountingContent: Cannot create SteamDLLAppsystem001 interface\n"); return false;}
+		Warning("MountingContent: Cannot create SteamDLLAppsystem001 interface\n"); return false;
+	}
 
 	ISteam006* pSteam006 = (ISteam006 *)pAppSystem->QueryInterface( STEAM_INTERFACE_VERSION_006 );
 	if( !pSteam006 ) {
-		Error( "MountingContent: Cannot initialize ISteam006\n"); return false;}
+		Warning("MountingContent: Cannot initialize ISteam006\n"); return false;
+	}
 
 	TSteamApp App;
 	App.szName = new char[ 255 ];

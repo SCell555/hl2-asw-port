@@ -2,6 +2,8 @@
 // ** auto generated vertexshader **
 // *********************************
 
+#define SHADER_EDITOR_SWARM_COMPILE
+
 // Combos
 // DYNAMIC: "COMPRESSED_VERTS"		"0..1"
 // DYNAMIC: "SKINNING"		"0..1"

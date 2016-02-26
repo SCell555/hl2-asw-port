@@ -1,0 +1,19 @@
+//
+// vs 3.0   ps 3.0   shaders collection
+//
+//  These shaders are forced to compile as shader model 3.0
+//  using the new compiler.
+//	    _ps30.vcs
+//	    _vs30.vcs
+//
+
+ae_depthoffield_ps30.fxc
+
+ae_ssao_blurx_ps30.fxc
+ae_ssao_blury_ps30.fxc
+
+ae_ssao_combine_ps30.fxc
+
+ae_ssao_ps30.fxc
+
+ae_lensflare_ps2x.fxc

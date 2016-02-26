@@ -11,7 +11,7 @@
 //#define UI_USING_OLDDIALOGS							// implement?
 #define UI_USING_RANDOMMENUMOVIES						// random menu backgound movies
 #define UI_USING_RANDOMLOADINGBGS						// random game loading backgrounds
-//#define UI_USING_LOADINGSPINNER						// spinning texture in corner when game is loading
+#define UI_USING_LOADINGSPINNER						// spinning texture in corner when game is loading
 //#define UI_USING_TRANSITIONBG							// using background image in transition between levels
 #define UI_USING_DEVCOMMENTARIES						// implement!!!
 #define UI_USING_GAMEPLAYCONFIGDIALOG					// "gameplay" menu

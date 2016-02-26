@@ -72,6 +72,7 @@
 #endif
 
 #include "ShaderEditor/ShaderEditorSystem.h"
+#include "ShaderEditor/Grass/CGrassCluster.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -202,6 +203,11 @@ static ConVar r_eyewaterepsilon( "r_eyewaterepsilon", "7.0f", FCVAR_CHEAT );
 extern ConVar cl_leveloverview;
 
 ConVar r_fastzreject( "r_fastzreject", "0", 0, "Activate/deactivates a fast z-setting algorithm to take advantage of hardware with fast z reject. Use -1 to default to hardware settings" );
+
+static ConVar ae_ssao( "ae_ssao", "0", FCVAR_ARCHIVE );
+static ConVar ae_ssao_occlusionradius( "ae_ssao_occlusionradius", "0.002", 0 );
+static ConVar ae_ssao_anglebias( "ae_ssao_anglebias", "30", 0 );
+static ConVar ae_ssao_occlusionintensity( "ae_ssao_occlusionintensity", "2.0", 0 );
 
 //-----------------------------------------------------------------------------
 // Globals
@@ -496,6 +502,8 @@ protected:
 	virtual void	PushView( float waterHeight );
 	virtual void	PopView();
 
+	void			SSAO_DepthPass();
+	void			SSAO_DrawResults();
 };
 
 
@@ -508,7 +516,7 @@ class CSimpleWorldView : public CBaseWorldView
 public:
 	CSimpleWorldView(CViewRender *pMainView) : CBaseWorldView( pMainView ) {}
 
-	void			Setup( const CViewSetup &view, int nClearFlags, bool bDrawSkybox, const VisibleFogVolumeInfo_t &fogInfo, const WaterRenderInfo_t& info, ViewCustomVisibility_t *pCustomVisibility = NULL );
+	void			Setup( const CViewSetup &view, int nClearFlags, bool bUseSSAO, bool bDrawSkybox, const VisibleFogVolumeInfo_t &fogInfo, const WaterRenderInfo_t& info, ViewCustomVisibility_t *pCustomVisibility = NULL );
 	void			Draw();
 
 private: 
@@ -573,7 +581,7 @@ public:
 		m_IntersectionView( pMainView )
 	{}
 
-	void Setup(  const CViewSetup &view, bool bDrawSkybox, const VisibleFogVolumeInfo_t &fogInfo, const WaterRenderInfo_t& waterInfo );
+	void Setup( const CViewSetup &view, bool bUseSSAO, bool bDrawSkybox, const VisibleFogVolumeInfo_t &fogInfo, const WaterRenderInfo_t& waterInfo );
 	void			Draw();
 
 	class CReflectionView : public CBaseWorldView
@@ -769,6 +777,12 @@ static inline unsigned long BuildEngineDrawWorldListFlags( unsigned nDrawFlags )
 	{
 		nEngineFlags |= DRAWWORLDLISTS_DRAW_REFLECTION;
 	}
+	
+	if( nDrawFlags & DF_SSAO_DEPTH_PASS )
+	{
+		nEngineFlags |= DRAWWORLDLISTS_DRAW_STRICTLYUNDERWATER | DRAWWORLDLISTS_DRAW_INTERSECTSWATER | DRAWWORLDLISTS_DRAW_STRICTLYABOVEWATER | DRAWWORLDLISTS_DRAW_SSAO;
+		nEngineFlags &= ~( DRAWWORLDLISTS_DRAW_WATERSURFACE | DRAWWORLDLISTS_DRAW_REFRACTION | DRAWWORLDLISTS_DRAW_REFLECTION );
+	}
 
 	return nEngineFlags;
 }
@@ -833,6 +847,17 @@ PRECACHE_REGISTER_BEGIN( GLOBAL, PrecachePostProcessingEffects )
 #if defined( INFESTED_DLL )
 	PRECACHE( MATERIAL, "engine/writestencil" )
 #endif // INFSETED_DLL
+	PRECACHE( MATERIAL, "effects/vignette" )
+	PRECACHE( MATERIAL, "effects/colorgrade" )
+	PRECACHE( MATERIAL, "effects/filmgrain" )
+	PRECACHE( MATERIAL, "effects/lensflare" )
+	PRECACHE( MATERIAL, "effects/ssao" )
+	PRECACHE( MATERIAL, "effects/ssao_blurx" )
+	PRECACHE( MATERIAL, "effects/ssao_blury" )
+	PRECACHE( MATERIAL, "effects/ssao_combine" )
+
+	PRECACHE( MATERIAL, "effects/exp/depth" )
+	PRECACHE( MATERIAL, "effects/dof_x" )
 PRECACHE_REGISTER_END( )
 
 //-----------------------------------------------------------------------------
@@ -2928,7 +2953,7 @@ void CViewRender::DrawWorldAndEntities( bool bDrawSkybox, const CViewSetup &view
 		}
 
 		CRefPtr<CSimpleWorldView> pNoWaterView = new CSimpleWorldView( this );
-		pNoWaterView->Setup( viewIn, nClearFlags, bDrawSkybox, fogVolumeInfo, info, pCustomVisibility );
+		pNoWaterView->Setup( viewIn, nClearFlags, ae_ssao.GetBool(), bDrawSkybox, fogVolumeInfo, info, pCustomVisibility );
 		AddViewToScene( pNoWaterView );
 		return;
 	}
@@ -2945,7 +2970,7 @@ void CViewRender::DrawWorldAndEntities( bool bDrawSkybox, const CViewSetup &view
 	if ( !fogVolumeInfo.m_bEyeInFogVolume )
 	{
 		CRefPtr<CAboveWaterView> pAboveWaterView = new CAboveWaterView( this );
-		pAboveWaterView->Setup( viewIn, bDrawSkybox, fogVolumeInfo, info );
+		pAboveWaterView->Setup( viewIn, ae_ssao.GetBool(), bDrawSkybox, fogVolumeInfo, info );
 		AddViewToScene( pAboveWaterView );
 	}
 	else
@@ -4055,7 +4080,7 @@ static inline void DrawRenderable( IClientRenderable *pEnt, int flags, const Ren
 //-----------------------------------------------------------------------------
 // Draws all opaque renderables in leaves that were rendered
 //-----------------------------------------------------------------------------
-static inline void DrawOpaqueRenderable( IClientRenderable *pEnt, bool bTwoPass, bool bShadowDepth )
+static inline void DrawOpaqueRenderable( IClientRenderable *pEnt, bool bTwoPass, bool bShadowDepth, bool bSSAO )
 {
 	ASSERT_LOCAL_PLAYER_RESOLVABLE();
 	float color[3];
@@ -4076,6 +4101,11 @@ static inline void DrawOpaqueRenderable( IClientRenderable *pEnt, bool bTwoPass,
 		flags |= STUDIO_SHADOWDEPTHTEXTURE;
 	}
 
+	if ( bSSAO )
+	{
+		flags |= STUDIO_SSAODEPTHTEXTURE;
+	}
+
 	RenderableInstance_t instance;
 	instance.m_nAlpha = 255;
 	DrawRenderable( pEnt, flags, instance );
@@ -4090,12 +4120,12 @@ static void SetupBonesOnBaseAnimating( C_BaseAnimating *&pBaseAnimating )
 }
 
 
-static void DrawOpaqueRenderables_DrawBrushModels( int nCount, CClientRenderablesList::CEntry **ppEntities, bool bShadowDepth )
+static void DrawOpaqueRenderables_DrawBrushModels( int nCount, CClientRenderablesList::CEntry **ppEntities, bool bShadowDepth, bool bSSAO )
 {
 	for( int i = 0; i < nCount; ++i )
 	{
 		Assert( !ppEntities[i]->m_TwoPass );
-		DrawOpaqueRenderable( ppEntities[i]->m_pRenderable, false, bShadowDepth );
+		DrawOpaqueRenderable( ppEntities[i]->m_pRenderable, false, bShadowDepth, bSSAO );
 	}
 }
 
@@ -4136,14 +4166,14 @@ static void DrawOpaqueRenderables_DrawStaticProps( int nCount, CClientRenderable
 		staticpropmgr->DrawStaticProps( pStatics, pInstances, numScheduled, bShadowDepth, vcollide_wireframe.GetBool() );
 }
 
-static void DrawOpaqueRenderables_Range( int nCount, CClientRenderablesList::CEntry **ppEntities, bool bShadowDepth )
+static void DrawOpaqueRenderables_Range( int nCount, CClientRenderablesList::CEntry **ppEntities, bool bShadowDepth, bool bSSAO )
 {
 	for ( int i = 0; i < nCount; ++i )
 	{
 		CClientRenderablesList::CEntry *itEntity = ppEntities[i]; 
 		if ( itEntity->m_pRenderable )
 		{
-			DrawOpaqueRenderable( itEntity->m_pRenderable, ( itEntity->m_TwoPass != 0 ), bShadowDepth );
+			DrawOpaqueRenderable( itEntity->m_pRenderable, ( itEntity->m_TwoPass != 0 ), bShadowDepth, bSSAO );
 		}
 	}
 }
@@ -4156,12 +4186,12 @@ static void	DrawOpaqueRenderables_ModelRenderables( int nCount, ModelRenderSyste
 	g_pModelRenderSystem->DrawModels( pModelRenderables, nCount, bShadowDepth ? MODEL_RENDER_MODE_SHADOW_DEPTH : MODEL_RENDER_MODE_NORMAL );
 }
 
-static void	DrawOpaqueRenderables_NPCs( int nCount, CClientRenderablesList::CEntry **ppEntities, bool bShadowDepth )
+static void	DrawOpaqueRenderables_NPCs( int nCount, CClientRenderablesList::CEntry **ppEntities, bool bShadowDepth, bool bSSAO )
 {
-	DrawOpaqueRenderables_Range( nCount, ppEntities, bShadowDepth );
+	DrawOpaqueRenderables_Range( nCount, ppEntities, bShadowDepth, bSSAO );
 }
 
-void CRendering3dView::DrawOpaqueRenderables( bool bShadowDepth )
+void CRendering3dView::DrawOpaqueRenderables( bool bShadowDepth, bool bSSAO )
 {
 	VPROF("CViewRender::DrawOpaqueRenderables" );
 
@@ -4198,7 +4228,7 @@ void CRendering3dView::DrawOpaqueRenderables( bool bShadowDepth )
 	//
 	// First do the brush models
 	//
-	DrawOpaqueRenderables_DrawBrushModels( brushModels.Count(), brushModels.Base(), bShadowDepth );
+	DrawOpaqueRenderables_DrawBrushModels( brushModels.Count(), brushModels.Base(), bShadowDepth, bSSAO );
 
 	// Move all static props to modelrendersystem
 	bool bUseFastPath = ( cl_modelfastpath.GetInt() != 0 );
@@ -4287,19 +4317,21 @@ void CRendering3dView::DrawOpaqueRenderables( bool bShadowDepth )
 	//
 	// Draw static props + opaque entities that aren't using the fast path.
 	//
-	DrawOpaqueRenderables_Range( otherRenderables.Count(), otherRenderables.Base(), bShadowDepth );
+	DrawOpaqueRenderables_Range( otherRenderables.Count(), otherRenderables.Base(), bShadowDepth, bSSAO );
 	DrawOpaqueRenderables_DrawStaticProps( staticProps.Count(), staticProps.Base(), bShadowDepth );
 
 	//
 	// Draw NPCs now
 	//
-	DrawOpaqueRenderables_NPCs( arrRenderEntsNpcsFirst.Count(), arrRenderEntsNpcsFirst.Base(), bShadowDepth );
+	DrawOpaqueRenderables_NPCs( arrRenderEntsNpcsFirst.Count(), arrRenderEntsNpcsFirst.Base(), bShadowDepth, bSSAO );
 
 	//
 	// Ropes and particles
 	//
 	RopeManager()->DrawRenderCache( bShadowDepth );
 	g_pParticleSystemMgr->DrawRenderCache( bShadowDepth );
+	
+	CGrassClusterManager::GetInstance()->RenderClusters( bShadowDepth );
 }
 
 
@@ -4422,7 +4454,7 @@ void CRendering3dView::DrawTranslucentRenderablesNoWorld( bool bInSkybox )
 	// Draw the particle singletons.
 	DrawParticleSingletons( bInSkybox );
 
-	bool bShadowDepth = (m_DrawFlags & DF_SHADOW_DEPTH_MAP ) != 0;
+	bool bShadowDepth = ( m_DrawFlags & ( DF_SHADOW_DEPTH_MAP | DF_SSAO_DEPTH_PASS ) ) != 0;
 
 	CClientRenderablesList::CEntry *pEntities = m_pRenderablesList->m_RenderGroups[RENDER_GROUP_TRANSLUCENT];
 	int iCurTranslucentEntity = m_pRenderablesList->m_RenderGroupCounts[RENDER_GROUP_TRANSLUCENT] - 1;
@@ -4462,7 +4494,7 @@ void CRendering3dView::DrawNoZBufferTranslucentRenderables( void )
 	if ( !m_pMainView->ShouldDrawEntities() || !r_drawtranslucentrenderables.GetBool() )
 		return;
 
-	bool bShadowDepth = (m_DrawFlags & DF_SHADOW_DEPTH_MAP ) != 0;
+	bool bShadowDepth = (m_DrawFlags & ( DF_SHADOW_DEPTH_MAP | DF_SSAO_DEPTH_PASS ) ) != 0;
 
 	// FIXME: This ignores Z. We don't need to sort it at all? Not sure about refraction here...
 	// Could use fast path
@@ -5462,6 +5494,14 @@ void CBaseWorldView::DrawSetup( float waterHeight, int nSetupFlags, float waterZ
 		render->PopView( GetFrustum() );
 	}
 
+	ConVarRef ae_dof("ae_dof");
+
+	bool enableEstrangedDepthPass = ( ae_ssao.GetBool() || ae_dof.GetBool() );
+	if( savedViewID == VIEW_MAIN && enableEstrangedDepthPass )
+	{
+		SSAO_DepthPass();
+	}
+
 	g_CurrentViewID = savedViewID;
 }
 
@@ -5514,11 +5554,21 @@ void CBaseWorldView::DrawExecute( float waterHeight, view_id_t viewID, float wat
 	{
 		if ( m_DrawFlags & DF_DRAW_ENTITITES )
 		{
+			if ( ae_ssao.GetBool() )
+			{
+				SSAO_DrawResults();
+			}
+
 			DrawTranslucentRenderables( false, false );
 			DrawNoZBufferTranslucentRenderables();
 		}
 		else
 		{
+			if ( ae_ssao.GetBool() )
+			{
+				SSAO_DrawResults();
+			}
+
 			// Draw translucent world brushes only, no entities
 			DrawTranslucentWorldInLeaves( false );
 		}
@@ -5543,10 +5593,277 @@ void CBaseWorldView::DrawExecute( float waterHeight, view_id_t viewID, float wat
 #endif
 }
 
+void CBaseWorldView::SSAO_DepthPass()
+{
+#if 1
+	VPROF_BUDGET( "Depth Pass", _T("Post Processing") );
+
+	int savedViewID = g_CurrentViewID;
+	g_CurrentViewID = VIEW_SSAO;
+
+	ITexture *pSSAO = materials->FindTexture( "_rt_SSAO_depth", TEXTURE_GROUP_RENDER_TARGET );
+
+	CMatRenderContextPtr pRenderContext( materials );
+
+	pRenderContext->ClearColor4ub( 255, 255, 255, 255 );
+
+#if defined( _X360 )
+	Assert(0); // rebalance this if we ever use this on 360
+	pRenderContext->PushVertexShaderGPRAllocation( 112 ); //almost all work is done in vertex shaders for depth rendering, max out their threads
+#endif
+
+	pRenderContext.SafeRelease();
+
+	if( IsPC() )
+	{
+		render->Push3DView( (*this), VIEW_CLEAR_DEPTH | VIEW_CLEAR_COLOR, pSSAO, GetFrustum() );
+	}
+	else if( IsX360() )
+	{
+		render->Push3DView( (*this), VIEW_CLEAR_DEPTH | VIEW_CLEAR_COLOR, pSSAO, GetFrustum() );
+	}
+
+	MDLCACHE_CRITICAL_SECTION();
+
+	engine->Sound_ExtraUpdate();	// Make sure sound doesn't stutter
+
+	m_DrawFlags |= DF_SSAO_DEPTH_PASS;
+
+	{
+		VPROF_BUDGET( "DrawWorld", VPROF_BUDGETGROUP_SHADOW_DEPTH_TEXTURING );
+		DrawWorld( 0.0f );
+	}
+
+	// Draw opaque and translucent renderables with appropriate override materials
+	// OVERRIDE_SSAO_DEPTH_WRITE is OK with a NULL material pointer
+	modelrender->ForcedMaterialOverride( NULL, OVERRIDE_SSAO_DEPTH_WRITE );	
+
+	{
+		VPROF_BUDGET( "DrawOpaqueRenderables", VPROF_BUDGETGROUP_SHADOW_DEPTH_TEXTURING );
+		DrawOpaqueRenderables( false, true );
+	}
+
+#if 0
+	if ( m_bRenderFlashlightDepthTranslucents || r_flashlightdepth_drawtranslucents.GetBool() )
+	{
+		VPROF_BUDGET( "DrawTranslucentRenderables", VPROF_BUDGETGROUP_SHADOW_DEPTH_TEXTURING );
+		DrawTranslucentRenderables( false, true );
+	}
+#endif
+
+	modelrender->ForcedMaterialOverride( 0 );
+
+	m_DrawFlags &= ~DF_SSAO_DEPTH_PASS;
+
+	pRenderContext.GetFrom( materials );
+
+	if( IsX360() )
+	{
+		//Resolve() the depth texture here. Before the pop so the copy will recognize that the resolutions are the same
+		pRenderContext->CopyRenderTargetToTextureEx( NULL, -1, NULL, NULL );
+	}
+
+	render->PopView( GetFrustum() );
+
+#if defined( _X360 )
+	pRenderContext->PopVertexShaderGPRAllocation();
+#endif
+
+	pRenderContext.SafeRelease();
+
+	g_CurrentViewID = savedViewID;
+#endif
+}
+
+static void CalcFarPlaneCameraRelativePoints( Vector *p4PointsOut, Vector &vForward, Vector &vUp, Vector &vLeft, float flFarPlane,
+	float flFovX, float flFovY,
+	float flClipSpaceBottomLeftX, float flClipSpaceBottomLeftY,
+	float flClipSpaceTopRightX, float flClipSpaceTopRightY)
+{
+	flFovX *= 0.5f;
+	flFovY *= 0.5f;
+	Vector vFowardShift = flFarPlane * vForward;
+	Vector vUpShift = flFarPlane * tanf( DEG2RAD( flFovY ) ) * vUp;
+	Vector vRightShift = flFarPlane * tanf( DEG2RAD( flFovX ) ) * -vLeft;
+	p4PointsOut[0] = vFowardShift + flClipSpaceBottomLeftX * vRightShift + flClipSpaceBottomLeftY * vUpShift;
+	p4PointsOut[1] = vFowardShift + flClipSpaceTopRightX * vRightShift + flClipSpaceBottomLeftY * vUpShift;
+	p4PointsOut[2] = vFowardShift + flClipSpaceBottomLeftX * vRightShift + flClipSpaceTopRightY * vUpShift;
+	p4PointsOut[3] = vFowardShift + flClipSpaceTopRightX * vRightShift + flClipSpaceTopRightY * vUpShift;
+}
+
+//Draw SSAO results
+void CBaseWorldView::SSAO_DrawResults()
+{
+	VPROF_BUDGET( "Estranged - HBAO", _T("Estranged - Post Processing") );
+
+	CMatRenderContextPtr pRenderContext( materials );
+
+	int x, y, w, h;
+
+	pRenderContext->GetViewport( x, y, w, h );
+
+	// I guess pass up the inverse view projection to the shader since we might need it later on... :V
+	VMatrix viewMatrix, projectionMatrix, viewProjectionMatrix, inverseViewProjectionMatrix;
+	pRenderContext->GetMatrix( MATERIAL_VIEW, &viewMatrix );
+	pRenderContext->GetMatrix( MATERIAL_PROJECTION, &projectionMatrix );
+	MatrixMultiply( projectionMatrix, viewMatrix, viewProjectionMatrix );
+	MatrixInverseGeneral( viewProjectionMatrix, inverseViewProjectionMatrix );
+
+	// these are the four points so we can calculate relative points for FOV and all that jazz
+	Vector vPoints[ 4 ];
+	Vector vForward, vUp, vRight;
+
+	AngleVectors( angles, &vForward, &vRight, &vUp );
+	// screen space, so different lookup
+	Vector vLeft = -vRight;
+	float flFOVx = atan( h * tan( fov * M_PI / 360.0f ) / w );
+	float flFOVy = atan( w * tan( fov * M_PI / 360.0f ) / h );
+
+	// finally do the calculation with our fancy function :D
+	CalcFarPlaneCameraRelativePoints( vPoints, vForward, vUp, vLeft, zFar, flFOVx, flFOVy, -1.0f, -1.0f, 1.0f, 1.0f );
+
+	// fetch out ssao material
+	IMaterial *pOverlayMaterial = materials->FindMaterial( "effects/ssao", TEXTURE_GROUP_OTHER );
+
+	/* --- SSAO VARIABLE SETTINGS --- */
+
+	//Occlusion scale
+	IMaterialVar *pOcclusionRadiusVar = pOverlayMaterial->FindVar( "$occlusionradius", NULL );
+	pOcclusionRadiusVar->SetFloatValue( ae_ssao_occlusionradius.GetFloat() );
+	//Occlusion power
+	IMaterialVar *pAngleBiasVar = pOverlayMaterial->FindVar( "$anglebias", NULL );
+	pAngleBiasVar->SetFloatValue( ae_ssao_anglebias.GetFloat() );
+	//Sample radius
+	IMaterialVar *pOcclusionIntensityVar = pOverlayMaterial->FindVar( "$occlusionintensity", NULL );
+	pOcclusionIntensityVar->SetFloatValue( ae_ssao_occlusionintensity.GetFloat() );
+
+	pRenderContext->Bind( pOverlayMaterial );
+	IMesh *pMesh = pRenderContext->GetDynamicMesh( true );
+
+	pRenderContext->MatrixMode( MATERIAL_VIEW );
+	pRenderContext->PushMatrix();
+	pRenderContext->LoadIdentity();
+
+	pRenderContext->MatrixMode( MATERIAL_PROJECTION );
+	pRenderContext->PushMatrix();
+	pRenderContext->LoadIdentity();
+
+	// again, we might need these things like near and far Z or the view origin later on, for fancy stuff?
+	/*pRenderContext->MatrixMode( MATERIAL_MATRIX_UNUSED0 );
+	pRenderContext->LoadMatrix( inverseViewProjectionMatrix );
+	pRenderContext->MatrixMode( MATERIAL_MATRIX_UNUSED1 );
+	pRenderContext->LoadMatrix( viewProjectionMatrix );
+	pRenderContext->MatrixMode( MATERIAL_MATRIX_UNUSED2 );
+	pRenderContext->LoadMatrix( viewMatrix );
+	Vector vNearFarZ( zNear, zFar, 0.0f );
+	pRenderContext->SetVectorRenderingParameter( VECTOR_RENDERPARM_NEAR_FAR_Z, vNearFarZ );
+	pRenderContext->SetVectorRenderingParameter( VECTOR_RENDERPARM_VIEW_ORIGIN, origin );*/
+
+	// Lets build a screen-aligned quad! :D
+	CMeshBuilder meshBuilder;
+	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+	meshBuilder.Position3f( -1.0f, -1.0f, 0.0f );
+	meshBuilder.TexCoord2f( 0, 0.0f, 2.0f );
+	meshBuilder.TexCoord3fv( 1, vPoints[ 0 ].Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Position3f( -1.0f, 1, 0.0f );
+	meshBuilder.TexCoord2f( 0, 0.0f, 0.0f );
+	meshBuilder.TexCoord3fv( 1, vPoints[ 2 ].Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Position3f( 1, 1, 0.0f );
+	meshBuilder.TexCoord2f( 0, 2.0f, 0.0f );
+	meshBuilder.TexCoord3fv( 1, vPoints[ 3 ].Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Position3f( 1, -1.0f, 0.0f );
+	meshBuilder.TexCoord2f( 0, 2.0f, 2.0f );
+	meshBuilder.TexCoord3fv( 1, vPoints[ 1 ].Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.End();
+	// done
+
+	ITexture *pSSAO_BlurY = materials->FindTexture( "_rt_ssao_blury", TEXTURE_GROUP_RENDER_TARGET ); // we'll use this one for blur in x
+	ITexture *pSSAOResult = materials->FindTexture( "_rt_ssao_result", TEXTURE_GROUP_RENDER_TARGET ); // Get our ao texture
+
+	IMaterial *xblur_mat = materials->FindMaterial( "effects/ssao_blurx", TEXTURE_GROUP_OTHER, true ); // blur it in x
+	IMaterial *yblur_mat = materials->FindMaterial( "effects/ssao_blury", TEXTURE_GROUP_OTHER, true ); // then y
+	IMaterial *ssao_final = materials->FindMaterial( "effects/ssao_combine", TEXTURE_GROUP_OTHER, true ); // use this for combined result
+
+	ITexture *pFrameBuffer = materials->FindTexture( "_rt_FullFrameFB", TEXTURE_GROUP_RENDER_TARGET );
+
+	Rect_t	DestRect;
+	DestRect.x = 0;
+	DestRect.y = 0;
+	DestRect.width = pFrameBuffer->GetActualWidth();
+	DestRect.height = pFrameBuffer->GetActualHeight();
+
+	// draw ssao
+	pRenderContext->PushRenderTargetAndViewport( pSSAOResult );
+	pMesh->Draw();
+	pRenderContext->PopRenderTargetAndViewport();
+
+	// blur y and send to FB1
+	pRenderContext->PushRenderTargetAndViewport( pSSAO_BlurY );
+	pRenderContext->DrawScreenSpaceRectangle( yblur_mat, x, y, w, h, 0, 0, w - 1, h - 1, w, h );
+	pRenderContext->PopRenderTargetAndViewport();
+
+	// blur x and send to our ssao_result FB
+	pRenderContext->PushRenderTargetAndViewport( pSSAOResult );
+	pRenderContext->DrawScreenSpaceRectangle( xblur_mat, x, y, w, h, 0, 0, w - 1, h - 1, w, h );
+	pRenderContext->PopRenderTargetAndViewport();
+
+	// pop our matrix for view and projection
+	pRenderContext->MatrixMode( MATERIAL_VIEW );
+	pRenderContext->PopMatrix();
+
+	pRenderContext->MatrixMode( MATERIAL_PROJECTION );
+	pRenderContext->PopMatrix();
+
+	// draw our final material where we combine :D
+	pRenderContext->CopyRenderTargetToTextureEx( pFrameBuffer, 0, NULL, &DestRect );
+
+	pRenderContext->DrawScreenSpaceRectangle( ssao_final, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
+	
+	pRenderContext.SafeRelease();
+}
+
+void CViewRender::DrawBokehDepthOfField()
+{
+	if (g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 90)
+	{
+		return;
+	}
+
+	VPROF_BUDGET( "Brokeh Depth of Field", _T("Post Processing") );
+
+	CMatRenderContextPtr pRenderContext( materials );
+
+	ITexture *pFrameBuffer = materials->FindTexture( "_rt_FullFrameFB", TEXTURE_GROUP_RENDER_TARGET );
+
+	Rect_t	DestRect;
+	int w = pFrameBuffer->GetActualWidth();
+	int h = pFrameBuffer->GetActualHeight();
+	DestRect.x = 0;
+	DestRect.y = 0;
+	DestRect.width = w;
+	DestRect.height = h;
+
+	pRenderContext->CopyRenderTargetToTextureEx( pFrameBuffer, 0, NULL, &DestRect );
+
+	IMaterial *ae_DOF_X_Mat = materials->FindMaterial("effects/dof_x", TEXTURE_GROUP_OTHER);
+
+	UpdateScreenEffectTexture();
+	pRenderContext->DrawScreenSpaceRectangle(ae_DOF_X_Mat, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
+}
+
 //-----------------------------------------------------------------------------
 // Draws the scene when there's no water or only cheap water
 //-----------------------------------------------------------------------------
-void CSimpleWorldView::Setup( const CViewSetup &view, int nClearFlags, bool bDrawSkybox, const VisibleFogVolumeInfo_t &fogInfo, const WaterRenderInfo_t &waterInfo, ViewCustomVisibility_t *pCustomVisibility )
+void CSimpleWorldView::Setup( const CViewSetup &view, int nClearFlags, bool bSSAO, bool bDrawSkybox, const VisibleFogVolumeInfo_t &fogInfo, const WaterRenderInfo_t &waterInfo, ViewCustomVisibility_t *pCustomVisibility )
 {
 	BaseClass::Setup( view );
 
@@ -5696,7 +6013,7 @@ void CBaseWaterView::CSoftwareIntersectionView::Draw()
 //-----------------------------------------------------------------------------
 // Draws the scene when the view point is above the level of the water
 //-----------------------------------------------------------------------------
-void CAboveWaterView::Setup( const CViewSetup &view, bool bDrawSkybox, const VisibleFogVolumeInfo_t &fogInfo, const WaterRenderInfo_t& waterInfo )
+void CAboveWaterView::Setup( const CViewSetup &view, bool bUseSSAO, bool bDrawSkybox, const VisibleFogVolumeInfo_t &fogInfo, const WaterRenderInfo_t& waterInfo )
 {
 	BaseClass::Setup( view );
 
@@ -5713,7 +6030,10 @@ void CAboveWaterView::Setup( const CViewSetup &view, bool bDrawSkybox, const Vis
 	m_DrawFlags = DF_RENDER_ABOVEWATER | DF_DRAW_ENTITITES;
 	m_ClearFlags = VIEW_CLEAR_DEPTH;
 
-
+	if ( bUseSSAO )
+	{
+		m_DrawFlags |= DF_DRAW_SSAO;
+	}
 
 	if ( bDrawSkybox )
 	{
@@ -6080,7 +6400,7 @@ void CUnderWaterView::CRefractionView::Draw()
 void CReflectiveGlassView::Setup( const CViewSetup &view, int nClearFlags, bool bDrawSkybox, 
 	const VisibleFogVolumeInfo_t &fogInfo, const WaterRenderInfo_t &waterInfo, const cplane_t &reflectionPlane )
 {
-	BaseClass::Setup( view, nClearFlags, bDrawSkybox, fogInfo, waterInfo, NULL );
+	BaseClass::Setup( view, nClearFlags, ae_ssao.GetBool(), bDrawSkybox, fogInfo, waterInfo, NULL );
 	m_ReflectionPlane = reflectionPlane;
 }
 
@@ -6161,7 +6481,7 @@ void CReflectiveGlassView::Draw()
 void CRefractiveGlassView::Setup( const CViewSetup &view, int nClearFlags, bool bDrawSkybox, 
 	const VisibleFogVolumeInfo_t &fogInfo, const WaterRenderInfo_t &waterInfo, const cplane_t &reflectionPlane )
 {
-	BaseClass::Setup( view, nClearFlags, bDrawSkybox, fogInfo, waterInfo, NULL );
+	BaseClass::Setup( view, nClearFlags, ae_ssao.GetBool(), bDrawSkybox, fogInfo, waterInfo, NULL );
 	m_ReflectionPlane = reflectionPlane;
 }
 

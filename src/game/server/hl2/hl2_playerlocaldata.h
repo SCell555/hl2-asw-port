@@ -44,6 +44,8 @@ public:
 	CNetworkVar( float, m_flFlashBattery );
 	CNetworkVar( Vector, m_vecLocatorOrigin );
 #endif
+	CNetworkVar( float, m_flNightVisionBattery );
+	CNetworkVar( bool, m_bIsNightVisionOn );
 
 	// Ladder related data
 	CNetworkVar( EHANDLE, m_hLadder );

@@ -49,7 +49,7 @@
 #include "logic_playerproxy.h"
 
 #ifdef HL2_EPISODIC
-//#include "npc_alyx_episodic.h"
+#include "npc_alyx_episodic.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -87,9 +87,9 @@ ConVar hl2_darkness_flashlight_factor ( "hl2_darkness_flashlight_factor", "1" );
 	#define	HL2_NORM_SPEED 190
 	#define	HL2_SPRINT_SPEED 320
 #else
-	#define	HL2_WALK_SPEED hl2_walkspeed.GetFloat()
-	#define	HL2_NORM_SPEED hl2_normspeed.GetFloat()
-	#define	HL2_SPRINT_SPEED hl2_sprintspeed.GetFloat()
+	#define	HL2_WALK_SPEED() hl2_walkspeed.GetFloat()
+	#define	HL2_NORM_SPEED() hl2_normspeed.GetFloat()
+	#define	HL2_SPRINT_SPEED() hl2_sprintspeed.GetFloat()
 #endif
 
 ConVar player_showpredictedposition( "player_showpredictedposition", "0" );
@@ -947,7 +947,7 @@ void CHL2_Player::Activate( void )
 	BaseClass::Activate();
 	InitSprinting();
 
-#ifdef HL2_EPISODIC
+#if 0
 
 	// Delay attacks by 1 second after loading a game.
 	if ( GetActiveWeapon() )
@@ -1020,7 +1020,7 @@ bool CHL2_Player::HandleInteraction(int interactionType, void *data, CBaseCombat
 	else if (interactionType ==	g_interactionBarnacleVictimGrab)
 	{
 #ifdef HL2_EPISODIC
-/*		CNPC_Alyx *pAlyx = CNPC_Alyx::GetAlyx();
+/**/	CNPC_Alyx *pAlyx = CNPC_Alyx::GetAlyx();
 		if ( pAlyx )
 		{
 			// Make Alyx totally hate this barnacle so that she saves the player.
@@ -1028,7 +1028,7 @@ bool CHL2_Player::HandleInteraction(int interactionType, void *data, CBaseCombat
 
 			priority = pAlyx->IRelationPriority(sourceEnt);
 			pAlyx->AddEntityRelationship( sourceEnt, D_HT, priority + 5 );
-		}*/
+		}//*/
 #endif//HL2_EPISODIC
 
 		m_afPhysicsFlags |= PFLAG_ONBARNACLE;
@@ -1207,7 +1207,7 @@ void CHL2_Player::StartSprinting( void )
 	filter.UsePredictionRules();
 	EmitSound( filter, entindex(), "HL2Player.SprintStart" );
 
-	SetMaxSpeed( HL2_SPRINT_SPEED );
+	SetMaxSpeed( HL2_SPRINT_SPEED() );
 	m_fIsSprinting = true;
 }
 
@@ -1223,11 +1223,11 @@ void CHL2_Player::StopSprinting( void )
 
 	if( IsSuitEquipped() )
 	{
-		SetMaxSpeed( HL2_NORM_SPEED );
+		SetMaxSpeed( HL2_NORM_SPEED() );
 	}
 	else
 	{
-		SetMaxSpeed( HL2_WALK_SPEED );
+		SetMaxSpeed( HL2_WALK_SPEED() );
 	}
 
 	m_fIsSprinting = false;
@@ -1259,7 +1259,7 @@ void CHL2_Player::EnableSprint( bool bEnable )
 //-----------------------------------------------------------------------------
 void CHL2_Player::StartWalking( void )
 {
-	SetMaxSpeed( HL2_WALK_SPEED );
+	SetMaxSpeed( HL2_WALK_SPEED() );
 	m_fIsWalking = true;
 }
 
@@ -1267,7 +1267,7 @@ void CHL2_Player::StartWalking( void )
 //-----------------------------------------------------------------------------
 void CHL2_Player::StopWalking( void )
 {
-	SetMaxSpeed( HL2_NORM_SPEED );
+	SetMaxSpeed( HL2_NORM_SPEED() );
 	m_fIsWalking = false;
 }
 
@@ -1523,7 +1523,7 @@ void CHL2_Player::CommanderUpdate()
 		m_HL2Local.m_fSquadInFollowMode = bFollowMode;
 
 		// debugging code for displaying extra squad indicators
-		/*
+		/**/
 		char *pszMoving = "";
 		AISquadIter_t iter;
 		for ( CAI_BaseNPC *pAllyNpc = m_pPlayerAISquad->GetFirstMember(&iter); pAllyNpc; pAllyNpc = m_pPlayerAISquad->GetNextMember(&iter) )
@@ -1540,7 +1540,7 @@ void CHL2_Player::CommanderUpdate()
 			CFmtStr( "%d|%c%s", GetNumSquadCommandables(), ( bFollowMode ) ? 'F' : 'S', pszMoving ),
 			255, 128, 0, 128,
 			0 );
-		*/
+		//*/
 
 	}
 	else
@@ -2420,11 +2420,11 @@ bool CHL2_Player::ShouldShootMissTarget( CBaseCombatCharacter *pAttacker )
 void CHL2_Player::CombineBallSocketed( CPropCombineBall *pCombineBall )
 {
 #ifdef HL2_EPISODIC
-/*	CNPC_Alyx *pAlyx = CNPC_Alyx::GetAlyx();
+/**/CNPC_Alyx *pAlyx = CNPC_Alyx::GetAlyx();
 	if ( pAlyx )
 	{
 		pAlyx->CombineBallSocketed( pCombineBall->NumBounces() );
-	}*/
+	}//*/
 #endif
 }
 
@@ -3268,6 +3268,25 @@ void CHL2_Player::UpdateClientData( void )
 	}
 #endif // HL2_EPISODIC
 
+	if ( IsNightVisionOn() && sv_infinite_aux_power.GetBool() == false )
+	{
+		m_HL2Local.m_flNightVisionBattery -= FLASH_DRAIN_TIME * gpGlobals->frametime; //TODO: change time
+		if ( m_HL2Local.m_flNightVisionBattery < 0.0f )
+		{
+			SetNightVisionState( false );
+			m_HL2Local.m_flNightVisionBattery = 0.0f;
+			engine->ClientCommand(edict(), "sedit_disable_ppe ppe_night");
+		}
+	}
+	else
+	{
+		m_HL2Local.m_flNightVisionBattery += FLASH_CHARGE_TIME * gpGlobals->frametime; //TODO: change time
+		if ( m_HL2Local.m_flNightVisionBattery > 100.0f )
+		{
+			m_HL2Local.m_flNightVisionBattery = 100.0f;
+		}
+	}
+
 	BaseClass::UpdateClientData();
 }
 
@@ -3760,6 +3779,26 @@ void CHL2_Player::FirePlayerProxyOutput( const char *pszOutputName, variant_t va
 
 	GetPlayerProxy()->FireNamedOutput( pszOutputName, variant, pActivator, pCaller );
 }
+
+
+bool CHL2_Player::IsNightVisionOn()
+{
+	return m_HL2Local.m_bIsNightVisionOn.Get();
+}
+
+void CHL2_Player::SetNightVisionState(bool state)
+{
+	m_HL2Local.m_bIsNightVisionOn.Set( state );
+}
+
+CON_COMMAND_F(night_vision, "toggle night vision\n", FCVAR_CLIENTCMD_CAN_EXECUTE)
+{
+	CHL2_Player* player = (CHL2_Player*)UTIL_GetCommandClient();
+	if (!player)
+		return;
+	player->SetNightVisionState(!player->IsNightVisionOn());
+}
+
 /*
 LINK_ENTITY_TO_CLASS( logic_playerproxy, CLogicPlayerProxy);
 

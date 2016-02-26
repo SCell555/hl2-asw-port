@@ -2378,7 +2378,7 @@ inline bool C_BaseEntity::ShouldRecordInTools() const
 
 inline bool C_BaseEntity::IsVisible() const
 {
-	ASSERT_LOCAL_PLAYER_RESOLVABLE();
+	ExecuteOnce(ASSERT_LOCAL_PLAYER_RESOLVABLE());
 	if ( INVALID_CLIENT_RENDER_HANDLE == m_hRender )
 		return false;
 	return m_VisibilityBits.IsBitSet( GET_ACTIVE_SPLITSCREEN_SLOT() );

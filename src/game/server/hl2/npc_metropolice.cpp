@@ -245,7 +245,6 @@ const char* const m_sModelNames[] =
 	"models/DPFilms/Metropolice/c08cop.mdl",
 	"models/DPFilms/Metropolice/civil_medic.mdl",
 	"models/DPFilms/Metropolice/elite_police.mdl",
-	"models/DPFilms/Metropolice/female_police.mdl",
 	"models/DPFilms/Metropolice/hdpolice.mdl",
 	"models/DPFilms/Metropolice/hl2beta_police.mdl",
 	"models/DPFilms/Metropolice/hl2concept.mdl",

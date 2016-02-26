@@ -38,6 +38,8 @@ public:
 	const WaterRenderInfo_t &GetWaterRenderInfo();
 #endif
 
+	void SetPPEEnabled(const char* effect, bool status);
+
 private:
 	bool m_bReady;
 
@@ -54,6 +56,5 @@ private:
 };
 
 extern ShaderEditorHandler *g_ShaderEditorSystem;
-
 
 #endif

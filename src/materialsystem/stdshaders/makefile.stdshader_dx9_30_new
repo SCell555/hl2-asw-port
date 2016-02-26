@@ -1,0 +1,50 @@
+default:  fxctmp9_tmp\ae_depthoffield_ps30.inc shaders\fxc\ae_depthoffield_ps30.vcs fxctmp9_tmp\ae_ssao_blurx_ps30.inc shaders\fxc\ae_ssao_blurx_ps30.vcs fxctmp9_tmp\ae_ssao_blury_ps30.inc shaders\fxc\ae_ssao_blury_ps30.vcs fxctmp9_tmp\ae_ssao_combine_ps30.inc shaders\fxc\ae_ssao_combine_ps30.vcs fxctmp9_tmp\ae_ssao_ps30.inc shaders\fxc\ae_ssao_ps30.vcs fxctmp9_tmp\ae_lensflare_ps30.inc shaders\fxc\ae_lensflare_ps30.vcs
+
+fxctmp9_tmp\ae_depthoffield_ps30.inc shaders\fxc\ae_depthoffield_ps30.vcs: ae_depthoffield_ps30.fxc ..\..\devtools\bin\updateshaders.pl ..\..\devtools\bin\fxc_prep.pl common_ps_fxc.h common_hlsl_cpp_consts.h common_pragmas.h common_fxc.h
+	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." ae_depthoffield_ps30.fxc-----ae_depthoffield_ps30
+	echo ae_depthoffield_ps30.fxc>> filestocopy.txt
+	echo common_ps_fxc.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo common_pragmas.h>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
+
+fxctmp9_tmp\ae_ssao_blurx_ps30.inc shaders\fxc\ae_ssao_blurx_ps30.vcs: ae_ssao_blurx_ps30.fxc ..\..\devtools\bin\updateshaders.pl ..\..\devtools\bin\fxc_prep.pl common_fxc.h common_ps_fxc.h common_hlsl_cpp_consts.h common_pragmas.h
+	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." ae_ssao_blurx_ps30.fxc-----ae_ssao_blurx_ps30
+	echo ae_ssao_blurx_ps30.fxc>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
+	echo common_ps_fxc.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo common_pragmas.h>> filestocopy.txt
+
+fxctmp9_tmp\ae_ssao_blury_ps30.inc shaders\fxc\ae_ssao_blury_ps30.vcs: ae_ssao_blury_ps30.fxc ..\..\devtools\bin\updateshaders.pl ..\..\devtools\bin\fxc_prep.pl common_fxc.h common_hlsl_cpp_consts.h common_pragmas.h common_ps_fxc.h
+	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." ae_ssao_blury_ps30.fxc-----ae_ssao_blury_ps30
+	echo ae_ssao_blury_ps30.fxc>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo common_pragmas.h>> filestocopy.txt
+	echo common_ps_fxc.h>> filestocopy.txt
+
+fxctmp9_tmp\ae_ssao_combine_ps30.inc shaders\fxc\ae_ssao_combine_ps30.vcs: ae_ssao_combine_ps30.fxc ..\..\devtools\bin\updateshaders.pl ..\..\devtools\bin\fxc_prep.pl common_pragmas.h common_hlsl_cpp_consts.h common_ps_fxc.h common_fxc.h
+	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." ae_ssao_combine_ps30.fxc-----ae_ssao_combine_ps30
+	echo ae_ssao_combine_ps30.fxc>> filestocopy.txt
+	echo common_pragmas.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo common_ps_fxc.h>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
+
+fxctmp9_tmp\ae_ssao_ps30.inc shaders\fxc\ae_ssao_ps30.vcs: ae_ssao_ps30.fxc ..\..\devtools\bin\updateshaders.pl ..\..\devtools\bin\fxc_prep.pl common_fxc.h common_ps_fxc.h common_hlsl_cpp_consts.h common_pragmas.h
+	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." ae_ssao_ps30.fxc-----ae_ssao_ps30
+	echo ae_ssao_ps30.fxc>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
+	echo common_ps_fxc.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo common_pragmas.h>> filestocopy.txt
+
+fxctmp9_tmp\ae_lensflare_ps30.inc shaders\fxc\ae_lensflare_ps30.vcs: ae_lensflare_ps2x.fxc ..\..\devtools\bin\updateshaders.pl ..\..\devtools\bin\fxc_prep.pl common_fxc.h common_ps_fxc.h common_hlsl_cpp_consts.h common_pragmas.h
+	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." ae_lensflare_ps2x.fxc-----ae_lensflare_ps30
+	echo ae_lensflare_ps2x.fxc>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
+	echo common_ps_fxc.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo common_pragmas.h>> filestocopy.txt
+

@@ -1481,7 +1481,7 @@ void CBasePlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, 
 			CalcPlayerView( eyeOrigin, eyeAngles, fov );
 			CBaseAnimating *pAnimating = dynamic_cast<CBaseAnimating *>(this);
 			pAnimating->SetPoseParameter("aim_pitch", eyeAngles[PITCH]);
-			pAnimating->GetAttachment( pAnimating->LookupAttachment( "eyes" ), eyeOrigin, eyeAngles);
+			//pAnimating->GetAttachment( pAnimating->LookupAttachment( "eyes" ), eyeOrigin, eyeAngles);
 
 			#ifdef CLIENT_DLL
 			if ( !this->IsAlive() )

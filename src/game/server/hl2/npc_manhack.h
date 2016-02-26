@@ -255,6 +255,7 @@ private:
 	CSprite			*m_pLightGlow;
 	
 	CHandle<SmokeTrail>	m_hSmokeTrail;
+	EHANDLE			m_pPrevOwner;
 
 	int				m_iPanel1;
 	int				m_iPanel2;

@@ -55,7 +55,8 @@ public:
 	void			PerformClientSideNPCSpeedModifiers( float flFrameTime, CUserCmd *pCmd );
 
 	bool				IsWeaponLowered( void ) { return m_HL2Local.m_bWeaponLowered; }
-	
+	virtual void	Think();
+
 public:
 
 	C_HL2PlayerLocalData		m_HL2Local;
@@ -77,6 +78,7 @@ private:
 	float				m_flSpeedMod;
 	float				m_flExitSpeedMod;
 
+	bool				m_bLastNVState;
 
 friend class CHL2GameMovement;
 };

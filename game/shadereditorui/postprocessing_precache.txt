@@ -1,3 +1,23 @@
 "pp_precache"
 {
+	"effect_00"
+	{
+		"effect_path"		"shadereditorui\canvas\post_processing_graphs\ppe_ssao.txt"
+		"effect_start_enabled"		"0"
+	}
+	"effect_01"
+	{
+		"effect_path"		"shadereditorui\canvas\post_processing_graphs\ppe_gaussian_blur.txt"
+		"effect_start_enabled"		"0"
+	}
+	"effect_02"
+	{
+		"effect_path"		"shadereditorui\canvas\post_processing_graphs\ppe_sunrays.txt"
+		"effect_start_enabled"		"0"
+	}
+	"effect_03"
+	{
+		"effect_path"		"shadereditorui\canvas\post_processing_graphs\ppe_night.txt"
+		"effect_start_enabled"		"0"
+	}
 }

@@ -163,13 +163,13 @@ ShadowType_t C_BaseCombatWeapon::ShadowCastType()
 	if ( IsEffectActive( /*EF_NODRAW |*/ EF_NOSHADOW ) )
 		return SHADOWS_NONE;
 
-	if (!IsBeingCarried())
+	//if (!IsBeingCarried())
 		return SHADOWS_RENDER_TO_TEXTURE;
 
-	if (IsCarriedByLocalPlayer())
+	/*if (IsCarriedByLocalPlayer())
 		return SHADOWS_NONE;
 
-	return (m_iState != WEAPON_IS_CARRIED_BY_PLAYER) ? SHADOWS_RENDER_TO_TEXTURE : SHADOWS_NONE;
+	return (m_iState != WEAPON_IS_CARRIED_BY_PLAYER) ? SHADOWS_RENDER_TO_TEXTURE : SHADOWS_NONE;*/
 }
 
 //-----------------------------------------------------------------------------
@@ -192,7 +192,6 @@ void C_BaseCombatWeapon::DrawCrosshair()
 {
 #ifndef INFESTED_DLL
 	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
-	CBaseCombatWeapon *pWeapon = player->GetActiveWeapon();
 	if ( !player )
 		return;
 
@@ -227,18 +226,13 @@ void C_BaseCombatWeapon::DrawCrosshair()
 
 	CHudCrosshair *crosshair = GET_HUDELEMENT( CHudCrosshair );
 	if ( !crosshair )
-		return;
+		return DevMsg("where is crosshair?\n");
 
 	// Find out if this weapon's auto-aimed onto a target
 	bool bOnTarget = ( m_iState == WEAPON_IS_ACTIVE ) && player->m_fOnTarget;
 	
 	if ( player->GetFOV() >= 90 )
 	{ 
-		if(pWeapon && (FClassnameIs(pWeapon, "weapon_rpg" ) || FClassnameIs(pWeapon, "weapon_crossbow" )) )
-			crosshair->SetVisible(false);
-		if(pWeapon && (FClassnameIs(pWeapon, "weapon_shotgun" ) /*|| FClassnameIs(pWeapon, "weapon_357" )*/) )
-			crosshair->SetCrosshair(HudIcons().GetIcon("crosshair_rounded"), Color(255, 255, 255, 255));
-
 		// normal crosshairs
 		if ( bOnTarget && GetWpnData().iconAutoaim )
 		{

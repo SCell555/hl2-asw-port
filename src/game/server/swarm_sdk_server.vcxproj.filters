@@ -1897,6 +1897,10 @@
       <Filter>Source Files\HL2 Server\Gamerules</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\mountsteamcontent.cpp" />
+    <ClCompile Include="fire.cpp" />
+    <ClCompile Include="..\shared\weapon_grapple.cpp" />
+    <ClCompile Include="weapon_custom.cpp" />
+    <ClCompile Include="env_colorgrade.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\achievement_saverestore.h">
@@ -3712,6 +3716,8 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\mountsteamcontent.h" />
+    <ClInclude Include="..\shared\weapon_grapple.h" />
+    <ClInclude Include="weapon_custom.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="spawn_helper.nut">

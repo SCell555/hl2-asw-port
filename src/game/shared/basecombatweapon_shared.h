@@ -328,6 +328,10 @@ public:
 	virtual bool			UsesClipsForAmmo2( void ) const;
 	bool					IsMeleeWeapon() const;
 
+	Vector					GetIronsightPositionOffset(void) const;
+	QAngle					GetIronsightAngleOffset(void) const;
+	float					GetIronsightFOVOffset(void) const;
+
 	virtual	void			OnMouseWheel( int nDirection ) {}
 
 	// derive this function if you mod uses encrypted weapon info files
@@ -498,6 +502,9 @@ public:
 	// Weapon art
 	CNetworkVar( int, m_iViewModelIndex );
 	CNetworkVar( int, m_iWorldModelIndex );
+	
+	CNetworkVar( bool, m_bIsIronsighted );
+	CNetworkVar( float, m_flIronsightedTime );
 
 public:
 	// Weapon data
@@ -555,6 +562,13 @@ public:
 	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_nNextThinkTick );
 
 	int						WeaponState() const { return m_iState; }
+
+	virtual bool			HasIronsights(void) { return GetWpnData().hasIronsight; }
+	bool					IsIronsighted(void);
+	void					ToggleIronsights(void);
+	void					EnableIronsights(void);
+	void					DisableIronsights(void);
+	void					SetIronsightTime(void);
 
 	int						m_iSubType;
 

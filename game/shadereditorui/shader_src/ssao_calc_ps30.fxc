@@ -2,6 +2,8 @@
 // ** auto generated pixelshader **
 // ********************************
 
+#define SHADER_EDITOR_SWARM_COMPILE
+
 
 // Includes
 #include "common_ps_fxc.h"
@@ -23,7 +25,7 @@ const float2 _g_TexelSize		: register( c16 );
 //--------------------------------------------------------
 //a list of user parameters
 
-#define METHOD 0
+#define METHOD 1
 
 static float near = 7; //Z-near
 static float far = 192.0; //Z-far

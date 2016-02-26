@@ -1,0 +1,6 @@
+fxctmp9_tmp\ae_depthoffield_ps30.inc
+fxctmp9_tmp\ae_ssao_blurx_ps30.inc
+fxctmp9_tmp\ae_ssao_blury_ps30.inc
+fxctmp9_tmp\ae_ssao_combine_ps30.inc
+fxctmp9_tmp\ae_ssao_ps30.inc
+fxctmp9_tmp\ae_lensflare_ps30.inc

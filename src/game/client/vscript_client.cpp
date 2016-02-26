@@ -13,6 +13,7 @@
 #include "characterset.h"
 #include "isaverestore.h"
 #include "gamerules.h"
+#include "mountsteamcontent.h"
 #ifdef _WIN32
 //#include "vscript_client_nut.h"
 #endif
@@ -87,6 +88,10 @@ bool VScriptClientInit()
 			{
 				scriptLanguage = SL_PYTHON;
 			}
+			else if( !Q_stricmp(pszScriptLanguage, "lua") )
+			{
+				scriptLanguage = SL_LUA;
+			}
 			else
 			{
 				DevWarning("-scriptlang does not recognize a language named '%s'. virtual machine did NOT start.\n", pszScriptLanguage );
@@ -105,7 +110,13 @@ bool VScriptClientInit()
 				ScriptRegisterFunction( g_pScriptVM, GetMapName, "Get the name of the map.");
 				ScriptRegisterFunction( g_pScriptVM, Time, "Get the current server time" );
 				ScriptRegisterFunction( g_pScriptVM, DoIncludeScript, "Execute a script (internal)" );
+
+				ScriptRegisterFunction( g_pScriptVM, BeginCreatingNewWeapon, "Start creating new weapon entity.");
+				ScriptRegisterFunction( g_pScriptVM, AddWeaponProperty, "Add properties for new weapon entity.");
+				ScriptRegisterFunction( g_pScriptVM, EndCreatingNewWeapon, "Finish creating new weapon entity.");
 				
+				ScriptRegisterFunctionNamed( g_pScriptVM, Steam_MountSteamContent, "MountSteamContent", "Mounts steam content by appid" );
+
 				if ( GameRules() )
 				{
 					GameRules()->RegisterScriptFunctions();

@@ -437,7 +437,7 @@ void ClientPrecache( void )
 
 	//HL2 weapon script [str]
 	engine->ForceExactFile( "scripts/weapon_357.txt" );
-	engine->ForceExactFile( "scripts/weapon_alyxgun.txt" ); / i dont really know, does it should be execed [str]
+	engine->ForceExactFile( "scripts/weapon_alyxgun.txt" ); // i dont really know, does it should be execed [str]
 	engine->ForceExactFile( "scripts/weapon_annabelle.txt" ); // i dont really know, does it should be execed [str]
 	engine->ForceExactFile( "scripts/weapon_ar2.txt" );
 	engine->ForceExactFile( "scripts/weapon_bugbait.txt" );

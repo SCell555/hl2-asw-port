@@ -5907,7 +5907,7 @@ void CBasePlayer::ImpulseCommands( )
 		break;
 
 	case 200:
-		if ( sv_cheats->GetBool() )
+		if ( true )//sv_cheats->GetBool() )
 		{
 			CBaseCombatWeapon *pWeapon;
 
@@ -6321,7 +6321,7 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 			Create("node_viewer_human", GetLocalOrigin(), GetLocalAngles());
 		}
 		break;
-	case	202:// Random blood splatter
+	case	204:// Random blood splatter
 		{
 			Vector forward;
 			EyeVectors( &forward );
@@ -6601,6 +6601,30 @@ bool CBasePlayer::ClientCommand( const CCommand &args )
 		{
 			pl->DumpPerfToRecipient( this, nRecords );
 		}
+		return true;
+	}
+	else if (stricmp(cmd, "toggle_ironsight") == 0)
+	{
+		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+		if (pWeapon != NULL)
+			pWeapon->ToggleIronsights();
+
+		return true;
+	}
+	else if (stricmp(cmd, "+ironsight") == 0)
+	{
+		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+		if (pWeapon != NULL)
+			pWeapon->EnableIronsights();
+
+		return true;
+	}
+	else if (stricmp(cmd, "-ironsight") == 0)
+	{
+		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+		if (pWeapon != NULL)
+			pWeapon->DisableIronsights();
+
 		return true;
 	}
 

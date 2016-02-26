@@ -2,6 +2,8 @@
 // ** auto generated pixelshader **
 // ********************************
 
+#define SHADER_EDITOR_SWARM_COMPILE
+
 // Combos
 // DYNAMIC: "PIXELFOGTYPE"		"0..1"
 // DYNAMIC: "WRITEWATERFOGTODESTALPHA"		"0..1"

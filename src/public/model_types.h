@@ -26,6 +26,9 @@
 #define STUDIO_SKIP_FLEXES				0x00000400
 #define STUDIO_DONOTMODIFYSTENCILSTATE	0x00000800	// TERROR
 
+// Not a studio flag, but used to flag model as using shadow depth material override
+#define STUDIO_SSAODEPTHTEXTURE			0x08000000
+
 // Not a studio flag, but used to flag model as a non-sorting brush model
 #define STUDIO_TRANSPARENCY				0x80000000
 

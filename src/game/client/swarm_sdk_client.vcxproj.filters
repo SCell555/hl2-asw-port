@@ -103,6 +103,9 @@
     <Filter Include="Source Files\Shader Editor">
       <UniqueIdentifier>{604dba41-98ff-4cca-85b6-1eeea650df3b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Shader Editor\Grass">
+      <UniqueIdentifier>{dfe11fc7-f61b-4d35-9a7a-1a0fd4e0b0f6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="client_base.vpc">
@@ -1975,6 +1978,17 @@
     </ClCompile>
     <ClCompile Include="c_env_global_light.cpp" />
     <ClCompile Include="..\shared\mountsteamcontent.cpp" />
+    <ClCompile Include="ShaderEditor\Grass\CGrassCluster.cpp">
+      <Filter>Source Files\Shader Editor\Grass</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\weapon_grapple.cpp" />
+    <ClCompile Include="c_weapon_custom.cpp" />
+    <ClCompile Include="C_ShaderAPIGameSystem.cpp" />
+    <ClCompile Include="IShaderAPIExtClient.cpp" />
+    <ClCompile Include="hl2_rendertargets.cpp" />
+    <ClCompile Include="c_entgloweffect.cpp" />
+    <ClCompile Include="c_env_colorgrade.cpp" />
+    <ClCompile Include="colorgrade_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -4102,6 +4116,15 @@
       <Filter>Source Files\Shader Editor</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\mountsteamcontent.h" />
+    <ClInclude Include="ShaderEditor\Grass\CGrassCluster.h">
+      <Filter>Source Files\Shader Editor\Grass</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\weapon_grapple.h" />
+    <ClInclude Include="c_weapon_custom.h" />
+    <ClInclude Include="hl2_rendertargets.h" />
+    <ClInclude Include="c_entgloweffect.h" />
+    <ClInclude Include="c_env_colorgrade.h" />
+    <ClInclude Include="colorgrade_manager.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\bitmap.lib">

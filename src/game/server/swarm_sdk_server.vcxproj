@@ -249,6 +249,7 @@ exit 1
     <ClCompile Include="..\shared\activitylist.cpp" />
     <ClCompile Include="..\shared\hl2\survival_gamerules.cpp" />
     <ClCompile Include="..\shared\mountsteamcontent.cpp" />
+    <ClCompile Include="..\shared\weapon_grapple.cpp" />
     <ClCompile Include="ai_activity.cpp" />
     <ClCompile Include="ai_addon.cpp" />
     <ClCompile Include="ai_agent.cpp" />
@@ -424,6 +425,7 @@ exit 1
     <ClCompile Include="EntityParticleTrail.cpp" />
     <ClCompile Include="..\shared\EntityParticleTrail_Shared.cpp" />
     <ClCompile Include="env_ambient_light.cpp" />
+    <ClCompile Include="env_colorgrade.cpp" />
     <ClCompile Include="env_debughistory.cpp" />
     <ClCompile Include="..\shared\env_detail_controller.cpp" />
     <ClCompile Include="env_dof_controller.cpp" />
@@ -457,6 +459,7 @@ exit 1
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="filters.cpp" />
+    <ClCompile Include="fire.cpp" />
     <ClCompile Include="fire_smoke.cpp" />
     <ClCompile Include="fish.cpp" />
     <ClCompile Include="flex_expresser.cpp" />
@@ -782,6 +785,7 @@ exit 1
     <ClCompile Include="wcedit.cpp" />
     <ClCompile Include="..\shared\weapon_parse.cpp" />
     <ClCompile Include="..\shared\weapon_proficiency.cpp" />
+    <ClCompile Include="weapon_custom.cpp" />
     <ClCompile Include="weight_button.cpp" />
     <ClCompile Include="world.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -1011,6 +1015,7 @@ exit 1
     <ClInclude Include="..\shared\activitylist.h" />
     <ClInclude Include="..\shared\ai_activity.h" />
     <ClInclude Include="..\shared\mountsteamcontent.h" />
+    <ClInclude Include="..\shared\weapon_grapple.h" />
     <ClInclude Include="ai_addon.h" />
     <ClInclude Include="ai_agent.h" />
     <ClInclude Include="ai_baseactor.h" />
@@ -1303,6 +1308,7 @@ exit 1
     <ClInclude Include="wcedit.h" />
     <ClInclude Include="..\shared\weapon_parse.h" />
     <ClInclude Include="..\shared\weapon_proficiency.h" />
+    <ClInclude Include="weapon_custom.h" />
     <ClInclude Include="world.h" />
     <ClInclude Include="plasma.h" />
     <ClInclude Include="smoke_trail.h" />

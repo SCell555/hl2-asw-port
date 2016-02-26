@@ -1334,6 +1334,64 @@ void C_BasePlayer::CreateWaterEffects( void )
 	}
 }
 
+void C_BasePlayer::CalcDeathView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
+{
+    if ( m_lifeState != LIFE_ALIVE )
+    {
+        C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+ 
+        if ( !pPlayer )
+            return;
+ 
+        // Keep a copy of the actual player model.
+        pPlayer->SnatchModelInstance(this);
+ 
+        matrix3x4a_t boneDelta0[MAXSTUDIOBONES];
+        matrix3x4a_t boneDelta1[MAXSTUDIOBONES];
+        matrix3x4a_t currentBones[MAXSTUDIOBONES];
+        const float boneDt = 0.05f;
+ 
+        if ( pPlayer && !pPlayer->IsDormant() )
+        {
+            pPlayer->GetRagdollInitBoneArrays( boneDelta0, boneDelta1, currentBones, boneDt );
+        }
+        else
+        {
+            GetRagdollInitBoneArrays( boneDelta0, boneDelta1, currentBones, boneDt );
+        }
+		// we don't want to draw player ragdoll after death as it causes a lot of graphics glitches (DmitRex)
+		//pPlayer->ShouldDraw();
+        // Sets the ragdoll.
+        InitAsClientRagdoll( boneDelta0, boneDelta1, currentBones, boneDt );
+ 
+        // Calculate origin of the ragdoll and attach camera to head.
+		Vector origin;
+		GetAttachment( "eyes", origin );
+        eyeOrigin = origin;
+ 
+        Vector vForward;
+        AngleVectors( eyeAngles, &vForward );
+ 
+        VectorNormalize( vForward );
+        VectorMA( origin, -2, vForward, eyeOrigin );
+ 
+        Vector WALL_MIN( -WALL_OFFSET, -WALL_OFFSET, -WALL_OFFSET );
+        Vector WALL_MAX( WALL_OFFSET, WALL_OFFSET, WALL_OFFSET );
+ 
+        trace_t trace; // clip against world
+        C_BaseEntity::PushEnableAbsRecomputations( false ); // HACK don't recompute positions while doing RayTrace
+        UTIL_TraceHull( origin, eyeOrigin, WALL_MIN, WALL_MAX, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &trace );
+        C_BaseEntity::PopEnableAbsRecomputations();
+ 
+        if (trace.fraction < 0.8)
+        {
+			trace.endpos.z=trace.endpos.z+10;
+			eyeOrigin = trace.endpos;
+        }
+        fov = GetFOV();
+    }
+}
+
 //-----------------------------------------------------------------------------
 // Called when not in tactical mode. Allows view to be overriden for things like driving a tank.
 //-----------------------------------------------------------------------------

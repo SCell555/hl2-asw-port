@@ -8,7 +8,6 @@
 #include <KeyValues.h>
 #include <tier0/mem.h>
 #include "filesystem.h"
-#include "utldict.h"
 #include "ammodef.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -75,6 +74,11 @@ extern itemFlags_t g_ItemFlags[7];
 
 
 static CUtlDict< FileWeaponInfo_t*, unsigned short > m_WeaponInfoDatabase;
+
+CUtlDict< FileWeaponInfo_t*, unsigned short > *GetWeaponInfoDatabase()
+{
+	return &m_WeaponInfoDatabase;
+}
 
 #ifdef _DEBUG
 // used to track whether or not two weapons have been mistakenly assigned the wrong slot
@@ -187,7 +191,7 @@ void PrecacheFileWeaponInfoDatabase( IFileSystem *filesystem, const unsigned cha
 			}
 			else
 			{
-				Error( "Expecting 'file', got %s\n", sub->GetName() );
+				Warning( "Expecting 'file', got %s\n", sub->GetName() );
 			}
 		}
 	}
@@ -337,6 +341,45 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 	bShowUsageHint = false;
 	m_bAllowFlipping = true;
 	m_bBuiltRightHanded = true;
+
+	m_bAllowFlipping = true;
+	m_bIsCustom = false;
+	m_bBuiltRightHanded = true;
+	m_bUseMuzzleSmoke = false;
+	m_sCanReloadSingly = false;
+	m_sDualWeapons = false;
+	m_sWeaponOptions = false;
+	muzzle = { 0, 0, 0, 0 };
+	secondary = primary = {
+		false,
+		false,
+		0,
+		0.f,
+		0,
+		0.f,
+		Vector(0, 0, 0),
+		false,
+		false,
+		0.f,
+		false,
+		0.f,
+		0.f,
+		0.f,
+		0.f,
+		0.f,
+		0.f,
+		Vector(0, 0, 0),
+		Vector(0, 0, 0),
+		0.f,
+		0.f,
+		false,
+		false,
+		false,
+		0,
+		0,
+		false,
+		false
+	};
 }
 
 #ifdef CLIENT_DLL
@@ -401,6 +444,7 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 	m_bBuiltRightHanded = pKeyValuesData->GetBool( "BuiltRightHanded", true );
 	m_bAllowFlipping = pKeyValuesData->GetBool( "AllowFlipping", true );
 	m_bMeleeWeapon = pKeyValuesData->GetBool( "MeleeWeapon", false );
+	m_bUseMuzzleSmoke = pKeyValuesData->GetBool( "UseMuzzleSmoke", false );
 
 #if defined(_DEBUG) && defined(HL2_CLIENT_DLL)
 	// make sure two weapons aren't in the same slot & position
@@ -442,6 +486,408 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 		Q_strncpy( szAIAddOn, "", sizeof( szAIAddOn ) );
 	else
 		Q_strncpy( szAIAddOn, pAIAddOn, sizeof( szAIAddOn )  );
+
+	KeyValues *pSights = pKeyValuesData->FindKey("IronSight");
+	if (pSights)
+	{
+		vecIronsightPosOffset.x = pSights->GetFloat("forward", 0.0f);
+		vecIronsightPosOffset.y = pSights->GetFloat("right", 0.0f);
+		vecIronsightPosOffset.z = pSights->GetFloat("up", 0.0f);
+
+		angIronsightAngOffset[PITCH] = pSights->GetFloat("pitch", 0.0f);
+		angIronsightAngOffset[YAW] = pSights->GetFloat("yaw", 0.0f);
+		angIronsightAngOffset[ROLL] = pSights->GetFloat("roll", 0.0f);
+
+		flIronsightFOVOffset = pSights->GetFloat("fov", 0.0f);
+		hasIronsight = true;
+	}
+	else
+	{
+		hasIronsight = false;
+		vecIronsightPosOffset = vec3_origin;
+		angIronsightAngOffset.Init();
+		flIronsightFOVOffset = 0.0f;
+	}
+
+#if 0	//no need for it now
+	if (m_bIsCustom)
+	{
+		KeyValues *pWeaponSpec = pKeyValuesData->FindKey("WeaponSpec");
+		if (pWeaponSpec)
+		{
+			KeyValues *pWeaponOptions = pWeaponSpec->FindKey("WeaponOptions");
+			if (pWeaponOptions)
+			{
+				m_sWeaponOptions = true;
+				m_sCanReloadSingly = (pWeaponOptions->GetInt("CanReloadSingly", 1) != 0) ? true : false;
+				m_sDualWeapons = (pWeaponOptions->GetInt("DualWeapons", 0) != 0) ? true : false;
+			}
+			else
+			{
+				m_sWeaponOptions = false;
+			}
+
+			KeyValues *pPrimaryFire = pWeaponSpec->FindKey("PrimaryFire");
+			if (pPrimaryFire)
+			{
+				primary.hasFire = true;
+				primary.fireRate = pPrimaryFire->GetFloat("FireRate", 1.0f);
+				primary.ironsightFireRate = pPrimaryFire->GetFloat("IronsightFireRate", primary.fireRate);
+				primary.zoomFireRate = pPrimaryFire->GetFloat("ZoomFireRate", primary.fireRate);
+				primary.infiniteAmmoEnabled = (pPrimaryFire->GetInt("InfiniteAmmo", 0) != 0) ? true : false;
+				primary.minRange = pPrimaryFire->GetInt("MinRange", 0);
+				primary.maxRange = pPrimaryFire->GetInt("MaxRange", 0);
+				primary.canFireUnderwater = (pPrimaryFire->GetInt("CanFireUnderwater", 1) != 0) ? true : false;
+				primary.fireBoth = (pWeaponOptions->GetInt("FireBothGuns", 1) != 0) ? true : false;
+				KeyValues *pBullet1 = pPrimaryFire->FindKey("Bullet");
+				if (pBullet1)
+				{
+					primary.bulletEnabled = true;
+					primary.damage = pBullet1->GetFloat("Damage", 0);
+					primary.shotCount = pBullet1->GetInt("ShotCount", 0);
+
+					KeyValues *pSpread1 = pBullet1->FindKey("Spread");
+					if (pSpread1)
+					{
+						primary.spread.x = sin((pSpread1->GetFloat("x", 0.0f) / 2.0f));
+						primary.spread.y = sin((pSpread1->GetFloat("y", 0.0f) / 2.0f));
+						primary.spread.z = sin((pSpread1->GetFloat("z", 0.0f) / 2.0f));
+					}
+					else
+					{
+						primary.spread.x = 0.0f;
+						primary.spread.y = 0.0f;
+						primary.spread.z = 0.0f;
+					}
+
+					KeyValues *pIronsightSpread1 = pBullet1->FindKey("IronsightSpread");
+					if (pIronsightSpread1)
+					{
+						primary.ironsightSpread.x = sin((pIronsightSpread1->GetFloat("x", 0.0f) / 2.0f));
+						primary.ironsightSpread.y = sin((pIronsightSpread1->GetFloat("y", 0.0f) / 2.0f));
+						primary.ironsightSpread.z = sin((pIronsightSpread1->GetFloat("z", 0.0f) / 2.0f));
+					}
+					else
+					{
+						primary.ironsightSpread.x = primary.spread.x;
+						primary.ironsightSpread.y = primary.spread.y;
+						primary.ironsightSpread.z = primary.spread.z;
+					}
+
+					KeyValues *pZoomSpread1 = pBullet1->FindKey("ZoomSpread");
+					if (pZoomSpread1)
+					{
+						primary.zoomSpread.x = sin((pZoomSpread1->GetFloat("x", 0.0f) / 2.0f));
+						primary.zoomSpread.y = sin((pZoomSpread1->GetFloat("y", 0.0f) / 2.0f));
+						primary.zoomSpread.z = sin((pZoomSpread1->GetFloat("z", 0.0f) / 2.0f));
+					}
+					else
+					{
+						primary.zoomSpread.x = primary.spread.x;
+						primary.zoomSpread.y = primary.spread.y;
+						primary.zoomSpread.z = primary.spread.z;
+					}
+				}
+				else
+				{
+					primary.damage = 0.0f;
+					primary.shotCount = 0;
+					primary.bulletEnabled = false;
+				}
+
+				KeyValues *pMissle1 = pPrimaryFire->FindKey("Missle");
+				if (pMissle1) //No params yet, but setting this will enable missles
+				{
+					primary.missleEnabled = true;
+					primary.hasRecoilRPGMissle = (pMissle1->GetInt("UseRecoil", 1) != 0) ? true : false;
+				}
+				else
+				{
+					primary.missleEnabled = false;
+				}
+
+				KeyValues *pSMGGrenade1 = pPrimaryFire->FindKey("SMGGrenade");
+				if (pSMGGrenade1) //No params yet, but setting this will enable missles
+				{
+					primary.SMGGrenadeEnabled = true;
+					primary.SMGGrenadeDamage = pSMGGrenade1->GetFloat("Damage", 0);
+					primary.hasRecoilSMGGrenade = (pSMGGrenade1->GetInt("UseRecoil", 1) != 0) ? true : false;
+				}
+				else
+				{
+					primary.SMGGrenadeEnabled = false;
+					primary.SMGGrenadeDamage = 0.0;
+				}
+
+				KeyValues *pAR2EnergyBall1 = pPrimaryFire->FindKey("AR2EnergyBall");
+				if (pAR2EnergyBall1) //No params yet, but setting this will enable missles
+				{
+					primary.AR2EnergyBallEnabled = true;
+					primary.combineBallRadius = pAR2EnergyBall1->GetFloat("Radius", 0);
+					primary.combineBallMass = pAR2EnergyBall1->GetFloat("Mass", 0);
+					primary.combineBallDuration = pAR2EnergyBall1->GetFloat("Duration", 0);
+				}
+				else
+				{
+					primary.AR2EnergyBallEnabled = false;
+					primary.combineBallRadius = 0.0;
+					primary.combineBallMass = 0.0;
+					primary.combineBallDuration = 0.0;
+				}
+
+				KeyValues *pRecoil1 = pPrimaryFire->FindKey("Recoil");
+				if (pRecoil1) //No params yet, but setting this will enable missles
+				{
+					primary.recoilEasyDampen = pRecoil1->GetFloat("EasyDampen", 0);
+					primary.recoilDegrees = pRecoil1->GetFloat("Degrees", 0);
+					primary.recoilSeconds = pRecoil1->GetFloat("Seconds", 0);
+				}
+				else
+				{
+					primary.recoilEasyDampen = 0.0;
+					primary.recoilDegrees = 0.0;
+					primary.recoilSeconds = 0.0;
+				}
+			}
+			else
+			{
+				primary.hasFire = false;
+			}
+
+			KeyValues *pSecondaryFire = pWeaponSpec->FindKey("SecondaryFire");
+			if (pSecondaryFire)
+			{
+				secondary.hasFire = true;
+				secondary.fireRate = pSecondaryFire->GetFloat("FireRate", 1.0f);
+				secondary.ironsightFireRate = pSecondaryFire->GetFloat("IronsightFireRate", secondary.fireRate);
+				secondary.zoomFireRate = pSecondaryFire->GetFloat("ZoomFireRate", secondary.fireRate);
+				m_sUsePrimaryAmmo = (pSecondaryFire->GetInt("UsePrimaryAmmo", 0) != 0) ? true : false;
+				secondary.infiniteAmmoEnabled = (pSecondaryFire->GetInt("InfiniteAmmo", 0) != 0) ? true : false;
+				secondary.minRange = pSecondaryFire->GetInt("MinRange", 0);
+				secondary.maxRange = pSecondaryFire->GetInt("MaxRange", 0);
+				secondary.canFireUnderwater = (pSecondaryFire->GetInt("CanFireUnderwater", 1) != 0) ? true : false;
+				secondary.fireBoth = (pWeaponOptions->GetInt("FireBothGuns", 0) != 0) ? true : false;
+				KeyValues *pBullet1 = pSecondaryFire->FindKey("Bullet");
+				if (pBullet1)
+				{
+					secondary.bulletEnabled = true;
+					secondary.damage = pBullet1->GetFloat("Damage", 0);
+					secondary.shotCount = pBullet1->GetInt("ShotCount", 0);
+
+					KeyValues *pSpread1 = pBullet1->FindKey("Spread");
+					if (pSpread1)
+					{
+						secondary.spread.x = sin((pSpread1->GetFloat("x", 0.0f) / 2.0f));
+						secondary.spread.y = sin((pSpread1->GetFloat("y", 0.0f) / 2.0f));
+						secondary.spread.z = sin((pSpread1->GetFloat("z", 0.0f) / 2.0f));
+					}
+					else
+					{
+						secondary.spread.x = 0.0f;
+						secondary.spread.y = 0.0f;
+						secondary.spread.z = 0.0f;
+					}
+
+					KeyValues *pIronsightSpread1 = pBullet1->FindKey("IronsightSpread");
+					if (pIronsightSpread1)
+					{
+						secondary.ironsightSpread.x = sin((pIronsightSpread1->GetFloat("x", 0.0f) / 2.0f));
+						secondary.ironsightSpread.y = sin((pIronsightSpread1->GetFloat("y", 0.0f) / 2.0f));
+						secondary.ironsightSpread.z = sin((pIronsightSpread1->GetFloat("z", 0.0f) / 2.0f));
+					}
+					else
+					{
+						secondary.ironsightSpread.x = secondary.spread.x;
+						secondary.ironsightSpread.y = secondary.spread.y;
+						secondary.ironsightSpread.z = secondary.spread.z;
+					}
+
+					KeyValues *pZoomSpread1 = pBullet1->FindKey("ZoomSpread");
+					if (pZoomSpread1)
+					{
+						secondary.zoomSpread.x = sin((pZoomSpread1->GetFloat("x", 0.0f) / 2.0f));
+						secondary.zoomSpread.y = sin((pZoomSpread1->GetFloat("y", 0.0f) / 2.0f));
+						secondary.zoomSpread.z = sin((pZoomSpread1->GetFloat("z", 0.0f) / 2.0f));
+					}
+					else
+					{
+						secondary.zoomSpread.x = secondary.spread.x;
+						secondary.zoomSpread.y = secondary.spread.y;
+						secondary.zoomSpread.z = secondary.spread.z;
+					}
+				}
+				else
+				{
+					secondary.damage = 0.0f;
+					secondary.shotCount = 0;
+					secondary.bulletEnabled = false;
+				}
+
+				KeyValues *pMissle1 = pSecondaryFire->FindKey("Missle");
+				if (pMissle1) //No params yet, but setting this will enable missles
+				{
+					secondary.missleEnabled = true;
+					secondary.hasRecoilRPGMissle = (pMissle1->GetInt("UseRecoil", 1) != 0) ? true : false;
+				}
+				else
+				{
+					secondary.missleEnabled = false;
+				}
+
+				KeyValues *pSMGGrenade1 = pSecondaryFire->FindKey("SMGGrenade");
+				if (pSMGGrenade1) //No params yet, but setting this will enable missles
+				{
+					secondary.SMGGrenadeEnabled = true;
+					secondary.SMGGrenadeDamage = pSMGGrenade1->GetFloat("Damage", 0);
+					secondary.hasRecoilSMGGrenade = (pSMGGrenade1->GetInt("UseRecoil", 1) != 0) ? true : false;
+				}
+				else
+				{
+					secondary.SMGGrenadeEnabled = false;
+					secondary.SMGGrenadeDamage = 0.0;
+				}
+
+				KeyValues *pAR2EnergyBall1 = pSecondaryFire->FindKey("AR2EnergyBall");
+				if (pAR2EnergyBall1) //No params yet, but setting this will enable missles
+				{
+					secondary.AR2EnergyBallEnabled = true;
+					secondary.combineBallRadius = pAR2EnergyBall1->GetFloat("Radius", 0);
+					secondary.combineBallMass = pAR2EnergyBall1->GetFloat("Mass", 0);
+					secondary.combineBallDuration = pAR2EnergyBall1->GetFloat("Duration", 0);
+				}
+				else
+				{
+					secondary.AR2EnergyBallEnabled = false;
+					secondary.combineBallRadius = 0.0;
+					secondary.combineBallMass = 0.0;
+					secondary.combineBallDuration = 0.0;
+				}
+
+				KeyValues *pRecoil1 = pSecondaryFire->FindKey("Recoil");
+				if (pRecoil1) //No params yet, but setting this will enable missles
+				{
+					secondary.recoilEasyDampen = pRecoil1->GetFloat("EasyDampen", 0);
+					secondary.recoilDegrees = pRecoil1->GetFloat("Degrees", 0);
+					secondary.recoilSeconds = pRecoil1->GetFloat("Seconds", 0);
+				}
+				else
+				{
+					secondary.recoilEasyDampen = 0.0;
+					secondary.recoilDegrees = 0.0;
+					secondary.recoilSeconds = 0.0;
+				}
+			}
+			else
+			{
+				secondary.hasFire = false;
+			}
+
+
+
+			KeyValues *pZoom = pWeaponSpec->FindKey("Zoom");
+			if (pZoom)
+			{
+				m_sUsesZoom = true;
+				m_sUseZoomOnPrimaryFire = (pZoom->GetInt("UseOnPrimaryFire", 0) != 0) ? true : false;
+				m_sUsesZoomSound = (pZoom->GetInt("UsesSound", 1) != 0) ? true : false;
+				m_sUsesZoomColor = (pZoom->GetInt("UsesColor", 1) != 0) ? true : false;
+				KeyValues *pZoomColor = pZoom->FindKey("ZoomColor");
+				{
+					if (pZoomColor && m_sUsesZoomColor)
+					{
+						m_sZoomColorRed = pZoomColor->GetInt("Red", 0);
+						m_sZoomColorGreen = pZoomColor->GetInt("Green", 0);
+						m_sZoomColorBlue = pZoomColor->GetInt("Blue", 0);
+						m_sZoomColorAlpha = pZoomColor->GetInt("Alpha", 0);
+					}
+					else
+						m_sZoomColorAlpha = m_sZoomColorBlue = m_sZoomColorGreen = m_sZoomColorRed = 0;
+
+				}
+			}
+			else
+			{
+				m_sUsesZoom = false;
+			}
+
+			KeyValues *pCustomization = pWeaponSpec->FindKey("Customization");
+			if (pCustomization)
+			{
+				m_sUsesCustomization = true;
+
+				m_sWeaponSkin = pCustomization->GetInt("Skin", 0);
+				KeyValues *pBodygroup1 = pWeaponSpec->FindKey("Bodygroup1");
+				if (pBodygroup1)
+				{
+					m_sBodygroup1 = pBodygroup1->GetInt("Bodygroup", 0);
+					m_sSubgroup1 = pBodygroup1->GetInt("Subgroup", 0);
+				}
+
+
+				KeyValues *pBodygroup2 = pWeaponSpec->FindKey("Bodygroup2");
+				if (pBodygroup2)
+				{
+					m_sBodygroup2 = pBodygroup2->GetInt("Bodygroup", 0);
+					m_sSubgroup2 = pBodygroup2->GetInt("Subgroup", 0);
+				}
+
+
+				KeyValues *pBodygroup3 = pWeaponSpec->FindKey("Bodygroup3");
+				{
+					if (pBodygroup3)
+					{
+						m_sBodygroup3 = pBodygroup3->GetInt("Bodygroup", 0);
+						m_sSubgroup3 = pBodygroup3->GetInt("Subgroup", 0);
+					}
+				}
+
+				KeyValues *pBodygroup4 = pWeaponSpec->FindKey("Bodygroup4");
+				if (pBodygroup4)
+				{
+					m_sBodygroup4 = pBodygroup4->GetInt("Bodygroup", 0);
+					m_sSubgroup4 = pBodygroup4->GetInt("Subgroup", 0);
+				}
+
+
+				KeyValues *pBodygroup5 = pWeaponSpec->FindKey("Bodygroup5");
+				if (pBodygroup5)
+				{
+					m_sBodygroup5 = pBodygroup5->GetInt("Bodygroup", 0);
+					m_sSubgroup5 = pBodygroup5->GetInt("Subgroup", 0);
+				}
+
+
+				KeyValues *pBodygroup6 = pWeaponSpec->FindKey("Bodygroup6");
+				if (pBodygroup6)
+				{
+					m_sBodygroup6 = pBodygroup6->GetInt("Bodygroup", 0);
+					m_sSubgroup6 = pBodygroup6->GetInt("Subgroup", 0);
+				}
+
+			}
+			else
+			{
+				m_sUsesCustomization = false;
+			}
+		}
+	}
+#endif
+
+	KeyValues *flash = pKeyValuesData->FindKey("muzzleflash");
+	if (flash)
+	{
+		muzzle.r = flash->GetInt("red", 255);
+		muzzle.g = flash->GetInt("green", 192);
+		muzzle.b = flash->GetInt("blue", 64);
+		muzzle.exponent = flash->GetInt("exponent", 1);
+	}
+	else
+	{
+		muzzle.r = 255;
+		muzzle.g = 192;
+		muzzle.b = 64;
+		muzzle.exponent = 2;
+	}
 
 	// Now read the weapon sounds
 	memset( aShootSounds, 0, sizeof( aShootSounds ) );

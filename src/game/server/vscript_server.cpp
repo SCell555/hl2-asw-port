@@ -15,6 +15,7 @@
 #include "sceneentity.h"		// for exposing scene precache function
 #include "isaverestore.h"
 #include "gamerules.h"
+#include "mountsteamcontent.h"
 #ifdef _WIN32
 //#include "vscript_server_nut.h"
 #endif
@@ -398,6 +399,10 @@ bool VScriptServerInit()
 			{
 				scriptLanguage = SL_PYTHON;
 			}
+			else if( !Q_stricmp(pszScriptLanguage, "lua") )
+			{
+				scriptLanguage = SL_LUA;
+			}
 			else
 			{
 				DevWarning("-server_script does not recognize a language named '%s'. virtual machine did NOT start.\n", pszScriptLanguage );
@@ -430,6 +435,12 @@ bool VScriptServerInit()
 				ScriptRegisterFunction( g_pScriptVM, DoIncludeScript, "Execute a script (internal)" );
 				ScriptRegisterFunction( g_pScriptVM, CreateProp, "Create a physics prop" );
 
+				
+				ScriptRegisterFunction( g_pScriptVM, BeginCreatingNewWeapon, "Start creating new weapon entity.");
+				ScriptRegisterFunction( g_pScriptVM, AddWeaponProperty, "Add properties for new weapon entity.");
+				ScriptRegisterFunction( g_pScriptVM, EndCreatingNewWeapon, "Finish creating new weapon entity.");
+
+				ScriptRegisterFunctionNamed( g_pScriptVM, Steam_MountSteamContent, "MountSteamContent", "Mounts steam content by appid" );
 				
 				if ( GameRules() )
 				{

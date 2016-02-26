@@ -46,7 +46,7 @@ static ConVar r_flashlightvisualizetrace( "r_flashlightvisualizetrace", "0", FCV
 static ConVar r_flashlightambient( "r_flashlightambient", "0.0", FCVAR_CHEAT );
 static ConVar r_flashlightshadowatten( "r_flashlightshadowatten", "0.35", FCVAR_CHEAT );
 static ConVar r_flashlightladderdist( "r_flashlightladderdist", "40.0", FCVAR_CHEAT );
-static ConVar r_flashlightAO ( "r_flashlightAO", "0", FCVAR_CHEAT);
+static ConVar r_flashlightAO ( "r_flashlightAO", "1", FCVAR_CHEAT);
 static ConVar r_flashlightuberlight ( "r_flashlightuberlight", "0" );
 static ConVar r_flashlightnearoffsetscale( "r_flashlightnearoffsetscale", "1.0", FCVAR_CHEAT );
 static ConVar r_flashlighttracedistcutoff( "r_flashlighttracedistcutoff", "128" );
@@ -411,9 +411,12 @@ bool CFlashlightEffect::UpdateDefaultFlashlightState( FlashlightState_t& state, 
 	{
 		state.m_FarZ = state.m_FarZAtten = r_flashlightfar.GetFloat();	// Strictly speaking, these are different, but the game can treat them the same
 	}
-	state.m_bEnableShadows = castsShadows && r_flashlightdepthtexture.GetBool();
+	state.m_bEnableShadows = r_flashlightdepthtexture.GetBool();
 	state.m_flShadowMapResolution = r_flashlightdepthres.GetInt();
-	state.m_flShadowFilterSize = 3.0f;		// default value
+	state.m_flShadowFilterSize = 1.0f;		// default value	3.0f
+	state.m_nShadowQuality = 2;
+	state.m_bShadowHighRes = true;
+
 	// uberlight
 	state.m_bUberlight = r_flashlightuberlight.GetBool();
 	state.m_uberlightState.m_fRoundness = 1.0f;

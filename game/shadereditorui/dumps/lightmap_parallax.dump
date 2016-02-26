@@ -11,7 +11,7 @@
 	"i_dtest"		"1"
 	"i_dwrite"		"1"
 	"i_srgbw"		"1"
-	"i_vfmt_flags"		"19136819"
+	"i_vfmt_flags"		"38273075"
 	"i_vfmt_texcoords"		"3"
 	"i_vfmt_udata"		"0"
 	"i_vfmt_texcoordDim_0"		"2"
@@ -55,19 +55,19 @@
 		}
 		"combo_2"
 		{
-			"sz_name"		"FLASHLIGHTDEPTHFILTERMODE"
-			"i_static"		"0"
-			"i_min"		"0"
-			"i_max"		"2"
-			"i_type"		"10"
-		}
-		"combo_3"
-		{
 			"sz_name"		"PIXELFOGTYPE"
 			"i_static"		"0"
 			"i_min"		"0"
 			"i_max"		"1"
 			"i_type"		"7"
+		}
+		"combo_3"
+		{
+			"sz_name"		"FLASHLIGHTDEPTHFILTERMODE"
+			"i_static"		"0"
+			"i_min"		"0"
+			"i_max"		"2"
+			"i_type"		"10"
 		}
 		"combo_4"
 		{

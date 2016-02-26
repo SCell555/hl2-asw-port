@@ -7,20 +7,32 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client (HL2Swarm)", "game\c
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Server (HL2Swarm)", "game\server\swarm_sdk_server.vcxproj", "{A26C0361-6B09-9E3D-5194-C9CB89243710}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "stdshader_dx9", "materialsystem\stdshaders\stdshader_dx9_sdk.vcxproj", "{C8D2DC83-E117-7576-7B43-10C844264C51}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shaderlib", "materialsystem\shaderlib\shaderlib_sdk.vcxproj", "{1A1149D9-CB1B-BF85-19CA-C9C2996BFDE8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A02FA314-011F-4687-BF7E-F59FE220CCBC}.Debug|Win32.ActiveCfg = Release|Win32
-		{A02FA314-011F-4687-BF7E-F59FE220CCBC}.Debug|Win32.Build.0 = Release|Win32
+		{A02FA314-011F-4687-BF7E-F59FE220CCBC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A02FA314-011F-4687-BF7E-F59FE220CCBC}.Debug|Win32.Build.0 = Debug|Win32
 		{A02FA314-011F-4687-BF7E-F59FE220CCBC}.Release|Win32.ActiveCfg = Release|Win32
 		{A02FA314-011F-4687-BF7E-F59FE220CCBC}.Release|Win32.Build.0 = Release|Win32
-		{A26C0361-6B09-9E3D-5194-C9CB89243710}.Debug|Win32.ActiveCfg = Release|Win32
-		{A26C0361-6B09-9E3D-5194-C9CB89243710}.Debug|Win32.Build.0 = Release|Win32
+		{A26C0361-6B09-9E3D-5194-C9CB89243710}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A26C0361-6B09-9E3D-5194-C9CB89243710}.Debug|Win32.Build.0 = Debug|Win32
 		{A26C0361-6B09-9E3D-5194-C9CB89243710}.Release|Win32.ActiveCfg = Release|Win32
 		{A26C0361-6B09-9E3D-5194-C9CB89243710}.Release|Win32.Build.0 = Release|Win32
+		{C8D2DC83-E117-7576-7B43-10C844264C51}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C8D2DC83-E117-7576-7B43-10C844264C51}.Debug|Win32.Build.0 = Debug|Win32
+		{C8D2DC83-E117-7576-7B43-10C844264C51}.Release|Win32.ActiveCfg = Release|Win32
+		{C8D2DC83-E117-7576-7B43-10C844264C51}.Release|Win32.Build.0 = Release|Win32
+		{1A1149D9-CB1B-BF85-19CA-C9C2996BFDE8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1A1149D9-CB1B-BF85-19CA-C9C2996BFDE8}.Debug|Win32.Build.0 = Debug|Win32
+		{1A1149D9-CB1B-BF85-19CA-C9C2996BFDE8}.Release|Win32.ActiveCfg = Release|Win32
+		{1A1149D9-CB1B-BF85-19CA-C9C2996BFDE8}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

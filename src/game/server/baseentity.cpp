@@ -5432,7 +5432,7 @@ ConVar sv_modelprecache_debug( "sv_modelprecache_debug", "1", FCVAR_CHEAT );
 // Input  : *name - model name
 // Output : int -- model index for model
 //-----------------------------------------------------------------------------
-int CBaseEntity::PrecacheModel( const char *name )
+int CBaseEntity::PrecacheModel( const char *name, bool bPreload )
 {
 	if ( !name || !*name )
 	{
@@ -5463,7 +5463,7 @@ int CBaseEntity::PrecacheModel( const char *name )
 	{
 		Msg( " !! CBaseEntity::PrecacheModel : (pre) modelinfo->PrecacheModel %s \n", name );
 	}
-	idx = engine->PrecacheModel( name, true ); // Precache is giving model an index.
+	idx = engine->PrecacheModel( name, bPreload ); // Precache is giving model an index.
 	if ( sv_modelprecache_debug.GetBool() )
 	{
 		Msg( " !! CBaseEntity::PrecacheModel : (post) modelinfo->PrecacheModel %s, index: %i \n", name, idx );
@@ -5493,7 +5493,7 @@ int CBaseEntity::PrecacheModel( const char *name )
 		}
 	}
 #else
-	int idx = engine->PrecacheModel( name, true );
+	int idx = engine->PrecacheModel( name, bPreload );
 	if ( idx != -1 )
 	{
 		PrecacheModelComponents( idx );

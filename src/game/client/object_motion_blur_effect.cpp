@@ -8,7 +8,7 @@
 #include "object_motion_blur_effect.h"
 #include "model_types.h"
 
-ConVar mat_object_motion_blur_enable( "mat_object_motion_blur_enable", "0" );
+ConVar mat_object_motion_blur_enable( "mat_object_motion_blur_enable", "1" );
 ConVar mat_object_motion_blur_model_scale( "mat_object_motion_blur_model_scale", "1.2" );
 
 CObjectMotionBlurManager g_ObjectMotionBlurManager;

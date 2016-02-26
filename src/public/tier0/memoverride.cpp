@@ -6,6 +6,7 @@
 // $NoKeywords: $
 //=============================================================================//
 
+#define NO_MEMOVERRIDE_NEW_DELETE //HACK -- too many crashes
 
 #if !defined(STEAM) && !defined(NO_MALLOC_OVERRIDE)
 #define AVOID_INCLUDING_ALGORITHM
@@ -13,8 +14,7 @@
 #undef PROTECTED_THINGS_ENABLE   // allow use of _vsnprintf
 
 #if defined( _WIN32 ) && !defined( _X360 )
-#define WIN_32_LEAN_AND_MEAN
-#include <windows.h>
+#include "winlite.h"
 #endif
 
 #include "tier0/dbg.h"

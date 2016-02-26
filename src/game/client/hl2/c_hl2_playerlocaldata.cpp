@@ -29,6 +29,8 @@ BEGIN_RECV_TABLE_NOBASE( C_HL2PlayerLocalData, DT_HL2Local )
 	RecvPropFloat( RECVINFO(m_flFlashBattery) ),
 	RecvPropVector( RECVINFO(m_vecLocatorOrigin) ),
 #endif
+	RecvPropFloat( RECVINFO(m_flNightVisionBattery) ),
+	RecvPropBool( RECVINFO(m_bIsNightVisionOn) ),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA_NO_BASE( C_HL2PlayerLocalData )
@@ -48,5 +50,7 @@ C_HL2PlayerLocalData::C_HL2PlayerLocalData()
 	m_flFlashBattery = 0.0f;
 	m_vecLocatorOrigin = vec3_origin;
 #endif
+	m_flNightVisionBattery = 0.0f;
+	m_bIsNightVisionOn = false;
 }
 

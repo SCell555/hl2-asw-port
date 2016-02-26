@@ -91,6 +91,8 @@ public:
 
 	Vector					m_vecLastFacing;
 
+	void					CalcIronsights( Vector &pos, QAngle &ang );
+
 	virtual bool			IsViewModel() const { return true; }
 	virtual bool			IsViewModelOrAttachment() const { return true; }
 

@@ -1856,6 +1856,9 @@ void C_BaseAnimating::StandardBlendingRules( CStudioHdr *hdr, Vector pos[], Quat
 	if ( !hdr )
 		return;
 
+	if ( !pos )
+		return;
+
 	if ( !hdr->SequencesAvailable() )
 	{
 		return;
@@ -2565,7 +2568,7 @@ CMouthInfo *C_BaseAnimating::GetMouth( void )
 #ifdef DEBUG_BONE_SETUP_THREADING
 ConVar cl_warn_thread_contested_bone_setup("cl_warn_thread_contested_bone_setup", "0" );
 #endif
-ConVar cl_threaded_bone_setup("cl_threaded_bone_setup", "1", 0, "Enable parallel processing of C_BaseAnimating::SetupBones()" );
+ConVar cl_threaded_bone_setup("cl_threaded_bone_setup", "0", 0, "Enable parallel processing of C_BaseAnimating::SetupBones()" );
 //ConVar cl_threaded_bone_setup("cl_threaded_bone_setup", ( IsX360() ) ? "1" : "0", 0, "Enable parallel processing of C_BaseAnimating::SetupBones()" );
 
 //-----------------------------------------------------------------------------
@@ -3208,6 +3211,11 @@ int C_BaseAnimating::DrawModel( int flags, const RenderableInstance_t &instance 
 		if ( flags & STUDIO_SKIP_DECALS )
 		{
 			extraFlags |= STUDIO_SKIP_DECALS;
+		}
+
+		if ( flags & STUDIO_SSAODEPTHTEXTURE )
+		{
+			extraFlags |= STUDIO_SSAODEPTHTEXTURE;
 		}
 
 		// Necessary for lighting blending

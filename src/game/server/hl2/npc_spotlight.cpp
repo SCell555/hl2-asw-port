@@ -445,7 +445,7 @@ CBaseEntity* CNPC_Spotlight::BestInspectTarget(void)
 	{
 		flSearchDist = SPOTLIGHT_ENTITY_SEARCH_DIST;
 	}
-	for ( CEntitySphereQuery sphere( vSearchOrigin, SPOTLIGHT_ENTITY_SEARCH_DIST ); pEntity = sphere.GetCurrentEntity(); sphere.NextEntity() )
+	for ( CEntitySphereQuery sphere( vSearchOrigin, SPOTLIGHT_ENTITY_SEARCH_DIST ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 	{
 		if (pEntity->GetFlags() & (FL_CLIENT|FL_NPC))
 		{

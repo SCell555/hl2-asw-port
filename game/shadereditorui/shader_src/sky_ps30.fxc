@@ -1,0 +1,67 @@
+// ********************************
+// ** auto generated pixelshader **
+// ********************************
+
+#define SHADER_EDITOR_SWARM_COMPILE
+
+// Combos
+// DYNAMIC: "PIXELFOGTYPE"		"0..1"
+// DYNAMIC: "WRITEWATERFOGTODESTALPHA"		"0..1"
+
+// Includes
+#include "common_ps_fxc.h"
+#include "common_vertexlitgeneric_dx9.h"
+#include "common_lightmappedgeneric_fxc.h"
+#include "common_flashlight_fxc.h"
+#include "common_parallax.h"
+
+
+// Samplers
+sampler _Sampler_00		: register( s0 );
+
+// Semantic structures
+struct PS_INPUT
+{
+	float2 vTexCoord_0			:	TEXCOORD0;
+	float2 vTexCoord_1			:	TEXCOORD1;
+	float2 vTexCoord_2			:	TEXCOORD2;
+	float2 vTexCoord_3			:	TEXCOORD3;
+	float2 vTexCoord_4			:	TEXCOORD4;
+};
+
+struct PS_OUTPUT
+{
+	float4 vColor_0				:	COLOR0;
+};
+
+// Entry point
+PS_OUTPUT main( const PS_INPUT In )
+{
+	PS_OUTPUT Out;
+	float4 _texLookup_6 = tex2D( _Sampler_00, In.vTexCoord_0 );
+	float3 _var0 = _texLookup_6.rgb;
+	float _var1 = _texLookup_6.a;
+	float4 _texLookup_8 = tex2D( _Sampler_00, In.vTexCoord_1 );
+	float3 _var2 = _texLookup_8.rgb;
+	float _var3 = _texLookup_8.a;
+	float2 _var4 = frac( In.vTexCoord_4 );
+	float4 _texLookup_11 = tex2D( _Sampler_00, In.vTexCoord_2 );
+	float3 _var5 = _texLookup_11.rgb;
+	float _var6 = _texLookup_11.a;
+	float4 _texLookup_13 = tex2D( _Sampler_00, In.vTexCoord_3 );
+	float3 _var7 = _texLookup_13.rgb;
+	float _var8 = _texLookup_13.a;
+	_var0 = _var0 * _var1;
+	_var2 = _var2 * _var3;
+	float _var9 = _var4.x;
+	_var5 = _var5 * _var6;
+	_var7 = _var7 * _var8;
+	float _var10 = _var4.y;
+	_var0 = lerp( _var0, _var2, _var9 );
+	_var5 = lerp( _var5, _var7, _var9 );
+	_var0 = lerp( _var0, _var5, _var10 );
+	float4 _var11 = float4( _var0.x, _var0.y, _var0.z, 1.000000 );
+	_var11 = FinalOutput( _var11, float( 0.000000 ), PIXELFOGTYPE, TONEMAP_SCALE_LINEAR, true, float( 0.000000 ) );
+	Out.vColor_0 = _var11;
+	return Out;
+}

@@ -33,4 +33,8 @@ inline bool VScriptRunScript( const char *pszScriptName, bool bWarnMissing = fal
 // Only allow scripts to create entities during map initialization
 bool IsEntityCreationAllowedInScripts( void );
 
+void BeginCreatingNewWeapon();
+void AddWeaponProperty(const char* prop, const char* value, const char* part);
+void EndCreatingNewWeapon();
+
 #endif // VSCRIPT_SHARED_H

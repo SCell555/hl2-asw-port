@@ -1,0 +1,76 @@
+// *********************************
+// ** auto generated vertexshader **
+// *********************************
+
+#define SHADER_EDITOR_SWARM_COMPILE
+
+
+// Includes
+#include "common_vs_fxc.h"
+
+
+// Semantic structures
+struct VS_INPUT
+{
+	float3 vPos					:	POSITION;
+	float2 vTexCoord_0			:	TEXCOORD0;
+};
+
+struct VS_OUTPUT
+{
+	float4 vProjPos				:	POSITION;
+	float2 vTexCoord_0			:	TEXCOORD0;
+	float2 vTexCoord_1			:	TEXCOORD1;
+	float2 vTexCoord_2			:	TEXCOORD2;
+	float2 vTexCoord_3			:	TEXCOORD3;
+	float2 vTexCoord_4			:	TEXCOORD4;
+};
+
+// Entry point
+VS_OUTPUT main( const VS_INPUT In )
+{
+	VS_OUTPUT Out;
+	float4 _var0 = mul( float4(In.vPos.xyz,1), cModelViewProj );
+	float4 _var1 = float4( In.vTexCoord_0.x, In.vTexCoord_0.y, 0.000000, 1.000000 );
+	float _var2 = float2( 512.000000, 256.000000 ).x;
+	float _var3 = float2( 512.000000, 256.000000 ).y;
+	float _var4 = float4( 16.000000, 16.000000, 16.000000, 16.000000 ).x;
+	float _var5 = float4( 16.000000, 16.000000, 16.000000, 16.000000 ).y;
+	float _var6 = float4( 16.000000, 16.000000, 16.000000, 16.000000 ).z;
+	float _var7 = float4( 16.000000, 16.000000, 16.000000, 16.000000 ).w;
+	float _var8 = float( 0.500000 ) / _var2;
+	float _var9 = max( _var2, _var3 );
+	float _var10 = float( 0.500000 ) / _var3;
+	_var9 = float( 0.010000 ) / _var9;
+	_var8 = _var8 - _var9;
+	_var10 = _var10 - _var9;
+	float2 _var11 = float2( _var8, _var10 );
+	float4 _var12 = float4( _var11, float2( 512.000000, 256.000000 ) );
+	float _var13 = dot( _var1, _var12 );
+	float _var14 = dot( _var1, _var12 );
+	float2 _var15 = float2( _var13, _var14 );
+	float _var16 = _var15.x;
+	float _var17 = _var15.y;
+	float _var18 = _var16 - _var4;
+	float _var19 = _var17 - _var5;
+	float _var20 = _var16 + _var4;
+	float _var21 = _var17 - _var5;
+	float _var22 = _var16 - _var4;
+	float _var23 = _var17 + _var5;
+	float _var24 = _var16 + _var4;
+	float _var25 = _var17 + _var5;
+	float2 _var26 = float2( _var18, _var19 );
+	float2 _var27 = float2( _var20, _var21 );
+	float2 _var28 = float2( _var22, _var23 );
+	float2 _var29 = float2( _var24, _var25 );
+	_var6 = _var18 * _var6;
+	_var7 = _var19 * _var7;
+	float2 _var30 = float2( _var6, _var7 );
+	Out.vProjPos = _var0;
+	Out.vTexCoord_0 = _var26;
+	Out.vTexCoord_1 = _var27;
+	Out.vTexCoord_2 = _var28;
+	Out.vTexCoord_3 = _var29;
+	Out.vTexCoord_4 = _var30;
+	return Out;
+}

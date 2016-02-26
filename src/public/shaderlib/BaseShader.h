@@ -100,31 +100,31 @@ public:
 	CBaseShader();
 
 	// Methods inherited from IShader
-	virtual char const* GetFallbackShader( IMaterialVar** params ) const { return 0; }
-	virtual int GetParamCount( ) const;
-	virtual const ShaderParamInfo_t& GetParamInfo( int paramIndex ) const;
+	virtual char const* GetFallbackShader(IMaterialVar** params) const { return 0; }
+	virtual int GetParamCount() const;
+	virtual const ShaderParamInfo_t& GetParamInfo(int paramIndex) const;
 
-	virtual void InitShaderParams( IMaterialVar** ppParams, const char *pMaterialName );
-	virtual void InitShaderInstance( IMaterialVar** ppParams, IShaderInit *pShaderInit, const char *pMaterialName, const char *pTextureGroupName );
-	virtual void DrawElements( IMaterialVar **params, int nModulationFlags, IShaderShadow* pShaderShadow, IShaderDynamicAPI* pShaderAPI,
-								VertexCompressionType_t vertexCompression, CBasePerMaterialContextData **pContext, CBasePerInstanceContextData** pInstanceDataPtr );
+	virtual void InitShaderParams(IMaterialVar** ppParams, const char *pMaterialName);
+	virtual void InitShaderInstance(IMaterialVar** ppParams, IShaderInit *pShaderInit, const char *pMaterialName, const char *pTextureGroupName);
+	virtual void DrawElements(IMaterialVar **params, int nModulationFlags, IShaderShadow* pShaderShadow, IShaderDynamicAPI* pShaderAPI,
+		VertexCompressionType_t vertexCompression, CBasePerMaterialContextData **pContext, CBasePerInstanceContextData** pInstanceDataPtr);
 
-	virtual int ComputeModulationFlags( IMaterialVar** params, IShaderDynamicAPI* pShaderAPI );
-	virtual bool NeedsPowerOfTwoFrameBufferTexture( IMaterialVar **params, bool bCheckSpecificToThisFrame = true ) const;
-	virtual bool NeedsFullFrameBufferTexture( IMaterialVar **params, bool bCheckSpecificToThisFrame = true ) const;
-	virtual bool IsTranslucent( IMaterialVar **params ) const;
+	virtual int ComputeModulationFlags(IMaterialVar** params, IShaderDynamicAPI* pShaderAPI);
+	virtual bool NeedsPowerOfTwoFrameBufferTexture(IMaterialVar **params, bool bCheckSpecificToThisFrame = true) const;
+	virtual bool NeedsFullFrameBufferTexture(IMaterialVar **params, bool bCheckSpecificToThisFrame = true) const;
+	virtual bool IsTranslucent(IMaterialVar **params) const;
 
 public:
 	// These functions must be implemented by the shader
-	virtual void OnInitShaderParams( IMaterialVar** ppParams, const char *pMaterialName ) {}
-	virtual void OnInitShaderInstance( IMaterialVar** ppParams, IShaderInit *pShaderInit, const char *pMaterialName ) = 0;
-	virtual void OnDrawElements( IMaterialVar **params, IShaderShadow* pShaderShadow, IShaderDynamicAPI* pShaderAPI, VertexCompressionType_t vertexCompression, CBasePerMaterialContextData **pContextDataPtr ) = 0;
+	virtual void OnInitShaderParams(IMaterialVar** ppParams, const char *pMaterialName) {}
+	virtual void OnInitShaderInstance(IMaterialVar** ppParams, IShaderInit *pShaderInit, const char *pMaterialName) = 0;
+	virtual void OnDrawElements(IMaterialVar **params, IShaderShadow* pShaderShadow, IShaderDynamicAPI* pShaderAPI, VertexCompressionType_t vertexCompression, CBasePerMaterialContextData **pContextDataPtr) = 0;
 
 	// Sets the default shadow state
-	void SetInitialShadowState( );
- 
+	void SetInitialShadowState();
+
 	// Draws a snapshot
-	void Draw( bool bMakeActualDrawCall = true );
+	void Draw(bool bMakeActualDrawCall = true);
 
 	// Are we currently taking a snapshot?
 	bool IsSnapshotting() const;
@@ -132,19 +132,19 @@ public:
 	// Methods related to building per-instance ("PI_") command buffers
 	void PI_BeginCommandBuffer();
 	void PI_EndCommandBuffer();
-	void PI_SetPixelShaderAmbientLightCube( int nFirstRegister );
-	void PI_SetPixelShaderLocalLighting( int nFirstRegister );
-	void PI_SetPixelShaderAmbientLightCubeLuminance( int nFirstRegister );
-	void PI_SetPixelShaderGlintDamping( int nFirstRegister );
-	void PI_SetVertexShaderAmbientLightCube( /*int nFirstRegister*/ );
-	void PI_SetModulationPixelShaderDynamicState( int nRegister );
-	void PI_SetModulationPixelShaderDynamicState_LinearColorSpace_LinearScale( int nRegister, float scale );
-	void PI_SetModulationPixelShaderDynamicState_LinearScale( int nRegister, float scale );
-	void PI_SetModulationPixelShaderDynamicState_LinearScale_ScaleInW( int nRegister, float scale );
-	void PI_SetModulationPixelShaderDynamicState_LinearColorSpace( int nRegister );
-	void PI_SetModulationPixelShaderDynamicState_Identity( int nRegister );
-	void PI_SetModulationVertexShaderDynamicState( void );
-	void PI_SetModulationVertexShaderDynamicState_LinearScale( float flScale );
+	void PI_SetPixelShaderAmbientLightCube(int nFirstRegister);
+	void PI_SetPixelShaderLocalLighting(int nFirstRegister);
+	void PI_SetPixelShaderAmbientLightCubeLuminance(int nFirstRegister);
+	void PI_SetPixelShaderGlintDamping(int nFirstRegister);
+	void PI_SetVertexShaderAmbientLightCube( /*int nFirstRegister*/);
+	void PI_SetModulationPixelShaderDynamicState(int nRegister);
+	void PI_SetModulationPixelShaderDynamicState_LinearColorSpace_LinearScale(int nRegister, float scale);
+	void PI_SetModulationPixelShaderDynamicState_LinearScale(int nRegister, float scale);
+	void PI_SetModulationPixelShaderDynamicState_LinearScale_ScaleInW(int nRegister, float scale);
+	void PI_SetModulationPixelShaderDynamicState_LinearColorSpace(int nRegister);
+	void PI_SetModulationPixelShaderDynamicState_Identity(int nRegister);
+	void PI_SetModulationVertexShaderDynamicState(void);
+	void PI_SetModulationVertexShaderDynamicState_LinearScale(float flScale);
 
 	// Gets at the current materialvar flags
 	int CurrentMaterialVarFlags() const;
@@ -153,7 +153,7 @@ public:
 	int CurrentMaterialVarFlags2() const;
 
 	// Finds a particular parameter	(works because the lowest parameters match the shader)
-	int FindParamIndex( const char *pName ) const;
+	int FindParamIndex(const char *pName) const;
 
 	// Are we using graphics?
 	bool IsUsingGraphics();
@@ -162,69 +162,69 @@ public:
 	bool CanUseEditorMaterials() const;
 
 	// Loads a texture
-	void LoadTexture( int nTextureVar );
+	void LoadTexture(int nTextureVar);
 
 	// Loads a bumpmap
-	void LoadBumpMap( int nTextureVar );
+	void LoadBumpMap(int nTextureVar);
 
 	// Loads a cubemap
-	void LoadCubeMap( int nTextureVar );
+	void LoadCubeMap(int nTextureVar);
 
 	// get the shaderapi handle for a texture. BE CAREFUL WITH THIS. 
-	ShaderAPITextureHandle_t GetShaderAPITextureBindHandle( int nTextureVar, int nFrameVar, int nTextureChannel = 0 );
-	ShaderAPITextureHandle_t GetShaderAPITextureBindHandle( ITexture *pTexture, int nFrame, int nTextureChannel = 0 );
+	ShaderAPITextureHandle_t GetShaderAPITextureBindHandle(int nTextureVar, int nFrameVar, int nTextureChannel = 0);
+	ShaderAPITextureHandle_t GetShaderAPITextureBindHandle(ITexture *pTexture, int nFrame, int nTextureChannel = 0);
 
 	// Binds a texture
-	void BindTexture( Sampler_t sampler1, Sampler_t sampler2, int nTextureVar, int nFrameVar = -1 );
-	void BindTexture( Sampler_t sampler1, int nTextureVar, int nFrameVar = -1 );
-	void BindTexture( Sampler_t sampler1, ITexture *pTexture, int nFrame = 0 );
-	void BindTexture( Sampler_t sampler1, Sampler_t sampler2, ITexture *pTexture, int nFrame = 0 );
+	void BindTexture(Sampler_t sampler1, Sampler_t sampler2, int nTextureVar, int nFrameVar = -1);
+	void BindTexture(Sampler_t sampler1, int nTextureVar, int nFrameVar = -1);
+	void BindTexture(Sampler_t sampler1, ITexture *pTexture, int nFrame = 0);
+	void BindTexture(Sampler_t sampler1, Sampler_t sampler2, ITexture *pTexture, int nFrame = 0);
 
 	// Bind vertex texture
-	void BindVertexTexture( VertexTextureSampler_t vtSampler, int nTextureVar, int nFrame = 0 );
+	void BindVertexTexture(VertexTextureSampler_t vtSampler, int nTextureVar, int nFrame = 0);
 
 	// Is the texture translucent?
-	bool TextureIsTranslucent( int textureVar, bool isBaseTexture );
+	bool TextureIsTranslucent(int textureVar, bool isBaseTexture);
 
 	// Is the color var white?
-	bool IsWhite( int colorVar );
+	bool IsWhite(int colorVar);
 
 	// Helper methods for fog
-	void FogToOOOverbright( void );
-	void FogToWhite( void );
-	void FogToBlack( void );
-	void FogToGrey( void );
-	void FogToFogColor( void );
-	void DisableFog( void );
-	void DefaultFog( void );
-	
+	void FogToOOOverbright(void);
+	void FogToWhite(void);
+	void FogToBlack(void);
+	void FogToGrey(void);
+	void FogToFogColor(void);
+	void DisableFog(void);
+	void DefaultFog(void);
+
 	// Helpers for alpha blending
-	void EnableAlphaBlending( ShaderBlendFactor_t src, ShaderBlendFactor_t dst );
+	void EnableAlphaBlending(ShaderBlendFactor_t src, ShaderBlendFactor_t dst);
 	void DisableAlphaBlending();
 
-	void SetBlendingShadowState( BlendType_t nMode );
+	void SetBlendingShadowState(BlendType_t nMode);
 
-	void SetNormalBlendingShadowState( int textureVar = -1, bool isBaseTexture = true );
-	void SetAdditiveBlendingShadowState( int textureVar = -1, bool isBaseTexture = true );
-	void SetDefaultBlendingShadowState( int textureVar = -1, bool isBaseTexture = true );
-	void SingleTextureLightmapBlendMode( );
+	void SetNormalBlendingShadowState(int textureVar = -1, bool isBaseTexture = true);
+	void SetAdditiveBlendingShadowState(int textureVar = -1, bool isBaseTexture = true);
+	void SetDefaultBlendingShadowState(int textureVar = -1, bool isBaseTexture = true);
+	void SingleTextureLightmapBlendMode();
 
 	// Helpers for color modulation
 	bool IsAlphaModulating();
 	// Helpers for HDR
-	bool IsHDREnabled( void );
+	bool IsHDREnabled(void);
 
-	bool UsingFlashlight( IMaterialVar **params ) const;
-	bool UsingEditor( IMaterialVar **params ) const;
+	bool UsingFlashlight(IMaterialVar **params) const;
+	bool UsingEditor(IMaterialVar **params) const;
 
-	void ApplyColor2Factor( float *pColorOut ) const;		// (*pColorOut) *= COLOR2
+	void ApplyColor2Factor(float *pColorOut) const;		// (*pColorOut) *= COLOR2
 
 private:
 	// This is a per-instance state which is handled completely by the system
 	void PI_SetSkinningMatrices();
-	void PI_SetVertexShaderLocalLighting( );
+	void PI_SetVertexShaderLocalLighting();
 
-	FORCEINLINE void SetFogMode( ShaderFogMode_t fogMode );
+	FORCEINLINE void SetFogMode(ShaderFogMode_t fogMode);
 
 protected:
 	static IMaterialVar **s_ppParams;

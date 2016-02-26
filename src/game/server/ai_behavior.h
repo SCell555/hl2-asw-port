@@ -94,7 +94,7 @@ public:
 		return false;
 	}
 	
-	bool IsRunning()								{ Assert( GetOuter() ); return ( GetOuter()->GetPrimaryBehavior() == this ); }
+	bool IsRunning()								{ Assert( GetOuter() ); return GetOuter() ? ( GetOuter()->GetPrimaryBehavior() == this ) : false; }
 	virtual bool CanSelectSchedule()				{ return true; }
 	virtual void BeginScheduleSelection() 			{}
 	virtual void EndScheduleSelection() 			{}

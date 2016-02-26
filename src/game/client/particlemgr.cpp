@@ -314,7 +314,7 @@ int CParticleEffectBinding::DrawModel( int flags, const RenderableInstance_t &in
 
 	//Avoid drawing particles while building depth textures. Perf win.
 	//At the very least, we absolutely should not do refraction updates below. So if this gets removed, be sure to wrap the refract/screen texture updates.
-	if( flags & STUDIO_SHADOWDEPTHTEXTURE )
+	if( flags & ( STUDIO_SHADOWDEPTHTEXTURE | STUDIO_SSAODEPTHTEXTURE ) )
 		return 0;
 
 	SetDrawn( true );

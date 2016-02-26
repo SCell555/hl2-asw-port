@@ -1,0 +1,78 @@
+// *********************************
+// ** auto generated vertexshader **
+// *********************************
+
+#define SHADER_EDITOR_SWARM_COMPILE
+
+// Combos
+// DYNAMIC: "COMPRESSED_VERTS"		"0..1"
+// DYNAMIC: "SKINNING"		"0..1"
+
+// Includes
+#include "common_vs_fxc.h"
+
+
+// Constants
+const float3 _g_VecOrig		: register( c48 );
+
+// Semantic structures
+struct VS_INPUT
+{
+	float3 vPos					:	POSITION;
+	float4 vBoneWeights			:	BLENDWEIGHT;
+	float4 vBoneIndices			:	BLENDINDICES;
+	float4 vNormal				:	NORMAL;
+	float4 vTangent_S			:	TANGENT;
+	float2 vTexCoord_0			:	TEXCOORD0;
+	float4 vColor_0				:	COLOR0;
+};
+
+struct VS_OUTPUT
+{
+	float4 vProjPos				:	POSITION;
+	float2 vTexCoord_0			:	TEXCOORD0;
+	float3 vTexCoord_1			:	TEXCOORD1;
+	float3 vTexCoord_2			:	TEXCOORD2;
+	float3 vTexCoord_3			:	TEXCOORD3;
+	float3 vTexCoord_4			:	TEXCOORD4;
+	float4 vTexCoord_5			:	TEXCOORD5;
+	float4 vColor_0				:	COLOR0;
+};
+
+// Entry point
+VS_OUTPUT main( const VS_INPUT In )
+{
+	VS_OUTPUT Out;
+	float3 _var0 = (float3)0;
+	DecompressVertex_Normal( In.vNormal, _var0 );
+	float3 _var1 = In.vColor_0.xyz;
+	float _var2 = In.vColor_0.w;
+	float3 _var3 = (float3)0;
+	float3 _var4 = (float3)0;
+	float3 _var5 = (float3)0;
+	float3 _var6 = (float3)0;
+	SkinPositionNormalAndTangentSpace( SKINNING, float4( In.vPos, 1 ), _var0, In.vTangent_S,
+			In.vBoneWeights, In.vBoneIndices,
+			_var3, _var4, _var5, _var6 );
+	_var1 = pow( _var1, float( 2.200000 ) );
+	float4 _var7 = float4( _var3.x, _var3.y, _var3.z, 1.000000 );
+	_var4 = normalize( _var4 );
+	_var5 = normalize( _var5 );
+	_var6 = normalize( _var6 );
+	float4 _var8 = float4( GetVertexAttenForLight( _var3, 0 ),
+			GetVertexAttenForLight( _var3, 1 ),
+			GetVertexAttenForLight( _var3, 2 ),
+			GetVertexAttenForLight( _var3, 3 ) );
+	float4 _var9 = float4( _var1, _var2 );
+	float3 _var10 = _var3 - _g_VecOrig;
+	_var7 = mul( _var7, cViewProj );
+	Out.vProjPos = _var7;
+	Out.vTexCoord_0 = In.vTexCoord_0;
+	Out.vTexCoord_1 = _var4;
+	Out.vTexCoord_2 = _var5;
+	Out.vTexCoord_3 = _var6;
+	Out.vTexCoord_4 = _var3;
+	Out.vTexCoord_5 = _var8;
+	Out.vColor_0 = _var9;
+	return Out;
+}

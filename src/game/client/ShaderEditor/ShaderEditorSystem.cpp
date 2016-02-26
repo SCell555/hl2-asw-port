@@ -23,6 +23,7 @@
 #include "rendertexture.h"
 #include "c_rope.h"
 #include "model_types.h"
+#include "c_basehlplayer.h"
 
 #define SWARM_DLL
 
@@ -75,7 +76,7 @@ bool ShaderEditorHandler::Init()
 #endif
 
 	bool bCreateEditor = ( CommandLine() != NULL ) && ( CommandLine()->FindParm( "-shaderedit" ) != 0 );
-	SEDIT_SKYMASK_MODE iEnableSkymask = SKYMASK_OFF;
+	SEDIT_SKYMASK_MODE iEnableSkymask = SKYMASK_FULL;
 
 #ifdef SHADEREDITOR_FORCE_ENABLED
 	bCreateEditor = true;
@@ -127,8 +128,8 @@ bool ShaderEditorHandler::Init()
 	return true;
 }
 
-#ifdef SHADEREDITOR_FORCE_ENABLED
-CON_COMMAND( sedit_debug_toggle_ppe, "" )
+#if 1
+CON_COMMAND_F( sedit_debug_toggle_ppe, "", FCVAR_HIDDEN )
 {
 	if ( !g_ShaderEditorSystem->IsReady() )
 		return Warning( "lib not ready.\n" );
@@ -143,6 +144,32 @@ CON_COMMAND( sedit_debug_toggle_ppe, "" )
 	shaderEdit->SetPPEEnabled( idx, !shaderEdit->IsPPEEnabled( idx ) );
 }
 #endif
+
+CON_COMMAND_F( sedit_disable_ppe, "", FCVAR_HIDDEN)
+{
+	if (args.ArgC() < 2)
+		return;
+	g_ShaderEditorSystem->SetPPEEnabled( args[1], false );
+}
+
+CON_COMMAND_F( sedit_enable_ppe, "", FCVAR_HIDDEN )
+{
+	if (args.ArgC() < 2)
+		return;
+	g_ShaderEditorSystem->SetPPEEnabled( args[1], true );
+}
+
+void ShaderEditorHandler::SetPPEEnabled(const char* effect, bool status)
+{
+	if (!g_ShaderEditorSystem->IsReady())
+		return Warning("lib not ready.\n");
+
+	const int idx = shaderEdit->GetPPEIndex(effect);
+	if (idx < 0)
+		return Warning("can't find ppe named: %s\n", effect);
+
+	shaderEdit->SetPPEEnabled(idx, status);
+}
 
 void ShaderEditorHandler::Shutdown()
 {
@@ -213,12 +240,29 @@ struct CallbackData_t
 
 		player_speed.Init();
 		player_pos.Init();
+
+		player_data.Init();
+
+		strongest_light_pos.Init();
+		strongest_light_strength.Init();
+		strongest_light_dir_calc.Init();
+		autoaim_target.Init();
+		locator_origin.Init();
 	};
 	Vector4D sun_data;
 	Vector sun_dir;
 
 	Vector4D player_speed;
 	Vector player_pos;
+
+	Vector4D player_data;
+
+	Vector strongest_light_pos;
+	Vector strongest_light_dir_calc;
+	Vector strongest_light_strength;
+
+	Vector autoaim_target;
+	Vector locator_origin;
 };
 
 static CallbackData_t clCallback_data;
@@ -269,13 +313,44 @@ void ShaderEditorHandler::PrepareCallbackData()
 	clCallback_data.sun_data[ 3 ] = s_flSunAmt_Last;
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( pPlayer )
+	if (pPlayer)
 	{
 		Vector velo = pPlayer->GetLocalVelocity();
-		clCallback_data.player_speed[ 3 ] = velo.NormalizeInPlace();
-		Q_memcpy( clCallback_data.player_speed.Base(), velo.Base(), sizeof(float) * 3 );
+		clCallback_data.player_speed[3] = velo.NormalizeInPlace();
+		Q_memcpy(clCallback_data.player_speed.Base(), velo.Base(), sizeof(float) * 3);
 
 		clCallback_data.player_pos = pPlayer->GetLocalOrigin();
+
+		C_BaseHLPlayer *pHLPlayer = (C_BaseHLPlayer*)pPlayer;
+		if (pHLPlayer)
+		{
+			Vector4D &data = clCallback_data.player_data;
+
+			data.x = pHLPlayer->GetHealth() / 100.0f;
+			data.y = pHLPlayer->m_HL2Local.m_flSuitPower / 100.0f;
+			data.z = pHLPlayer->m_HL2Local.m_flFlashBattery / 100.0f;
+			data.w = pHLPlayer->m_HL2Local.m_bitsActiveDevices; 
+			clCallback_data.autoaim_target = pHLPlayer->m_HL2Local.m_vecAutoAimPoint;
+			clCallback_data.locator_origin = pHLPlayer->m_HL2Local.m_vecLocatorOrigin;
+		}
+
+		Vector lightPos, lightBright, lightDirCalc;
+
+		if (!modelrender->GetBrightestShadowingLightSource(pPlayer->GetAbsOrigin() + pPlayer->GetEyeOffset(), lightPos, lightBright, true))
+		{
+			lightPos.Init();
+			lightBright.Init();
+			lightDirCalc.Init();
+		}
+		else
+		{
+			lightDirCalc = lightPos - (pPlayer->GetAbsOrigin() + pPlayer->GetEyeOffset());
+			lightDirCalc.NormalizeInPlace();
+		}
+
+		Q_memcpy(clCallback_data.strongest_light_pos.Base(), lightPos.Base(), sizeof(float) * 3);
+		Q_memcpy(clCallback_data.strongest_light_strength.Base(), lightBright.Base(), sizeof(float) * 3);
+		Q_memcpy(clCallback_data.strongest_light_dir_calc.Base(), lightDirCalc.Base(), sizeof(float) * 3);
 	}
 }
 
@@ -307,6 +382,48 @@ pFnClCallback_Declare( ClCallback_PlayerPos )
 	m_Lock.Unlock();
 }
 
+pFnClCallback_Declare( ClCallback_PlayerData )
+{
+	m_Lock.Lock();
+	Q_memcpy( pfl4, clCallback_data.player_data.Base(), sizeof(float) * 4 );
+	m_Lock.Unlock();
+}
+
+pFnClCallback_Declare( ClCallback_StrongestLightPos )
+{
+	m_Lock.Lock();
+	Q_memcpy( pfl4, clCallback_data.strongest_light_pos.Base(), sizeof(float) * 3 );
+	m_Lock.Unlock();
+}
+
+pFnClCallback_Declare( ClCallback_StrongestLightStr )
+{
+	m_Lock.Lock();
+	Q_memcpy( pfl4, clCallback_data.strongest_light_strength.Base(), sizeof(float) * 3 );
+	m_Lock.Unlock();
+}
+
+pFnClCallback_Declare( ClCallback_StrongestLightDir )
+{
+	m_Lock.Lock();
+	Q_memcpy( pfl4, clCallback_data.strongest_light_dir_calc.Base(), sizeof(float) * 3 );
+	m_Lock.Unlock();
+}
+
+pFnClCallback_Declare( ClCallback_PlayerAutoaim )
+{
+	m_Lock.Lock();
+	Q_memcpy( pfl4, clCallback_data.autoaim_target.Base(), sizeof(float) * 3 );
+	m_Lock.Unlock();
+}
+
+pFnClCallback_Declare( ClCallback_LocatorOrigin )
+{
+	m_Lock.Lock();
+	Q_memcpy( pfl4, clCallback_data.locator_origin.Base(), sizeof(float) * 3 );
+	m_Lock.Unlock();
+}
+
 void ShaderEditorHandler::RegisterCallbacks()
 {
 	if ( !IsReady() )
@@ -317,6 +434,12 @@ void ShaderEditorHandler::RegisterCallbacks()
 	shaderEdit->RegisterClientCallback( "sun dir", ClCallback_SunDirection, 3 );
 	shaderEdit->RegisterClientCallback( "local player velocity", ClCallback_PlayerVelocity, 4 );
 	shaderEdit->RegisterClientCallback( "local player position", ClCallback_PlayerPos, 3 );
+	shaderEdit->RegisterClientCallback( "local player data", ClCallback_PlayerData, 4 );
+	shaderEdit->RegisterClientCallback( "strongest light pos", ClCallback_StrongestLightPos, 3 );
+	shaderEdit->RegisterClientCallback( "strongest light intensity", ClCallback_StrongestLightStr, 3 );
+	shaderEdit->RegisterClientCallback( "strongest light dir", ClCallback_StrongestLightDir, 3 );
+	shaderEdit->RegisterClientCallback( "autoaim dir", ClCallback_PlayerAutoaim, 3 );
+	shaderEdit->RegisterClientCallback( "locator origin", ClCallback_LocatorOrigin, 3 );
 
 	shaderEdit->LockClientCallbacks();
 }

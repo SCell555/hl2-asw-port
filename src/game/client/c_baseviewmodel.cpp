@@ -29,6 +29,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+ConVar cl_righthand( "cl_righthand", "1", FCVAR_ARCHIVE, "Use right-handed view models." );
+
 ConVar vm_debug( "vm_debug", "0", FCVAR_CHEAT );
 ConVar vm_draw_always( "vm_draw_always", "0" );
 
@@ -201,6 +203,14 @@ bool C_BaseViewModel::Interpolate( float currentTime )
 
 inline bool C_BaseViewModel::ShouldFlipViewModel()
 {
+	// If cl_righthand is set, then we want them all right-handed.
+	CBaseCombatWeapon *pWeapon = m_hWeapon.Get();
+	if (pWeapon)
+	{
+		const FileWeaponInfo_t *pInfo = &pWeapon->GetWpnData();
+		return pInfo->m_bAllowFlipping && pInfo->m_bBuiltRightHanded != cl_righthand.GetBool();
+	}
+	
 	return false;
 }
 

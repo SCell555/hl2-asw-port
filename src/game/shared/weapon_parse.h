@@ -109,9 +109,15 @@ public:
 
 	// This tells if the weapon was built right-handed (defaults to true).
 	// This helps cl_righthand make the decision about whether to flip the model or not.
-	bool					m_bBuiltRightHanded;
+	bool					m_bBuiltRightHanded;	// it is built left or right handed.
 	bool					m_bAllowFlipping;	// False to disallow flipping the model, regardless of whether
-												// it is built left or right handed.
+
+	Vector					vecIronsightPosOffset;
+	QAngle					angIronsightAngOffset;
+	float					flIronsightFOVOffset;
+	bool					hasIronsight;						
+
+	ColorRGBExp32 muzzle;
 
 // CLIENT DLL
 	// Sprite data, read from the data file
@@ -130,6 +136,76 @@ public:
 	bool					bShowUsageHint;							// if true, then when you receive the weapon, show a hint about it
 
 // SERVER DLL
+
+	bool	m_sCanReloadSingly;
+	bool	m_sDualWeapons;
+	bool	m_sWeaponOptions;
+	bool	m_bUseMuzzleSmoke;
+	bool	m_bIsCustom;
+
+	struct WepDef
+	{
+		bool	bulletEnabled;
+		bool	missleEnabled;
+		char	ammoType;
+		float	damage;
+		int		shotCount;
+		float	fireRate;
+		Vector	spread;
+		bool	infiniteAmmoEnabled;
+		bool	SMGGrenadeEnabled;
+		float	SMGGrenadeDamage;
+		bool	AR2EnergyBallEnabled;
+		float	combineBallRadius;
+		float	combineBallMass;
+		float	combineBallDuration;
+		float	recoilEasyDampen;
+		float	recoilDegrees;
+		float	recoilSeconds;
+		Vector	ironsightSpread;
+		Vector	zoomSpread;
+		float	ironsightFireRate;
+		float	zoomFireRate;
+		bool	hasFire;
+		bool	hasRecoilSMGGrenade;
+		bool	hasRecoilRPGMissle;
+		int		minRange;
+		int		maxRange;
+		bool	canFireUnderwater;
+		bool	fireBoth;
+	}primary, secondary;
+
+	bool	 m_sUsePrimaryAmmo;
+
+	bool	m_sUsesZoom;
+	bool	m_sUsesZoomSound;
+	bool	m_sUsesZoomColor;
+	bool	m_sUseZoomOnPrimaryFire;
+	int		m_sZoomColorRed;
+	int		m_sZoomColorGreen;
+	int		m_sZoomColorBlue;
+	int		m_sZoomColorAlpha;
+
+	bool	m_sUsesCustomization;
+	bool	m_sUsesBodygroupSection1;
+	bool	m_sUsesBodygroupSection2;
+	bool	m_sUsesBodygroupSection3;
+	bool	m_sUsesBodygroupSection4;
+	bool	m_sUsesBodygroupSection5;
+	bool	m_sUsesBodygroupSection6;
+	int		m_sBodygroup1;
+	int		m_sBodygroup2;
+	int		m_sBodygroup3;
+	int		m_sBodygroup4;
+	int		m_sBodygroup5;
+	int		m_sBodygroup6;
+	int		m_sSubgroup1;
+	int		m_sSubgroup2;
+	int		m_sSubgroup3;
+	int		m_sSubgroup4;
+	int		m_sSubgroup5;
+	int		m_sSubgroup6;
+	int		m_sWeaponSkin;
 
 };
 
@@ -158,5 +234,8 @@ KeyValues* ReadEncryptedKVFile( IFileSystem *filesystem, const char *szFilenameW
 // Each game implements this. It can return a derived class and override Parse() if it wants.
 extern FileWeaponInfo_t* CreateWeaponInfo();
 
+#include "utldict.h"
+
+CUtlDict< FileWeaponInfo_t*, unsigned short > *GetWeaponInfoDatabase();
 
 #endif // WEAPON_PARSE_H
