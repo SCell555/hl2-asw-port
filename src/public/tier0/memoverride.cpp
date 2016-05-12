@@ -7,6 +7,7 @@
 //=============================================================================//
 
 #define NO_MEMOVERRIDE_NEW_DELETE //HACK -- too many crashes
+#define USE_LIGHT_MEM_DEBUG
 
 #if !defined(STEAM) && !defined(NO_MALLOC_OVERRIDE)
 #define AVOID_INCLUDING_ALGORITHM
@@ -837,7 +838,11 @@ extern "C" void * __cdecl _heap_alloc_base (size_t size)
 
 void * __cdecl _heap_alloc_dbg( size_t nSize, int nBlockUse, const char * szFileName, int nLine)
 {
+#ifndef _STATIC_LINKED
 		return _heap_alloc(nSize);
+#else
+		return AllocUnattributed(nSize);
+#endif
 }
 
 // 64-bit

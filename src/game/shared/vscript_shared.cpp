@@ -356,7 +356,7 @@ void AddWeaponProperty(const char* prop, const char* value, const char* part)
 
 	FileWeaponInfo_t::WepDef *workingPart = NULL;
 
-	int workingNum = modCount + 1;
+	unsigned int workingNum = modCount + 1;
 	for (int i = 0; i < ARRAYSIZE(modificationNames); i++)
 		if (Q_strcmp(modificationNames[i].modName, prop) == 0)
 		{

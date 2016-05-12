@@ -900,9 +900,7 @@ int CInput::CAM_IsThirdPerson( int nSlot /*=-1*/ )
 {
 	if ( nSlot == -1 )
 	{
-		ASSERT_LOCAL_PLAYER_RESOLVABLE();
-		PerUserInput_t &user = GetPerUser();
-		return user.m_fCameraInThirdPerson;
+		return m_PerUser[0].m_fCameraInThirdPerson;
 	}
 	return m_PerUser[ nSlot ].m_fCameraInThirdPerson;
 }
@@ -915,7 +913,7 @@ CAM_GetCameraOffset
 */
 void CInput::CAM_GetCameraOffset( Vector& ofs )
 {
-	ASSERT_LOCAL_PLAYER_RESOLVABLE();
+	//ASSERT_LOCAL_PLAYER_RESOLVABLE();
 	PerUserInput_t &user = GetPerUser();
 	VectorCopy( user.m_vecCameraOffset, ofs );
 }
@@ -928,7 +926,7 @@ CAM_InterceptingMouse
 */
 int CInput::CAM_InterceptingMouse( void )
 {
-	ASSERT_LOCAL_PLAYER_RESOLVABLE();
+	//ASSERT_LOCAL_PLAYER_RESOLVABLE();
 	PerUserInput_t &user = GetPerUser();
 	return user.m_fCameraInterceptingMouse;
 }

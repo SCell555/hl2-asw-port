@@ -46,40 +46,4 @@ enum
 #define DMG_SNIPER			(DMG_LASTGENERICFLAG<<1)	// This is sniper damage
 #define DMG_MISSILEDEFENSE	(DMG_LASTGENERICFLAG<<2)	// The only kind of damage missiles take. (special missile defense)
 
-
-#ifdef CLIENT_DLL
-EXTERN_RECV_TABLE( DT_ColorGradingData );
-#else
-EXTERN_SEND_TABLE( DT_ColorGradingData );
-#endif
-
-struct ColorGradingData_t
-{
-	ColorGradingData_t();
-
-	DECLARE_CLASS_NOBASE( ColorGradingData_t );
-	DECLARE_SIMPLE_DATADESC();
-	DECLARE_EMBEDDED_NETWORKVAR();
-
-	CNetworkVar( Vector, contrast );
-	CNetworkVar( Vector, brightness );
-
-	CNetworkVar( float, levels_r_min_input);
-	CNetworkVar( float, levels_r_max_input);
-	CNetworkVar( float, levels_r_min_output);
-	CNetworkVar( float, levels_r_max_output);
-
-	CNetworkVar( float, levels_g_min_input);
-	CNetworkVar( float, levels_g_max_input);
-	CNetworkVar( float, levels_g_min_output);
-	CNetworkVar( float, levels_g_max_output);
-
-	CNetworkVar( float, levels_b_min_input);
-	CNetworkVar( float, levels_b_max_input);
-	CNetworkVar( float, levels_b_min_output);
-	CNetworkVar( float, levels_b_max_output);
-
-	CNetworkVar( float, saturation );
-	CNetworkVar( float, gamma );
-};
 #endif // HL2_SHAREDDEFS_H

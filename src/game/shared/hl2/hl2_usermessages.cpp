@@ -43,4 +43,7 @@ void RegisterUserMessages( void )
 	usermessages->Register( "AchievementEvent", -1 );
 	usermessages->Register( "UpdateJalopyRadar", -1 );
 	usermessages->Register( "PlayerKilledNPC", -1 );
+	usermessages->Register( "CreditsPortalMsg", 1 );
+	usermessages->Register( "EntityPortalled", sizeof( long ) + sizeof( long ) + sizeof( Vector ) + sizeof( QAngle ) ); //something got teleported through a portal
+	usermessages->Register( "KillCam", -1 );
 }

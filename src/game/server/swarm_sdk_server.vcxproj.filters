@@ -1512,9 +1512,6 @@
     <ClCompile Include="..\shared\weapon_parse_default.cpp">
       <Filter>Source Files\HL2 Server\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\weapon_physcannon.cpp">
-      <Filter>Source Files\HL2 Server\Weapons</Filter>
-    </ClCompile>
     <ClCompile Include="hl2\weapon_pistol.cpp">
       <Filter>Source Files\HL2 Server\Weapons</Filter>
     </ClCompile>
@@ -1900,7 +1897,10 @@
     <ClCompile Include="fire.cpp" />
     <ClCompile Include="..\shared\weapon_grapple.cpp" />
     <ClCompile Include="weapon_custom.cpp" />
-    <ClCompile Include="env_colorgrade.cpp" />
+    <ClCompile Include="hl2\weapon_physcannon.cpp">
+      <Filter>Source Files\HL2 Server\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="playerInventoryServer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\achievement_saverestore.h">
@@ -3718,6 +3718,8 @@
     <ClInclude Include="..\shared\mountsteamcontent.h" />
     <ClInclude Include="..\shared\weapon_grapple.h" />
     <ClInclude Include="weapon_custom.h" />
+    <ClInclude Include="..\shared\playerInventory.h" />
+    <ClInclude Include="inventorySaveRestoreManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="spawn_helper.nut">

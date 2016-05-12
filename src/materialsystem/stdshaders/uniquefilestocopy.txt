@@ -4,3 +4,12 @@
 ..\..\..\..\..\PROGRA~2\Steam\steamapps\common\ALIENS~1\bin\vstdlib.dll 
 ..\..\devtools\bin\d3dx9_33.dll 
 ..\..\dx10sdk\utilities\dx9_30\dx_proxy.dll 
+common_fxc.h
+common_hlsl_cpp_consts.h
+common_pragmas.h
+common_ps_fxc.h
+common_vertexlitgeneric_dx9.h
+portal_ps2x.fxc
+portal_refract_ps2x.fxc
+portalstaticoverlay_ps2x.fxc
+shader_constant_register_map.h

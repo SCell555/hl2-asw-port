@@ -23,6 +23,7 @@
 #include <KeyValues.h>
 #include "FileSystem.h"
 #include "matsys_controls/matsyscontrols.h"
+#include "inventoryWindow.h"
 
 using namespace vgui;
 
@@ -453,6 +454,9 @@ void VGui_CreateGlobalPanels( void )
 	netgraphpanel->Create( toolParent );
 	debugoverlaypanel->Create( gameToolParent );
 
+	VPANEL gameParent = enginevgui->GetPanel(PANEL_INGAMESCREENS); // Our panel can be viewed as a ingamescreen.
+	InventoryPanel->Create(gameParent); // Creates the panel.
+
 #ifndef _X360
 	// Create mp3 player off of tool parent panel
 	MP3Player_Create( toolParent );
@@ -464,6 +468,8 @@ void VGui_Shutdown()
 #ifndef _X360
 	MP3Player_Destroy();
 #endif
+
+	InventoryPanel->Destroy(); // Destroys the panel.
 
 	netgraphpanel->Destroy();
 	debugoverlaypanel->Destroy();

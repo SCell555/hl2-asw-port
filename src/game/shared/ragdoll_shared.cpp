@@ -323,7 +323,7 @@ static void RagdollCreateDestrObjects( IPhysicsEnvironment *pPhysEnv, ragdoll_t 
 	
 	if ( !params.pCollide || params.pCollide->solidCount > RAGDOLL_MAX_ELEMENTS )
 	{
-		Warning( "Ragdoll solid count d exceeds maximum limit of d - Ragdoll not created"/*, params.pCollide->solidCount, RAGDOLL_MAX_ELEMENTS*/ );
+		Warning( "Ragdoll solid count %d exceeds maximum limit of %d - Ragdoll not created", params.pCollide->solidCount, RAGDOLL_MAX_ELEMENTS );
 		Assert( false );
 		return;
 	}

@@ -45,8 +45,6 @@ public:
 	float	m_flFlashBattery;
 	Vector	m_vecLocatorOrigin;
 #endif
-	float	m_flNightVisionBattery;
-	bool	m_bIsNightVisionOn;
 
 	// Ladder related data
 	EHANDLE			m_hLadder;

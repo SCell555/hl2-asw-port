@@ -409,7 +409,8 @@ CSuitPowerDevice SuitDeviceBreather( bits_SUIT_DEVICE_BREATHER, 6.7f );		// 100 
 
 
 IMPLEMENT_SERVERCLASS_ST(CHL2_Player, DT_HL2_Player)
-	SendPropDataTable(SENDINFO_DT(m_HL2Local), &REFERENCE_SEND_TABLE(DT_HL2Local), SendProxy_SendLocalDataTable),
+	SendPropDataTable( SENDINFO_DT(m_HL2Local), &REFERENCE_SEND_TABLE(DT_HL2Local), SendProxy_SendLocalDataTable ),
+	SendPropDataTable( SENDINFO_DT(m_Inventory), &REFERENCE_SEND_TABLE(DT_Inventory), SendProxy_SendLocalDataTable ),
 	SendPropBool( SENDINFO(m_fIsSprinting) ),
 END_SEND_TABLE()
 
@@ -3268,25 +3269,6 @@ void CHL2_Player::UpdateClientData( void )
 	}
 #endif // HL2_EPISODIC
 
-	if ( IsNightVisionOn() && sv_infinite_aux_power.GetBool() == false )
-	{
-		m_HL2Local.m_flNightVisionBattery -= FLASH_DRAIN_TIME * gpGlobals->frametime; //TODO: change time
-		if ( m_HL2Local.m_flNightVisionBattery < 0.0f )
-		{
-			SetNightVisionState( false );
-			m_HL2Local.m_flNightVisionBattery = 0.0f;
-			engine->ClientCommand(edict(), "sedit_disable_ppe ppe_night");
-		}
-	}
-	else
-	{
-		m_HL2Local.m_flNightVisionBattery += FLASH_CHARGE_TIME * gpGlobals->frametime; //TODO: change time
-		if ( m_HL2Local.m_flNightVisionBattery > 100.0f )
-		{
-			m_HL2Local.m_flNightVisionBattery = 100.0f;
-		}
-	}
-
 	BaseClass::UpdateClientData();
 }
 
@@ -3780,23 +3762,140 @@ void CHL2_Player::FirePlayerProxyOutput( const char *pszOutputName, variant_t va
 	GetPlayerProxy()->FireNamedOutput( pszOutputName, variant, pActivator, pCaller );
 }
 
-
-bool CHL2_Player::IsNightVisionOn()
+CON_COMMAND(pick, "")
 {
-	return m_HL2Local.m_bIsNightVisionOn.Get();
+	CHL2_Player* player = assert_cast<CHL2_Player*>(UTIL_GetCommandClient());
+
+	if (!player)
+		return DevMsg("no player\n");
+
+	CBaseEntity* ent = player->GetHeldObject();
+
+	if (!ent)
+		return DevMsg("no held entity\n");
+	int slot = -1;
+
+	for (int i = 0; i < 32; i++)
+	{
+		slot++;
+		if (!player->m_Inventory.isOccupied.Get(i))
+			break;
+	}
+	
+	if (slot == 31 && player->m_Inventory.isOccupied.Get(31))
+		return DevMsg("no space left in inventory\n");
+
+	auto &inv = player->m_Inventory;
+
+	const char* classN = ent->GetClassname();
+	const char* mdlName = ent->GetModelName().ToCStr();
+	const char* name = ent->GetEntityNameAsCStr();
+
+	string_t eN = FindPooledString(name);
+	if (!eN)
+		eN = AllocPooledString(name);
+	inv.entNames.GetForModify(slot) = eN;
+
+
+	string_t cN = FindPooledString(classN);
+	if (!cN)
+		cN = AllocPooledString(classN);
+	inv.classNames.GetForModify(slot) = cN;
+
+
+	string_t mN = FindPooledString(mdlName);
+	if (!mN)
+		mN = AllocPooledString(mdlName);
+	inv.modelNames.GetForModify(slot) = mN;
+
+	/*size_t s[3] = {
+		Q_strlen(name) + 1,
+		Q_strlen(classN) + 1,
+		Q_strlen(mdlName) + 1
+	};
+
+	if (s[0] - 1)
+	{
+		inv.entNames.GetForModify(slot) = new char[s[0]];
+		Q_memcpy(inv.entNames.GetForModify(slot), name, s[0]);
+	}
+	else
+		inv.entNames.GetForModify(slot) = NULL;
+	if (s[1] - 1)
+	{
+		inv.classNames.GetForModify(slot) = new char[s[1]];
+		Q_memcpy(inv.classNames.GetForModify(slot), classN, s[1]);
+	}
+	else
+		inv.classNames.GetForModify(slot) = NULL;
+	if (s[2] - 1)
+	{
+		inv.modelNames.GetForModify(slot) = new char[s[2]];
+		Q_memcpy(inv.modelNames.GetForModify(slot), mdlName, s[2]);
+	}
+	else
+		inv.modelNames.GetForModify(slot) = NULL;*/
+
+	inv.isOccupied.GetForModify(slot) = true;
+
+	ent->Remove();
 }
 
-void CHL2_Player::SetNightVisionState(bool state)
+CON_COMMAND(dropItem, "")
 {
-	m_HL2Local.m_bIsNightVisionOn.Set( state );
-}
+	CHL2_Player* player = assert_cast<CHL2_Player*>(UTIL_GetCommandClient());
 
-CON_COMMAND_F(night_vision, "toggle night vision\n", FCVAR_CLIENTCMD_CAN_EXECUTE)
-{
-	CHL2_Player* player = (CHL2_Player*)UTIL_GetCommandClient();
 	if (!player)
 		return;
-	player->SetNightVisionState(!player->IsNightVisionOn());
+
+	if (args.ArgC() != 2)
+		return;
+
+	int slot = Q_atoi(args[1]);
+
+	if (slot < 0)
+		return;
+
+	if (!player->m_Inventory.isOccupied.Get(slot))
+		return;
+
+	auto &inv = player->m_Inventory;
+
+	CBaseEntity *newEnt = CreateEntityByName(inv.classNames.Get(slot).ToCStr());
+	const char* mdlName = inv.modelNames.Get(slot).ToCStr();
+	if (mdlName && *mdlName)
+		newEnt->SetModelName(!FindPooledString(mdlName) ? AllocPooledString(mdlName) : FindPooledString(mdlName));
+	const char* entName = inv.entNames.Get(slot).ToCStr();
+	if (entName && *entName)
+		newEnt->SetName(!FindPooledString(entName) ? AllocPooledString(entName) : FindPooledString(entName));
+	newEnt->SetAbsOrigin(player->GetAbsOrigin() + Vector(0, 0, 32));
+	DispatchSpawn(newEnt);
+	newEnt->Activate();
+
+	player->PickupObject(newEnt, true);
+
+	//delete[] inv.classNames.GetForModify(slot);
+	inv.classNames.GetForModify(slot) = NULL_STRING;
+	//delete[] inv.entNames.GetForModify(slot);
+	inv.entNames.GetForModify(slot) = NULL_STRING;
+	//delete[] inv.modelNames.GetForModify(slot);
+	inv.modelNames.GetForModify(slot) = NULL_STRING;
+	inv.isOccupied.GetForModify(slot) = false;
+}
+
+CON_COMMAND(listInv, "")
+{
+	CHL2_Player* player = assert_cast<CHL2_Player*>(UTIL_GetCommandClient());
+
+	if (!player)
+		return DevMsg("no player\n");
+
+	auto &inv = player->m_Inventory;
+
+	for (int i = 0; i < 32; i++)
+	{
+		ConColorMsg(COLOR_BLUE, "%i: %s %s %s %i\n", i, inv.classNames.Get(i).ToCStr(), inv.entNames.Get(i).ToCStr(), inv.modelNames.Get(i).ToCStr(), inv.isOccupied.Get(i) ? 1 : 0);
+	}
 }
 
 /*

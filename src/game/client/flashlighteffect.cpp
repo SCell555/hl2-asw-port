@@ -411,11 +411,9 @@ bool CFlashlightEffect::UpdateDefaultFlashlightState( FlashlightState_t& state, 
 	{
 		state.m_FarZ = state.m_FarZAtten = r_flashlightfar.GetFloat();	// Strictly speaking, these are different, but the game can treat them the same
 	}
-	state.m_bEnableShadows = r_flashlightdepthtexture.GetBool();
+	state.m_bEnableShadows = castsShadows && r_flashlightdepthtexture.GetBool();
 	state.m_flShadowMapResolution = r_flashlightdepthres.GetInt();
-	state.m_flShadowFilterSize = 1.0f;		// default value	3.0f
-	state.m_nShadowQuality = 2;
-	state.m_bShadowHighRes = true;
+	state.m_flShadowFilterSize = 3.0f;
 
 	// uberlight
 	state.m_bUberlight = r_flashlightuberlight.GetBool();

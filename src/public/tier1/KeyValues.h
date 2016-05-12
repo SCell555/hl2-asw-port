@@ -470,5 +470,4 @@ inline bool KeyValuesDumpAsDevMsg( KeyValues *pKeyValues, int nIndentLevel = 0, 
 	return pKeyValues->Dump( &ctx, nIndentLevel );
 }
 
-
 #endif // KEYVALUES_H

@@ -69,8 +69,8 @@ if ERRORLEVEL 1 exit 1
     <ClCompile>
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.\hl2;.\hl2\vgui;..\..\game\shared\hl2;..\..\game\client\hl2\gameui;..\..\game\shared\multiplayer;..\statemachine;.\;..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\shared;.\game_controls;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=client;VPCGAME=swarm;VPCGAMECAPS=SWARM;_DLL_EXT=.dll;COMPILER_MSVC32;COMPILER_MSVC;MEMOVERRIDE_MODULE=client;NO_STRING_T;CLIENT_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;ENABLE_HTMLWINDOW;fopen=dont_use_fopen;HL2_CLIENT_DLL;GAMEUI_EMBEDDED;GAMEUI_EXPORTS;HL2_EPISODIC;CHROMIUM_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\hl2;.\hl2\vgui;..\..\game\shared\hl2;..\..\game\client\hl2\gameui;..\statemachine;.\;..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\shared;.\game_controls;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=client;VPCGAME=swarm;VPCGAMECAPS=SWARM;_DLL_EXT=.dll;COMPILER_MSVC32;COMPILER_MSVC;MEMOVERRIDE_MODULE=client;NO_STRING_T;CLIENT_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;ENABLE_HTMLWINDOW;fopen=dont_use_fopen;HL2_CLIENT_DLL;GAMEUI_EMBEDDED;GAMEUI_EXPORTS;HL2_EPISODIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>false</MinimalRebuild>
       <ExceptionHandling>
@@ -270,6 +270,7 @@ exit 1
     <ClCompile Include="..\shared\ai_responsesystem.cpp" />
     <ClCompile Include="..\shared\ai_speechconcept.cpp" />
     <ClCompile Include="..\shared\ammodef.cpp" />
+    <ClCompile Include="advmodelpanel.cpp" />
     <ClCompile Include="animatedentitytextureproxy.cpp" />
     <ClCompile Include="animatedoffsettextureproxy.cpp" />
     <ClCompile Include="animatedtextureproxy.cpp" />
@@ -291,7 +292,6 @@ exit 1
     <ClCompile Include="..\..\common\blackbox_helper.cpp" />
     <ClCompile Include="..\..\public\bone_accessor.cpp" />
     <ClCompile Include="bone_merge_cache.cpp" />
-    <ClCompile Include="colorgrade_manager.cpp" />
     <ClCompile Include="c_ai_basehumanoid.cpp" />
     <ClCompile Include="c_ai_basenpc.cpp" />
     <ClCompile Include="c_baseanimating.cpp" />
@@ -310,13 +310,11 @@ exit 1
     <ClCompile Include="c_colorcorrection.cpp" />
     <ClCompile Include="c_colorcorrectionvolume.cpp" />
     <ClCompile Include="c_dynamiclight.cpp" />
-    <ClCompile Include="c_entgloweffect.cpp" />
     <ClCompile Include="c_entitydissolve.cpp" />
     <ClCompile Include="c_entityflame.cpp" />
     <ClCompile Include="c_entityfreezing.cpp" />
     <ClCompile Include="c_entityparticletrail.cpp" />
     <ClCompile Include="c_env_ambient_light.cpp" />
-    <ClCompile Include="c_env_colorgrade.cpp" />
     <ClCompile Include="c_env_dof_controller.cpp" />
     <ClCompile Include="c_env_fog_controller.cpp" />
     <ClCompile Include="c_env_global_light.cpp" />
@@ -332,7 +330,6 @@ exit 1
     <ClCompile Include="c_func_conveyor.cpp" />
     <ClCompile Include="c_func_dust.cpp" />
     <ClCompile Include="c_func_lod.cpp" />
-    <ClCompile Include="C_ShaderAPIGameSystem.cpp" />
     <ClCompile Include="c_weapon_custom.cpp" />
     <ClCompile Include="hl2\C_Func_Monitor.cpp" />
     <ClCompile Include="c_func_movelinear.cpp" />
@@ -510,6 +507,7 @@ exit 1
     <ClCompile Include="..\shared\hintmessage.cpp" />
     <ClCompile Include="..\shared\hintsystem.cpp" />
     <ClCompile Include="history_resource.cpp" />
+    <ClCompile Include="hl2\c_weapon_physcannon.cpp" />
     <ClCompile Include="hl2\gameui\backgroundmenubutton.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -839,7 +837,6 @@ exit 1
     <ClCompile Include="hl2\vgui\nb_horiz_list.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="hl2_rendertargets.cpp" />
     <ClCompile Include="hltvcamera.cpp" />
     <ClCompile Include="hud.cpp" />
     <ClCompile Include="hud_basechat.cpp" />
@@ -859,6 +856,7 @@ exit 1
     <ClCompile Include="hud_pdump.cpp" />
     <ClCompile Include="hud_redraw.cpp" />
     <ClCompile Include="..\shared\igamesystem.cpp" />
+    <ClCompile Include="inventoryWindow.cpp" />
     <ClCompile Include="in_camera.cpp" />
     <ClCompile Include="in_joystick.cpp" />
     <ClCompile Include="in_main.cpp" />
@@ -882,7 +880,7 @@ exit 1
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="IShaderAPIExtClient.cpp" />
+    <ClCompile Include="IShaderPostProcessConnect.cpp" />
     <ClCompile Include="IsNPCProxy.cpp" />
     <ClCompile Include="..\..\public\jigglebones.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -917,6 +915,7 @@ exit 1
     </ClCompile>
     <ClCompile Include="object_motion_blur_effect.cpp" />
     <ClCompile Include="..\shared\obstacle_pushaway.cpp" />
+    <ClCompile Include="panelList.cpp" />
     <ClCompile Include="panelmetaclassmgr.cpp" />
     <ClCompile Include="particle_collision.cpp" />
     <ClCompile Include="particle_litsmokeemitter.cpp" />
@@ -955,6 +954,7 @@ exit 1
     </ClCompile>
     <ClCompile Include="..\shared\precache_register.cpp" />
     <ClCompile Include="..\shared\predictableid.cpp" />
+    <ClCompile Include="playerInventoryClient.cpp" />
     <ClCompile Include="prediction.cpp" />
     <ClCompile Include="..\shared\predictioncopy.cpp" />
     <ClCompile Include="..\shared\predictioncopy_helpers.cpp" />
@@ -1015,6 +1015,7 @@ exit 1
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ShaderAPIGameSystem.cpp" />
     <ClCompile Include="ShaderEditor\Grass\CGrassCluster.cpp" />
     <ClCompile Include="ShaderEditor\SEdit_ModelRender.cpp" />
     <ClCompile Include="ShaderEditor\ShaderEditorSystem.cpp" />
@@ -1081,6 +1082,7 @@ exit 1
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="vgui_controlgrid.cpp" />
     <ClCompile Include="vgui_debugoverlaypanel.cpp" />
     <ClCompile Include="vgui_fpspanel.cpp" />
     <ClCompile Include="vgui_game_viewport.cpp" />
@@ -1248,7 +1250,6 @@ exit 1
     <ClCompile Include="hl2\c_basehlcombatweapon.cpp" />
     <ClCompile Include="hl2\c_weapon__stubs_hl2.cpp" />
     <ClCompile Include="hl2\c_weapon_crossbow.cpp" />
-    <ClCompile Include="hl2\c_weapon_physcannon.cpp" />
     <ClCompile Include="hl2\c_weapon_stunstick.cpp" />
     <ClCompile Include="..\shared\weapon_parse_default.cpp" />
     <ClCompile Include="hl2\c_ar2_explosion.cpp" />
@@ -1300,7 +1301,9 @@ exit 1
     <ClCompile Include="toolframework_client.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\materialsystem\stdshaders\IShaderEnginePostprocessInterface.h" />
     <ClInclude Include="..\shared\mountsteamcontent.h" />
+    <ClInclude Include="..\shared\playerInventory.h" />
     <ClInclude Include="..\shared\weapon_grapple.h" />
     <ClInclude Include="achievement_notification_panel.h" />
     <ClInclude Include="..\shared\achievement_saverestore.h" />
@@ -1310,13 +1313,11 @@ exit 1
     <ClInclude Include="..\shared\ai_speechconcept.h" />
     <ClInclude Include="..\shared\baseachievement.h" />
     <ClInclude Include="..\..\common\blackbox_helper.h" />
-    <ClInclude Include="colorgrade_manager.h" />
+    <ClInclude Include="advmodelpanel.h" />
     <ClInclude Include="c_baselesson.h" />
     <ClInclude Include="c_basetoggle.h" />
     <ClInclude Include="c_colorcorrection.h" />
-    <ClInclude Include="c_entgloweffect.h" />
     <ClInclude Include="c_env_ambient_light.h" />
-    <ClInclude Include="c_env_colorgrade.h" />
     <ClInclude Include="c_env_projectedtexture.h" />
     <ClInclude Include="c_gameinstructor.h" />
     <ClInclude Include="c_physics_prop_statue.h" />
@@ -1414,15 +1415,16 @@ exit 1
     <ClInclude Include="hl2\vgui\nb_button.h" />
     <ClInclude Include="hl2\vgui\nb_header_footer.h" />
     <ClInclude Include="hl2\vgui\nb_horiz_list.h" />
-    <ClInclude Include="hl2_rendertargets.h" />
     <ClInclude Include="hud_locator_target.h" />
     <ClInclude Include="..\..\engine\iblackbox.h" />
+    <ClInclude Include="inventoryWindow.h" />
     <ClInclude Include="modelrendersystem.h" />
     <ClInclude Include="..\shared\particle_parse.h" />
     <ClInclude Include="..\shared\particle_property.h" />
     <ClInclude Include="..\shared\point_bonusmaps_accessor.h" />
     <ClInclude Include="..\shared\postprocess_shared.h" />
     <ClInclude Include="..\shared\sharedvar.h" />
+    <ClInclude Include="panelList.h" />
     <ClInclude Include="ShaderEditor\Grass\CGrassCluster.h" />
     <ClInclude Include="ShaderEditor\ISEdit_ModelRender.h" />
     <ClInclude Include="ShaderEditor\IVShaderEditor.h" />
@@ -1430,6 +1432,7 @@ exit 1
     <ClInclude Include="ShaderEditor\ShaderEditorSystem.h" />
     <ClInclude Include="spatialentitymgr.h" />
     <ClInclude Include="vgui_avatarimage.h" />
+    <ClInclude Include="vgui_controlgrid.h" />
     <ClInclude Include="viewdebug.h" />
     <ClInclude Include="viewpostprocess.h" />
     <ClInclude Include="vscript_client.h" />

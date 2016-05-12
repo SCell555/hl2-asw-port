@@ -422,8 +422,9 @@ inline AI_Response *CAI_ExpresserHost<BASE_NPC>::SpeakFindResponse( AIConcept_t 
 {
 	return this->GetExpresser()->SpeakFindResponse( concept, criteria );
 }
+#endif
 
-
+#if 0
 //-----------------------------------------------------------------------------
 // In this case we clearly don't care to hang on to the criteria, so make a convenience
 // class that generates a one off.

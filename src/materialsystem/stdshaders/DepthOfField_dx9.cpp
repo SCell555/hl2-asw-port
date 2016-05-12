@@ -212,7 +212,7 @@ BEGIN_VS_SHADER_FLAGS( DepthOfField_dx9, "Depth of Field", SHADER_NOT_EDITABLE )
 			// set up poisson sample location constants pre-divided by screen res
 			int nNumPoissonSamples = 0;
 			const float *pPoissonSrc = NULL;
-			switch ( params[QUALITY]->GetIntValue() )
+			switch ( mat_dof_quality.GetInt() )
 			{
 			case 0:
 				// NOTE: These must match the shader
@@ -266,7 +266,7 @@ BEGIN_VS_SHADER_FLAGS( DepthOfField_dx9, "Depth of Field", SHADER_NOT_EDITABLE )
 			if ( g_pHardwareConfig->SupportsPixelShaders_2_b() )
 			{
 				DECLARE_DYNAMIC_PIXEL_SHADER( depth_of_field_ps20b );
-				SET_DYNAMIC_PIXEL_SHADER_COMBO( QUALITY, params[QUALITY]->GetIntValue() );
+				SET_DYNAMIC_PIXEL_SHADER_COMBO( QUALITY, mat_dof_quality.GetInt() );
 				SET_DYNAMIC_PIXEL_SHADER( depth_of_field_ps20b );
 			}
 			else

@@ -21,10 +21,6 @@
 #include "panelmetaclassmgr.h"
 //#include "nb_header_footer.h"
 
-#ifdef ENABLE_CEF
-#include "cef/src_cef.h"
-#endif // ENABLE_CEF
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -99,13 +95,6 @@ IClientMode *GetClientModeNormal()
 	Assert( engine->IsLocalPlayerResolvable() );
 	return &g_ClientModeNormal[ engine->GetActiveSplitScreenPlayerSlot() ];
 }
-
-ClientModeHLNormal* GetClientModeSDK()
-{
-	Assert( engine->IsLocalPlayerResolvable() );
-	return &g_ClientModeNormal[ engine->GetActiveSplitScreenPlayerSlot() ];
-}
-
 
 static char const *s_CloseWindowNames[]={
 	"InfoMessageWindow",

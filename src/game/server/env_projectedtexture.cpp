@@ -156,10 +156,10 @@ CEnvProjectedTexture::CEnvProjectedTexture( void )
 void CEnvProjectedTexture::Spawn( void )
 {
 	m_bState = HasSpawnFlags( ENV_PROJECTEDTEXTURE_STARTON );
-	m_bEnableVolumetrics = ( ( GetSpawnFlags() & ENV_PROJECTEDTEXTURE_VOLUMETRIC ) != 0 );
-	m_bAlwaysUpdate = ( ( GetSpawnFlags() & ENV_PROJECTEDTEXTURE_ALWAYSUPDATE ) != 0 );
-	m_bEnableCampfireMode = ( ( GetSpawnFlags() & ENV_PROJECTEDTEXTURE_CAMPFIRE_MODE ) != 0 );
-	m_bUberLightEnabled = ( ( GetSpawnFlags() & ENV_PROJECTEDTEXTURE_UBERLIGHT ) != 0 );
+	m_bEnableVolumetrics = HasSpawnFlags( ENV_PROJECTEDTEXTURE_VOLUMETRIC );
+	m_bAlwaysUpdate = HasSpawnFlags( ENV_PROJECTEDTEXTURE_ALWAYSUPDATE );
+	m_bEnableCampfireMode = HasSpawnFlags( ENV_PROJECTEDTEXTURE_CAMPFIRE_MODE );
+	m_bUberLightEnabled = HasSpawnFlags( ENV_PROJECTEDTEXTURE_UBERLIGHT );
 
 	BaseClass::Spawn();
 }

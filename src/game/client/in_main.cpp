@@ -395,8 +395,7 @@ kbutton_t::Split_t &kbutton_t::GetPerUser( int nSlot /*=-1*/ )
 {
 	if ( nSlot == -1 )
 	{
-		ASSERT_LOCAL_PLAYER_RESOLVABLE();
-		nSlot = GET_ACTIVE_SPLITSCREEN_SLOT();
+		nSlot = 0;
 	}
 	return m_PerUser[ nSlot ];
 }
@@ -625,21 +624,18 @@ void IN_AttackDown( const CCommand &args )
 void IN_AttackUp( const CCommand &args )
 {
 	KeyUp( &in_attack, args[1] );
-	ASSERT_LOCAL_PLAYER_RESOLVABLE();
-	in_cancel[ GET_ACTIVE_SPLITSCREEN_SLOT() ] = 0;
+	in_cancel[0] = 0;
 }
 
 // Special handling
 void IN_Cancel( const CCommand &args )
 {
-	ASSERT_LOCAL_PLAYER_RESOLVABLE();
-	in_cancel[ GET_ACTIVE_SPLITSCREEN_SLOT() ] = 1;
+	in_cancel[0] = 1;
 }
 
 void IN_Impulse( const CCommand &args )
 {
-	ASSERT_LOCAL_PLAYER_RESOLVABLE();
-	in_impulse[ GET_ACTIVE_SPLITSCREEN_SLOT() ] = atoi( args[1] );
+	in_impulse[0] = atoi( args[1] );
 }
 
 void IN_ScoreDown( const CCommand &args )
@@ -870,17 +866,6 @@ void CInput::ClampAngles( QAngle& viewangles )
 	{
 		viewangles[PITCH] = -cl_pitchup.GetFloat();
 	}
-
-
-	if ( viewangles[ROLL] > 50 )
-	{
-		viewangles[ROLL] = 50;
-	}
-	if ( viewangles[ROLL] < -50 )
-	{
-		viewangles[ROLL] = -50;
-	}
-
 }
 
 /*
@@ -1112,8 +1097,7 @@ CInput::PerUserInput_t &CInput::GetPerUser( int nSlot /*=-1*/ )
 {
 	if ( nSlot == -1 )
 	{
-		ASSERT_LOCAL_PLAYER_RESOLVABLE();
-		return m_PerUser[ GET_ACTIVE_SPLITSCREEN_SLOT() ];
+		return m_PerUser[0];
 	}
 	return m_PerUser[ nSlot ];
 }
@@ -1122,16 +1106,14 @@ const CInput::PerUserInput_t &CInput::GetPerUser( int nSlot /*=-1*/ ) const
 {
 	if ( nSlot == -1 )
 	{
-		ASSERT_LOCAL_PLAYER_RESOLVABLE();
-		return m_PerUser[ GET_ACTIVE_SPLITSCREEN_SLOT() ];
+		return m_PerUser[0];
 	}
 	return m_PerUser[ nSlot ];
 }
 
 void CInput::ExtraMouseSample( float frametime, bool active )
 {
-	ASSERT_LOCAL_PLAYER_RESOLVABLE();
-	int nSlot = GET_ACTIVE_SPLITSCREEN_SLOT();
+	int nSlot = 0;
 
 	static CUserCmd dummy[ MAX_SPLITSCREEN_PLAYERS ];
 	CUserCmd *cmd = &dummy[ nSlot ];
@@ -1198,8 +1180,7 @@ if active == 1 then we are 1) not playing back demos ( where our commands are ig
 
 void CInput::CreateMove ( int sequence_number, float input_sample_frametime, bool active )
 {	
-	ASSERT_LOCAL_PLAYER_RESOLVABLE();
-	int nSlot = GET_ACTIVE_SPLITSCREEN_SLOT();
+	int nSlot = 0;
 
 	CUserCmd *cmd = &GetPerUser( nSlot ).m_pCommands[ sequence_number % MULTIPLAYER_BACKUP];
 	CVerifiedUserCmd *pVerified = &GetPerUser( nSlot ).m_pVerifiedCommands[ sequence_number % MULTIPLAYER_BACKUP];
@@ -1584,8 +1565,7 @@ Set bResetState to 1 to clear old state info
 */
 int CInput::GetButtonBits( bool bResetState )
 {
-	ASSERT_LOCAL_PLAYER_RESOLVABLE();
-	int nSlot = GET_ACTIVE_SPLITSCREEN_SLOT();
+	int nSlot = 0;
 
 	int bits = 0;
 
@@ -1662,7 +1642,7 @@ int CInput::GetButtonBits( bool bResetState )
 //-----------------------------------------------------------------------------
 void CInput::ClearInputButton( int bits )
 {
-	ASSERT_LOCAL_PLAYER_RESOLVABLE();
+	//ASSERT_LOCAL_PLAYER_RESOLVABLE();
 
 	if ( GET_ACTIVE_SPLITSCREEN_SLOT() != in_forceuser.GetInt() )
 	{

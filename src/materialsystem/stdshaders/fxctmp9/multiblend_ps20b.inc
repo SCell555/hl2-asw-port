@@ -19,14 +19,6 @@ private:
 	bool m_bLIGHTING_PREVIEW;
 #endif
 public:
-	void SetLIGHTING_PREVIEW( int i )
-	{
-		Assert( i >= 0 && i <= 1 );
-		m_nLIGHTING_PREVIEW = i;
-#ifdef _DEBUG
-		m_bLIGHTING_PREVIEW = true;
-#endif
-	}
 	void SetLIGHTING_PREVIEW( bool i )
 	{
 		m_nLIGHTING_PREVIEW = i ? 1 : 0;
@@ -40,14 +32,6 @@ private:
 	bool m_bFOW;
 #endif
 public:
-	void SetFOW( int i )
-	{
-		Assert( i >= 0 && i <= 1 );
-		m_nFOW = i;
-#ifdef _DEBUG
-		m_bFOW = true;
-#endif
-	}
 	void SetFOW( bool i )
 	{
 		m_nFOW = i ? 1 : 0;
@@ -61,14 +45,6 @@ private:
 	bool m_bFLASHLIGHT;
 #endif
 public:
-	void SetFLASHLIGHT( int i )
-	{
-		Assert( i >= 0 && i <= 1 );
-		m_nFLASHLIGHT = i;
-#ifdef _DEBUG
-		m_bFLASHLIGHT = true;
-#endif
-	}
 	void SetFLASHLIGHT( bool i )
 	{
 		m_nFLASHLIGHT = i ? 1 : 0;
@@ -82,14 +58,6 @@ private:
 	bool m_bFLASHLIGHTDEPTHFILTERMODE;
 #endif
 public:
-	void SetFLASHLIGHTDEPTHFILTERMODE( int i )
-	{
-		Assert( i >= 0 && i <= 2 );
-		m_nFLASHLIGHTDEPTHFILTERMODE = i;
-#ifdef _DEBUG
-		m_bFLASHLIGHTDEPTHFILTERMODE = true;
-#endif
-	}
 	void SetFLASHLIGHTDEPTHFILTERMODE( bool i )
 	{
 		m_nFLASHLIGHTDEPTHFILTERMODE = i ? 1 : 0;
@@ -138,14 +106,6 @@ private:
 	bool m_bFLASHLIGHTSHADOWS;
 #endif
 public:
-	void SetFLASHLIGHTSHADOWS( int i )
-	{
-		Assert( i >= 0 && i <= 1 );
-		m_nFLASHLIGHTSHADOWS = i;
-#ifdef _DEBUG
-		m_bFLASHLIGHTSHADOWS = true;
-#endif
-	}
 	void SetFLASHLIGHTSHADOWS( bool i )
 	{
 		m_nFLASHLIGHTSHADOWS = i ? 1 : 0;
@@ -159,14 +119,6 @@ private:
 	bool m_bPIXELFOGTYPE;
 #endif
 public:
-	void SetPIXELFOGTYPE( int i )
-	{
-		Assert( i >= 0 && i <= 1 );
-		m_nPIXELFOGTYPE = i;
-#ifdef _DEBUG
-		m_bPIXELFOGTYPE = true;
-#endif
-	}
 	void SetPIXELFOGTYPE( bool i )
 	{
 		m_nPIXELFOGTYPE = i ? 1 : 0;

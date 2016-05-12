@@ -721,7 +721,7 @@ void CCollisionProperty::SetCollisionBounds( const Vector& mins, const Vector &m
 	m_flRadius = vecSize.Length() * 0.5f;
 
 	MarkSurroundingBoundsDirty();
-}
+	}
 }
 
 //-----------------------------------------------------------------------------

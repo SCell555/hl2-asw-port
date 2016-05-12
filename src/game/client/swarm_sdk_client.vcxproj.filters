@@ -1589,9 +1589,6 @@
     <ClCompile Include="hl2\c_weapon_crossbow.cpp">
       <Filter>Source Files\HL2 Client\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="hl2\c_weapon_physcannon.cpp">
-      <Filter>Source Files\HL2 Client\Weapons</Filter>
-    </ClCompile>
     <ClCompile Include="hl2\c_weapon_stunstick.cpp">
       <Filter>Source Files\HL2 Client\Weapons</Filter>
     </ClCompile>
@@ -1983,12 +1980,16 @@
     </ClCompile>
     <ClCompile Include="..\shared\weapon_grapple.cpp" />
     <ClCompile Include="c_weapon_custom.cpp" />
-    <ClCompile Include="C_ShaderAPIGameSystem.cpp" />
-    <ClCompile Include="IShaderAPIExtClient.cpp" />
-    <ClCompile Include="hl2_rendertargets.cpp" />
-    <ClCompile Include="c_entgloweffect.cpp" />
-    <ClCompile Include="c_env_colorgrade.cpp" />
-    <ClCompile Include="colorgrade_manager.cpp" />
+    <ClCompile Include="ShaderAPIGameSystem.cpp" />
+    <ClCompile Include="IShaderPostProcessConnect.cpp" />
+    <ClCompile Include="hl2\c_weapon_physcannon.cpp">
+      <Filter>Source Files\HL2 Client\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="playerInventoryClient.cpp" />
+    <ClCompile Include="inventoryWindow.cpp" />
+    <ClCompile Include="advmodelpanel.cpp" />
+    <ClCompile Include="vgui_controlgrid.cpp" />
+    <ClCompile Include="panelList.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -4121,10 +4122,12 @@
     </ClInclude>
     <ClInclude Include="..\shared\weapon_grapple.h" />
     <ClInclude Include="c_weapon_custom.h" />
-    <ClInclude Include="hl2_rendertargets.h" />
-    <ClInclude Include="c_entgloweffect.h" />
-    <ClInclude Include="c_env_colorgrade.h" />
-    <ClInclude Include="colorgrade_manager.h" />
+    <ClInclude Include="..\..\materialsystem\stdshaders\IShaderEnginePostprocessInterface.h" />
+    <ClInclude Include="..\shared\playerInventory.h" />
+    <ClInclude Include="inventoryWindow.h" />
+    <ClInclude Include="advmodelpanel.h" />
+    <ClInclude Include="vgui_controlgrid.h" />
+    <ClInclude Include="panelList.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\bitmap.lib">

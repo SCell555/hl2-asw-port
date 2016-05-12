@@ -12,6 +12,7 @@
 #include "hl2_playerlocaldata.h"
 #include "simtimer.h"
 #include "soundenvelope.h"
+#include "playerInventory.h"
 
 class CAI_Squad;
 class CPropCombineBall;
@@ -319,14 +320,12 @@ private:
 
 	CNetworkVar( bool, m_fIsSprinting );
 	CNetworkVarForDerived( bool, m_fIsWalking );
-public:
-	bool				IsNightVisionOn();
-	void				SetNightVisionState( bool state );
 
 protected:	// Jeep: Portal_Player needs access to this variable to overload PlayerUse for picking up objects through portals
 	// This player's HL2 specific data that should only be replicated to 
 	//  the player and not to other players.
 	CNetworkVarEmbedded( CHL2PlayerLocalData, m_HL2Local );
+	CNetworkVarEmbedded( PlayerInventory, m_Inventory );
 
 	bool				m_bPlayUseDenySound;		// Signaled by PlayerUse, but can be unset by HL2 ladder code...
 
@@ -381,6 +380,10 @@ private:
 	float				m_flTimeNextLadderHint;	// Next time we're eligible to display a HUD hint about a ladder.
 	
 	friend class CHL2GameMovement;
+	friend class SaveRestoreInventoryMgr;
+	friend static void pick(const CCommand &args);
+	friend static void dropItem(const CCommand &args);
+	friend static void listInv(const CCommand &args);
 };
 
 

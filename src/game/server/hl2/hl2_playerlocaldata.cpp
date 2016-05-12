@@ -32,8 +32,6 @@ BEGIN_SEND_TABLE_NOBASE( CHL2PlayerLocalData, DT_HL2Local )
 	SendPropFloat( SENDINFO(m_flFlashBattery) ),
 	SendPropVector( SENDINFO(m_vecLocatorOrigin) ),
 #endif
-	SendPropFloat( SENDINFO(m_flNightVisionBattery) ),
-	SendPropBool( SENDINFO(m_bIsNightVisionOn) ),
 END_SEND_TABLE()
 
 BEGIN_SIMPLE_DATADESC( CHL2PlayerLocalData )
@@ -50,8 +48,6 @@ BEGIN_SIMPLE_DATADESC( CHL2PlayerLocalData )
 	DEFINE_FIELD( m_flFlashBattery, FIELD_FLOAT ),
 	DEFINE_FIELD( m_vecLocatorOrigin, FIELD_POSITION_VECTOR ),
 #endif
-	DEFINE_FIELD( m_flNightVisionBattery, FIELD_FLOAT ),
-	DEFINE_FIELD( m_bIsNightVisionOn, FIELD_BOOLEAN ),
 
 	// Ladder related stuff
 	DEFINE_FIELD( m_hLadder, FIELD_EHANDLE ),
@@ -70,7 +66,5 @@ CHL2PlayerLocalData::CHL2PlayerLocalData()
 #ifdef HL2_EPISODIC
 	m_flFlashBattery = 0.0f;
 #endif
-	m_flNightVisionBattery = 0.0f;
-	m_bIsNightVisionOn = false;
 }
 

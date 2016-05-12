@@ -5463,6 +5463,22 @@ int CBaseEntity::PrecacheModel( const char *name, bool bPreload )
 	{
 		Msg( " !! CBaseEntity::PrecacheModel : (pre) modelinfo->PrecacheModel %s \n", name );
 	}
+
+	char pa[MAX_PATH];
+	Q_ExtractFilePath(name, pa, MAX_PATH);
+	if (filesystem->FileExists(UTIL_VarArgs("%s.dx9.vtx", pa), "MOD"))
+	{
+		if (!filesystem->FileExists(UTIL_VarArgs("%s.vtx", pa), "MOD"))
+			filesystem->RenameFile(UTIL_VarArgs("%s.dx9.vtx", pa), UTIL_VarArgs("%s.vtx", pa), "MOD");
+		else
+			filesystem->RemoveFile(UTIL_VarArgs("%s.dx9.vtx", pa), "MOD");
+	}
+	if (filesystem->FileExists(UTIL_VarArgs("%s.dx8.vtx", pa), "MOD"))
+		filesystem->RemoveFile(UTIL_VarArgs("%s.dx8.vtx", pa), "MOD");
+	if (filesystem->FileExists(UTIL_VarArgs("%s.sw.vtx", pa), "MOD"))
+		filesystem->RemoveFile(UTIL_VarArgs("%s.sw.vtx", pa), "MOD");
+
+
 	idx = engine->PrecacheModel( name, bPreload ); // Precache is giving model an index.
 	if ( sv_modelprecache_debug.GetBool() )
 	{

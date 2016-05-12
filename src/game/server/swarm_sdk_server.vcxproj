@@ -68,7 +68,7 @@ if ERRORLEVEL 1 exit 1
     <ClCompile>
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.\python;..\..\game\shared\python;..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;.\;..\..\game\shared;..\..\utils\common;..\..\game\server\NextBot;$(IntDir);.\hl2;..\..\game\shared\hl2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;.\;..\..\game\shared;..\..\utils\common;..\..\game\server\NextBot;$(IntDir);.\hl2;..\..\game\shared\hl2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=server;VPCGAME=swarm;VPCGAMECAPS=SWARM;_DLL_EXT=.dll;COMPILER_MSVC32;COMPILER_MSVC;MEMOVERRIDE_MODULE=server;GAME_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;HL2_DLL;USES_SAVERESTORE;HL2_EPISODIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>false</MinimalRebuild>
@@ -185,7 +185,7 @@ exit 1
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
       <ErrorReporting>Prompt</ErrorReporting>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -425,7 +425,6 @@ exit 1
     <ClCompile Include="EntityParticleTrail.cpp" />
     <ClCompile Include="..\shared\EntityParticleTrail_Shared.cpp" />
     <ClCompile Include="env_ambient_light.cpp" />
-    <ClCompile Include="env_colorgrade.cpp" />
     <ClCompile Include="env_debughistory.cpp" />
     <ClCompile Include="..\shared\env_detail_controller.cpp" />
     <ClCompile Include="env_dof_controller.cpp" />
@@ -516,6 +515,7 @@ exit 1
     <ClCompile Include="guntarget.cpp" />
     <ClCompile Include="hl2\grenade_homer.cpp" />
     <ClCompile Include="hl2\grenade_pathfollower.cpp" />
+    <ClCompile Include="hl2\weapon_physcannon.cpp" />
     <ClCompile Include="h_ai.cpp" />
     <ClCompile Include="h_export.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -618,6 +618,7 @@ exit 1
     <ClCompile Include="..\shared\physics_shared.cpp" />
     <ClCompile Include="physobj.cpp" />
     <ClCompile Include="player.cpp" />
+    <ClCompile Include="playerInventoryServer.cpp" />
     <ClCompile Include="player_command.cpp" />
     <ClCompile Include="player_lagcompensation.cpp" />
     <ClCompile Include="player_pickup.cpp" />
@@ -943,7 +944,6 @@ exit 1
     <ClCompile Include="hl2\weapon_crowbar.cpp" />
     <ClCompile Include="hl2\weapon_frag.cpp" />
     <ClCompile Include="..\shared\weapon_parse_default.cpp" />
-    <ClCompile Include="hl2\weapon_physcannon.cpp" />
     <ClCompile Include="hl2\weapon_pistol.cpp" />
     <ClCompile Include="hl2\weapon_rpg.cpp" />
     <ClCompile Include="hl2\weapon_shotgun.cpp" />
@@ -1015,6 +1015,7 @@ exit 1
     <ClInclude Include="..\shared\activitylist.h" />
     <ClInclude Include="..\shared\ai_activity.h" />
     <ClInclude Include="..\shared\mountsteamcontent.h" />
+    <ClInclude Include="..\shared\playerInventory.h" />
     <ClInclude Include="..\shared\weapon_grapple.h" />
     <ClInclude Include="ai_addon.h" />
     <ClInclude Include="ai_agent.h" />
@@ -1201,6 +1202,7 @@ exit 1
     <ClInclude Include="..\..\public\tier2\interval.h" />
     <ClInclude Include="..\..\public\iregistry.h" />
     <ClInclude Include="..\shared\iscenetokenprocessor.h" />
+    <ClInclude Include="inventorySaveRestoreManager.h" />
     <ClInclude Include="iservervehicle.h" />
     <ClInclude Include="items.h" />
     <ClInclude Include="..\..\public\ivoiceserver.h" />

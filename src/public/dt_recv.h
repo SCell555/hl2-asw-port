@@ -404,7 +404,7 @@ RecvProp InternalRecvPropArray(
 // Use this to match a SendPropArray_UniqueElements
 //
 #define RecvPropArray_UniqueElements( arrayName, propDefinition ) \
-	RecvPropArray3( RECVINFO_ARRAY( m_nValues ), propDefinition )
+	RecvPropArray3( RECVINFO_ARRAY( arrayName ), propDefinition )
 
 
 

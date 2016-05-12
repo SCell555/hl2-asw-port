@@ -29,8 +29,16 @@ extern ConVar sensitivity;
 ConVar cl_npc_speedmod_intime( "cl_npc_speedmod_intime", "0.25", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
 ConVar cl_npc_speedmod_outtime( "cl_npc_speedmod_outtime", "1.5", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
 
+void DataTableRecvProxy_StaticDataTableInv(const RecvProp *pProp, void **pOut, void *pData, int objectID)
+{
+	extern bool g_bNeedUpdate;
+	g_bNeedUpdate = true;
+	return DataTableRecvProxy_StaticDataTable(pProp, pOut, pData, objectID);
+}
+
 IMPLEMENT_CLIENTCLASS_DT(C_BaseHLPlayer, DT_HL2_Player, CHL2_Player)
 	RecvPropDataTable( RECVINFO_DT(m_HL2Local),0, &REFERENCE_RECV_TABLE(DT_HL2Local) ),
+	RecvPropDataTable( RECVINFO_DT(m_Inventory),0, &REFERENCE_RECV_TABLE(DT_Inventory), DataTableRecvProxy_StaticDataTableInv ),
 	RecvPropBool( RECVINFO( m_fIsSprinting ) ),
 END_RECV_TABLE()
 
@@ -42,7 +50,7 @@ END_PREDICTION_DATA()
 //-----------------------------------------------------------------------------
 // Purpose: Drops player's primary weapon
 //-----------------------------------------------------------------------------
-void CC_DropPrimary( void )
+/*void CC_DropPrimary( void )
 {
 	C_BasePlayer *pPlayer = (C_BasePlayer *) C_BasePlayer::GetLocalPlayer();
 	
@@ -50,9 +58,9 @@ void CC_DropPrimary( void )
 		return;
 
 	pPlayer->Weapon_DropPrimary();
-}
+}*/
 
-static ConCommand dropprimary("dropprimary", CC_DropPrimary, "dropprimary: Drops the primary weapon of the player.");
+//static ConCommand dropprimary("dropprimary", CC_DropPrimary, "dropprimary: Drops the primary weapon of the player.");
 
 // link to the correct class.
 #if !defined ( HL2MP ) && !defined ( PORTAL )
@@ -93,20 +101,6 @@ void C_BaseHLPlayer::OnDataChanged( DataUpdateType_t updateType )
 	}
 
 	BaseClass::OnDataChanged( updateType );
-}
-
-void C_BaseHLPlayer::Think()
-{
-	if ( m_bLastNVState != m_HL2Local.m_bIsNightVisionOn )
-	{
-		m_bLastNVState = m_HL2Local.m_bIsNightVisionOn;
-
-		engine->ClientCmd("sedit_debug_toggle_ppe ppe_night");
-		DevMsg("toggled nightvision.\n");
-		//g_ShaderEditorSystem->SetPPEEnabled("ppe_night", m_bLastNVState);
-	}
-
-	BaseClass::Think();
 }
 
 //-----------------------------------------------------------------------------
@@ -661,4 +655,19 @@ bool C_BaseHLPlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 	}
 
 	return bResult;
+}
+
+CON_COMMAND(listInvClient, "")
+{
+	C_BaseHLPlayer* player = (C_BaseHLPlayer*)C_BaseHLPlayer::GetLocalPlayer();
+	
+	if (!player)
+		return DevMsg("no player\n");
+
+	auto &inv = player->m_Inventory;
+
+	for (int i = 0; i < 32; i++)
+	{
+		ConColorMsg(COLOR_BLUE, "%i: %s %s %s %i\n", i, inv.classNames[i], inv.entNames[i], inv.modelNames[i], inv.isOccupied.Get(i) ? 1 : 0);
+	}
 }

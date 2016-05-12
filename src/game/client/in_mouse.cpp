@@ -41,6 +41,10 @@
 // left / right
 #define	YAW		1
 
+#ifdef PORTAL
+bool g_bUpsideDown = false; // Set when the player is upside down in Portal to invert the mouse.
+#endif //#ifdef PORTAL
+
 extern ConVar lookstrafe;
 extern ConVar cl_pitchdown;
 extern ConVar cl_pitchup;
@@ -431,6 +435,13 @@ void CInput::ApplyMouse( int nSlot, QAngle& viewangles, CUserCmd *cmd, float mou
 
 	if ( !((in_strafe.GetPerUser( nSlot ).state & 1) || lookstrafe.GetInt()) )
 	{
+#ifdef PORTAL
+		if ( g_bUpsideDown )
+		{
+			viewangles[ YAW ] += m_yaw.GetFloat() * mouse_x;
+		}
+		else
+#endif //#ifdef PORTAL
 		if ( CAM_IsThirdPerson() && thirdperson_platformer.GetInt() )
 		{
 			if ( mouse_x )
@@ -464,35 +475,44 @@ void CInput::ApplyMouse( int nSlot, QAngle& viewangles, CUserCmd *cmd, float mou
 	//  to adjust view pitch.
 	if (!(in_strafe.GetPerUser( nSlot ).state & 1))
 	{
-		if ( CAM_IsThirdPerson() && thirdperson_platformer.GetInt() )
+#ifdef PORTAL
+		if ( g_bUpsideDown )
 		{
-			if ( mouse_y )
-			{
-				// use the mouse to orbit the camera around the player, and update the idealAngle
-				user.m_vecCameraOffset[ PITCH ] += m_pitch->GetFloat() * mouse_y;
-				cam_idealpitch.SetValue( user.m_vecCameraOffset[ PITCH ] - viewangles[ PITCH ] );
-
-				// why doesn't this work??? CInput::AdjustYaw is why
-				//cam_idealpitch.SetValue( cam_idealpitch.GetFloat() + m_pitch->GetFloat() * mouse_y );
-			}
+			viewangles[PITCH] -= m_pitch->GetFloat() * mouse_y;
 		}
 		else
+#endif //#ifdef PORTAL
 		{
+			if (CAM_IsThirdPerson() && thirdperson_platformer.GetInt())
+			{
+				if (mouse_y)
+				{
+					// use the mouse to orbit the camera around the player, and update the idealAngle
+					user.m_vecCameraOffset[PITCH] += m_pitch->GetFloat() * mouse_y;
+					cam_idealpitch.SetValue(user.m_vecCameraOffset[PITCH] - viewangles[PITCH]);
 
-			{
-				viewangles[PITCH] += m_pitch->GetFloat() * mouse_y;
+					// why doesn't this work??? CInput::AdjustYaw is why
+					//cam_idealpitch.SetValue( cam_idealpitch.GetFloat() + m_pitch->GetFloat() * mouse_y );
+				}
 			}
+			else
+			{
 
-			// Check pitch bounds
-			if (viewangles[PITCH] > cl_pitchdown.GetFloat())
-			{
-				viewangles[PITCH] = cl_pitchdown.GetFloat();
+				{
+					viewangles[PITCH] += m_pitch->GetFloat() * mouse_y;
+				}
+
+				// Check pitch bounds
+				if (viewangles[PITCH] > cl_pitchdown.GetFloat())
+				{
+					viewangles[PITCH] = cl_pitchdown.GetFloat();
+				}
+				if (viewangles[PITCH] < -cl_pitchup.GetFloat())
+				{
+					viewangles[PITCH] = -cl_pitchup.GetFloat();
+				}
 			}
-			if (viewangles[PITCH] < -cl_pitchup.GetFloat())
-			{
-				viewangles[PITCH] = -cl_pitchup.GetFloat();
-			}
-		}		
+		}
 	}
 	else
 	{

@@ -11,6 +11,7 @@
 #include "Engine_Post_ps20b.inc"
 
 #include "..\materialsystem_global.h"
+#include "IShaderEnginePostprocessInterface.h"
 
 // NOTE: This has to be the last file included!
 #include "tier0/memdbgon.h"
@@ -25,10 +26,6 @@ ConVar mat_local_contrast_vignette_start_override( "mat_local_contrast_vignette_
 ConVar mat_local_contrast_vignette_end_override( "mat_local_contrast_vignette_end_override", "-1.0" );
 ConVar mat_local_contrast_edge_scale_override( "mat_local_contrast_edge_scale_override", "-1000.0" );
 
-ConVar mat_vignette_enable("mat_vignette_enable", "0");
-ConVar mat_vignette_blur("mat_vignette_blur", "0");
-ConVar mat_local_contrast_enable("mat_local_contrast_enable", "0");
-
 DEFINE_FALLBACK_SHADER( Engine_Post, Engine_Post_dx9 )
 BEGIN_VS_SHADER_FLAGS( Engine_Post_dx9, "Engine post-processing effects (software anti-aliasing, bloom, color-correction", SHADER_NOT_EDITABLE )
 	BEGIN_SHADER_PARAMS
@@ -36,22 +33,21 @@ BEGIN_VS_SHADER_FLAGS( Engine_Post_dx9, "Engine post-processing effects (softwar
 		SHADER_PARAM( AAENABLE,					SHADER_PARAM_TYPE_BOOL,		"0",				"Enable software anti-aliasing" )
 		SHADER_PARAM( AAINTERNAL1,				SHADER_PARAM_TYPE_VEC4,		"[0 0 0 0]",		"Internal anti-aliasing values set via material proxy" )
 		SHADER_PARAM( AAINTERNAL2,				SHADER_PARAM_TYPE_VEC4,		"[0 0 0 0]",		"Internal anti-aliasing values set via material proxy" )
-		SHADER_PARAM( AAINTERNAL3,				SHADER_PARAM_TYPE_VEC4,		"[0 0 0 0]",		"Internal anti-aliasing values set via material proxy" )
 		SHADER_PARAM( BLOOMENABLE,				SHADER_PARAM_TYPE_BOOL,		"1",				"Enable bloom" )
 		SHADER_PARAM( BLOOMAMOUNT,				SHADER_PARAM_TYPE_FLOAT,	"1.0",				"Bloom scale factor" )
 		SHADER_PARAM( SCREENEFFECTTEXTURE,		SHADER_PARAM_TYPE_TEXTURE,	"",					"used for paint or vomit screen effect" )
 		SHADER_PARAM( DEPTHBLURENABLE,			SHADER_PARAM_TYPE_BOOL,		"0",				"Inexpensive depth-of-field substitute" )
 
-		SHADER_PARAM( ALLOWVIGNETTE,			SHADER_PARAM_TYPE_BOOL,		"0",				"Allow vignette" )
+		SHADER_PARAM( ALLOWVIGNETTE,			SHADER_PARAM_TYPE_BOOL,		"1",				"Allow vignette" )
 		SHADER_PARAM( VIGNETTEENABLE,			SHADER_PARAM_TYPE_BOOL,		"0",				"Enable vignette" )
 		SHADER_PARAM( INTERNAL_VIGNETTETEXTURE,	SHADER_PARAM_TYPE_TEXTURE,	"dev/vignette",		"" )
 
-		SHADER_PARAM( ALLOWNOISE,				SHADER_PARAM_TYPE_BOOL,		"0",				"Allow noise" )
+		SHADER_PARAM( ALLOWNOISE,				SHADER_PARAM_TYPE_BOOL,		"1",				"Allow noise" )
 		SHADER_PARAM( NOISEENABLE,				SHADER_PARAM_TYPE_BOOL,		"0",				"Enable noise" )
 		SHADER_PARAM( NOISESCALE,				SHADER_PARAM_TYPE_FLOAT,	"0",				"Noise scale" )
 		SHADER_PARAM( NOISETEXTURE,				SHADER_PARAM_TYPE_TEXTURE,	"",					"Noise texture" )
 
-		SHADER_PARAM( ALLOWLOCALCONTRAST,		SHADER_PARAM_TYPE_BOOL,		"0",				"Enable local contrast enhancement" )
+		SHADER_PARAM( ALLOWLOCALCONTRAST,		SHADER_PARAM_TYPE_BOOL,		"1",				"Enable local contrast enhancement" )
 		SHADER_PARAM( LOCALCONTRASTENABLE,		SHADER_PARAM_TYPE_BOOL,		"0",				"Enable local contrast enhancement" )
 		SHADER_PARAM( LOCALCONTRASTSCALE,		SHADER_PARAM_TYPE_FLOAT,	"0",				"Local contrast scale" )
 		SHADER_PARAM( LOCALCONTRASTMIDTONEMASK,	SHADER_PARAM_TYPE_FLOAT,	"0",				"Local contrast midtone mask" )
@@ -67,8 +63,8 @@ BEGIN_VS_SHADER_FLAGS( Engine_Post_dx9, "Engine post-processing effects (softwar
 		SHADER_PARAM( DEPTHBLURSTRENGTH,		SHADER_PARAM_TYPE_FLOAT,	"0",				"Strength of depth-blur effect" )
 		SHADER_PARAM( SCREENBLURSTRENGTH,		SHADER_PARAM_TYPE_FLOAT,	"0",				"Full-screen blur factor" )
 
-		SHADER_PARAM( VOMITCOLOR1,				SHADER_PARAM_TYPE_VEC3,		"[0 0 0 0]",		"1st vomit blend color" )
-		SHADER_PARAM( VOMITCOLOR2,				SHADER_PARAM_TYPE_VEC3,		"[0 0 0 0]",		"2st vomit blend color" )
+		SHADER_PARAM( VOMITCOLOR1,				SHADER_PARAM_TYPE_VEC3,		"[0 0 0]",		"1st vomit blend color" )
+		SHADER_PARAM( VOMITCOLOR2,				SHADER_PARAM_TYPE_VEC3,		"[0 0 0]",		"2st vomit blend color" )
 		SHADER_PARAM( VOMITREFRACTSCALE,		SHADER_PARAM_TYPE_FLOAT,	"0.15",				"vomit refract strength" )
 		SHADER_PARAM( VOMITENABLE,				SHADER_PARAM_TYPE_BOOL,		"0",				"Enable vomit refract" )
 
@@ -108,10 +104,6 @@ BEGIN_VS_SHADER_FLAGS( Engine_Post_dx9, "Engine post-processing effects (softwar
 		if ( !params[ AAINTERNAL2 ]->IsDefined() )
 		{
 			params[ AAINTERNAL2 ]->SetVecValue( 0, 0, 0, 0 );
-		}
-		if ( !params[ AAINTERNAL3 ]->IsDefined() )
-		{
-			params[ AAINTERNAL3 ]->SetVecValue( 0, 0, 0, 0 );
 		}
 		if ( !params[ BLOOMENABLE ]->IsDefined() )
 		{
@@ -281,8 +273,10 @@ BEGIN_VS_SHADER_FLAGS( Engine_Post_dx9, "Engine post-processing effects (softwar
 
 	SHADER_DRAW
 	{
+		GetShaderPostExt()->SetTextureParamIfNeeded(this, params, SCREENEFFECTTEXTURE, "screen");
+		GetShaderPostExt()->SetTextureParamIfNeeded(this, params, NOISETEXTURE, "noise");
 		bool bToolMode = params[TOOLMODE]->GetIntValue() != 0;
-		bool bDepthBlurEnable = params[ DEPTHBLURENABLE ]->GetIntValue() != 0;
+		bool bDepthBlurEnable = params[ DEPTHBLURENABLE ]->GetIntValue() != 0 || GetShaderPostExt()->IsDofEnabled();
 
 		SHADOW_STATE
 		{
@@ -367,7 +361,7 @@ BEGIN_VS_SHADER_FLAGS( Engine_Post_dx9, "Engine post-processing effects (softwar
 			}
 
 			// PC, ps20b has a desaturation control that overrides color correction
-			bool bDesaturateEnable = bToolMode && ( params[DESATURATEENABLE]->GetIntValue() != 0 ) && g_pHardwareConfig->SupportsPixelShaders_2_b() && IsPC();
+			bool bDesaturateEnable = bToolMode && ( params[DESATURATEENABLE]->GetIntValue() != 0 || GetShaderPostExt()->IsDesaturateEnabled() ) && g_pHardwareConfig->SupportsPixelShaders_2_b() && IsPC();
 			
 			float vPsConst16[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 			vPsConst16[0] = params[ DESATURATION ]->GetFloatValue();
@@ -420,18 +414,16 @@ BEGIN_VS_SHADER_FLAGS( Engine_Post_dx9, "Engine post-processing effects (softwar
 			float	dX			= 1.0f / width;
 			float	dY			= 1.0f / height;
 			float	offsets[4]	= { +dX, 0, +dY, -dX };
-			pShaderAPI->SetPixelShaderConstant( 0, &offsets[0], 1 );
+			pShaderAPI->SetPixelShaderConstant( 0, offsets, 1 );
 
 			// Upload AA tweakables:
 			//   x - strength (this can be used to toggle the AA off, or to weaken it where pathological cases are showing)
 			//   y - reduction of 1-pixel-line blurring (blurring of 1-pixel lines causes issues, so it's tunable)
 			//   z - edge threshold multiplier (default 1.0, < 1.0 => more edges softened, > 1.0 => fewer edges softened)
 			//   w - tap offset multiplier (default 1.0, < 1.0 => sharper image, > 1.0 => blurrier image)
-			float	tweakables[4] = {	params[ AAINTERNAL1 ]->GetVecValue()[0],
-										params[ AAINTERNAL1 ]->GetVecValue()[1],
-										params[ AAINTERNAL3 ]->GetVecValue()[0],
-										params[ AAINTERNAL3 ]->GetVecValue()[1] };
-			pShaderAPI->SetPixelShaderConstant( 1, &tweakables[0], 1 );
+			float	tweakables[4];
+			params[AAINTERNAL1]->GetVecValue(tweakables, 4);
+			pShaderAPI->SetPixelShaderConstant( 1, tweakables, 1 );
 
 			// Upload AA UV transform (converts bloom texture UVs to framebuffer texture UVs)
 			// NOTE: we swap the order of the z and w components since 'wz' is an allowed ps20 swizzle, but 'zw' is not:
@@ -439,7 +431,7 @@ BEGIN_VS_SHADER_FLAGS( Engine_Post_dx9, "Engine post-processing effects (softwar
 									params[ AAINTERNAL2 ]->GetVecValue()[1],
 									params[ AAINTERNAL2 ]->GetVecValue()[3],
 									params[ AAINTERNAL2 ]->GetVecValue()[2] };
-			pShaderAPI->SetPixelShaderConstant( 2, &uvTrans[0], 1 );
+			pShaderAPI->SetPixelShaderConstant( 2, uvTrans, 1 );
 
 			// Upload color-correction weights:
 			pShaderAPI->SetPixelShaderConstant( 3, &ccInfo.m_flDefaultWeight );
@@ -458,6 +450,8 @@ BEGIN_VS_SHADER_FLAGS( Engine_Post_dx9, "Engine post-processing effects (softwar
 				params[ DEPTHBLURFOCALDISTANCE ]->GetFloatValue(), 
 				params[ DEPTHBLURSTRENGTH ]->GetFloatValue()
 			};
+
+			GetShaderPostExt()->UpdateFloatArrayIfNeeded(bloomConstant, 4, "bloom");
 
 			if ( mat_screen_blur_override.GetFloat() >= 0.0f )
 			{
@@ -479,14 +473,14 @@ BEGIN_VS_SHADER_FLAGS( Engine_Post_dx9, "Engine post-processing effects (softwar
 			pShaderAPI->SetPixelShaderConstant( 5, bloomConstant );
 
 			// Vignette
-			bool bVignetteEnable = ( params[ VIGNETTEENABLE ]->GetIntValue() != 0 || mat_vignette_enable.GetBool() ) && ( params[ ALLOWVIGNETTE ]->GetIntValue() != 0 );
+			bool bVignetteEnable = (params[VIGNETTEENABLE]->GetIntValue() != 0 || GetShaderPostExt()->IsVignetteEnabled()) && (params[ALLOWVIGNETTE]->GetIntValue() != 0);
 			if ( bVignetteEnable )
 			{
 				BindTexture( SHADER_SAMPLER7, INTERNAL_VIGNETTETEXTURE );
 			}
 
 			// Noise
-			bool bNoiseEnable = ( params[ NOISEENABLE ]->GetIntValue() != 0 ) && ( params[ ALLOWNOISE ]->GetIntValue() != 0 );
+			bool bNoiseEnable = (params[NOISEENABLE]->GetIntValue() != 0 || GetShaderPostExt()->IsNoiseEnabled()) && (params[ALLOWNOISE]->GetIntValue() != 0);
 
 			int nFbTextureHeight = params[FBTEXTURE]->GetTextureValue()->GetActualHeight();
 			if ( nFbTextureHeight < 720 )
@@ -527,8 +521,8 @@ BEGIN_VS_SHADER_FLAGS( Engine_Post_dx9, "Engine post-processing effects (softwar
 			}
 
 			// Local Contrast
-			bool bLocalContrastEnable = ( params[ LOCALCONTRASTENABLE ]->GetIntValue() != 0 || mat_local_contrast_enable.GetBool() ) && ( params[ ALLOWLOCALCONTRAST ]->GetIntValue() != 0 );
-			bool bBlurredVignetteEnable = ( bLocalContrastEnable ) && ( params[ BLURREDVIGNETTEENABLE ]->GetIntValue() != 0 || mat_vignette_blur.GetBool() );
+			bool bLocalContrastEnable = ( params[ LOCALCONTRASTENABLE ]->GetIntValue() != 0 || GetShaderPostExt()->IsLocalContrastEnabled() ) && ( params[ ALLOWLOCALCONTRAST ]->GetIntValue() != 0 );
+			bool bBlurredVignetteEnable = ( bLocalContrastEnable ) && ( params[ BLURREDVIGNETTEENABLE ]->GetIntValue() != 0 || GetShaderPostExt()->IsBlurredVignetteEnabled() );
 
 			if ( bLocalContrastEnable )
 			{
@@ -545,6 +539,7 @@ BEGIN_VS_SHADER_FLAGS( Engine_Post_dx9, "Engine post-processing effects (softwar
 					vPsConst[1] = mat_local_contrast_midtone_mask_override.GetFloat();
 				}
 				vPsConst[2] = params[ BLURREDVIGNETTESCALE ]->GetFloatValue();
+				GetShaderPostExt()->UpdateFloatArrayIfNeeded(vPsConst, 3, "blur");
 				pShaderAPI->SetPixelShaderConstant( 8, vPsConst, 1 );
 
 				vPsConst[0] = params[ LOCALCONTRASTVIGNETTESTART ]->GetFloatValue();
@@ -562,6 +557,7 @@ BEGIN_VS_SHADER_FLAGS( Engine_Post_dx9, "Engine post-processing effects (softwar
 				{
 					vPsConst[2] = mat_local_contrast_edge_scale_override.GetFloat();
 				}
+				GetShaderPostExt()->UpdateFloatArrayIfNeeded(vPsConst, 3, "contrast");
 				pShaderAPI->SetPixelShaderConstant( 9, vPsConst, 1 );
 			}
 
@@ -570,7 +566,7 @@ BEGIN_VS_SHADER_FLAGS( Engine_Post_dx9, "Engine post-processing effects (softwar
 			vPsConst[0] = params[ FADETOBLACKSCALE ]->GetFloatValue();
 			pShaderAPI->SetPixelShaderConstant( 10, vPsConst, 1 );
 
-			bool bVomitEnable = ( params[ VOMITENABLE ]->GetIntValue() != 0 );
+			bool bVomitEnable = (params[VOMITENABLE]->GetIntValue() != 0 || GetShaderPostExt()->IsScreenEffectEnabled());
 			if ( bVomitEnable )
 			{
 				BindTexture( SHADER_SAMPLER8, SCREENEFFECTTEXTURE );
@@ -614,7 +610,7 @@ BEGIN_VS_SHADER_FLAGS( Engine_Post_dx9, "Engine post-processing effects (softwar
 			bool bConvertFromLinear = ( g_pHardwareConfig->GetHDRType() == HDR_TYPE_FLOAT );
 
 			// JasonM - double check this if the SFM needs to use the engine post FX clip in main
-			bool bConvertToLinear = bToolMode && bConvertFromLinear && ( g_pHardwareConfig->GetHDRType() == HDR_TYPE_FLOAT );
+			bool bConvertToLinear = bToolMode && bConvertFromLinear;
 
 			DECLARE_DYNAMIC_PIXEL_SHADER( engine_post_ps20b );
 			SET_DYNAMIC_PIXEL_SHADER_COMBO( AA_ENABLE,						aaEnabled );

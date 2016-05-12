@@ -265,13 +265,13 @@ FORCEINLINE uint32 ComputeSplitscreenRenderingFlags( IClientRenderable *pRendera
 #if defined( SS_SHIPPING_ASSERTS )
 #define ASSERT_LOCAL_PLAYER_RESOLVABLE() _AssertMsg( engine->IsLocalPlayerResolvable(), _T("Assertion Failed: ") _T("engine->IsLocalPlayerResolvable()"), ((void)0), false )
 #else
-#define ASSERT_LOCAL_PLAYER_RESOLVABLE() Assert( engine->IsLocalPlayerResolvable() );
+#define ASSERT_LOCAL_PLAYER_RESOLVABLE() AssertOnce( engine->IsLocalPlayerResolvable() );
 #endif
 
 #if defined( SS_SHIPPING_ASSERTS )
 #define ASSERT_LOCAL_PLAYER_NOT_RESOLVABLE() _AssertMsg( !engine->IsLocalPlayerResolvable(), _T("Assertion Failed: ") _T("!engine->IsLocalPlayerResolvable()"), ((void)0), false )
 #else
-#define ASSERT_LOCAL_PLAYER_NOT_RESOLVABLE() Assert( !engine->IsLocalPlayerResolvable() );
+#define ASSERT_LOCAL_PLAYER_NOT_RESOLVABLE() AssertOnce( !engine->IsLocalPlayerResolvable() );
 #endif
 
 #define GET_ACTIVE_SPLITSCREEN_SLOT() engine->GetActiveSplitScreenPlayerSlot()

@@ -62,8 +62,6 @@ PRECACHE_REGISTER_BEGIN( GLOBAL, PrecacheEffectMuzzleFlash )
 PRECACHE_REGISTER_END()
 
 
-ConVar func_break_max_pieces( "func_break_max_pieces", "15", FCVAR_ARCHIVE | FCVAR_REPLICATED );
-
 ConVar cl_fasttempentcollision( "cl_fasttempentcollision", "5" );
 
 // Temp entity interface
@@ -1002,6 +1000,8 @@ void CTempEnts::BreakModel( const Vector &pos, const QAngle &angles, const Vecto
 		// assume surface (not volume)
 		count = (size[0] * size[1] + size[1] * size[2] + size[2] * size[0])/(3 * SHARD_VOLUME * SHARD_VOLUME);
 	}
+
+	static ConVarRef func_break_max_pieces("func_break_max_pieces");
 
 	if ( count > func_break_max_pieces.GetInt() )
 	{

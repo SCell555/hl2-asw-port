@@ -28,9 +28,6 @@
     <Filter Include="Build Scripts">
       <UniqueIdentifier>{48d8c12f-8a75-4353-8f59-4c78eefa5e9c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Import">
-      <UniqueIdentifier>{714908c9-b08b-4608-8bd7-0da652b6c524}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\vpc_scripts\loadaddress.vpc">
@@ -386,40 +383,7 @@
     <ClCompile Include="writez_dx9.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ishaderapiext.cpp" />
-    <ClCompile Include="ae_colorgrade.cpp">
-      <Filter>Import</Filter>
-    </ClCompile>
-    <ClCompile Include="ae_depthoffield.cpp">
-      <Filter>Import</Filter>
-    </ClCompile>
-    <ClCompile Include="ae_filmgrainshader.cpp">
-      <Filter>Import</Filter>
-    </ClCompile>
-    <ClCompile Include="ae_lensflareshader.cpp">
-      <Filter>Import</Filter>
-    </ClCompile>
-    <ClCompile Include="ae_outlinexshader.cpp">
-      <Filter>Import</Filter>
-    </ClCompile>
-    <ClCompile Include="ae_outlineyshader.cpp">
-      <Filter>Import</Filter>
-    </ClCompile>
-    <ClCompile Include="ae_screentension.cpp">
-      <Filter>Import</Filter>
-    </ClCompile>
-    <ClCompile Include="ae_ssao_blurx.cpp">
-      <Filter>Import</Filter>
-    </ClCompile>
-    <ClCompile Include="ae_ssao_blury.cpp">
-      <Filter>Import</Filter>
-    </ClCompile>
-    <ClCompile Include="ae_ssao_combine.cpp">
-      <Filter>Import</Filter>
-    </ClCompile>
-    <ClCompile Include="ae_ssaoshader.cpp">
-      <Filter>Import</Filter>
-    </ClCompile>
+    <ClCompile Include="EnginePostInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\dx9sdk\lib\d3dx9.lib">
@@ -553,9 +517,8 @@
     <ClInclude Include="worldvertextransition_dx8_helper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ishaderapiext.h" />
-    <ClInclude Include="interface_typedefs.h" />
     <ClInclude Include="commandbuilder.h" />
+    <ClInclude Include="IShaderEnginePostprocessInterface.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="stdshader_dx9_20b.txt">

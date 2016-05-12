@@ -12,7 +12,9 @@
 #include "achievementmgr.h"
 #include "baseachievement.h"
 
+#ifndef PORTAL
 CAchievementMgr g_AchievementMgrHL2;	// global achievement mgr for HL2
+#endif
 
 class CAchievementHL2KillBarnaclesWithOneBarrel : public CBaseAchievement
 {

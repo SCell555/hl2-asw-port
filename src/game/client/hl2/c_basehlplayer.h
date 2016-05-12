@@ -15,6 +15,7 @@
 
 #include "c_baseplayer.h"
 #include "c_hl2_playerlocaldata.h"
+#include "playerInventory.h"
 
 class C_BaseHLPlayer : public C_BasePlayer
 {
@@ -55,11 +56,11 @@ public:
 	void			PerformClientSideNPCSpeedModifiers( float flFrameTime, CUserCmd *pCmd );
 
 	bool				IsWeaponLowered( void ) { return m_HL2Local.m_bWeaponLowered; }
-	virtual void	Think();
 
 public:
 
 	C_HL2PlayerLocalData		m_HL2Local;
+	C_PlayerInventory			m_Inventory;
 	EHANDLE				m_hClosestNPC;
 	float				m_flSpeedModTime;
 	bool				m_fIsSprinting;

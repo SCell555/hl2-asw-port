@@ -75,7 +75,6 @@ enum view_id_t
 	VIEW_INTRO_PLAYER = 5,
 	VIEW_INTRO_CAMERA = 6,
 	VIEW_SHADOW_DEPTH_TEXTURE = 7,
-	VIEW_SSAO = 8,
 	VIEW_ID_COUNT
 };
 view_id_t CurrentViewID();
@@ -170,7 +169,9 @@ public:
 	VPlane *		GetFrustum();
 	virtual int		GetDrawFlags() { return 0; }
 
-
+#ifdef PORTAL
+	virtual	void	EnableWorldFog() {};
+#endif
 
 protected:
 	// @MULTICORE (toml 8/11/2006): need to have per-view frustum. Change when move view stack to client
@@ -235,7 +236,7 @@ protected:
 	void			DrawWorld( float waterZAdjust );
 
 	// Draws all opaque/translucent renderables in leaves that were rendered
-	void			DrawOpaqueRenderables( bool bShadowDepth, bool bSSAO = false );
+	void			DrawOpaqueRenderables( bool bShadowDepth );
 	void			DrawTranslucentRenderables( bool bInSkybox, bool bShadowDepth );
 
 	// Renders all translucent entities in the render list
@@ -252,6 +253,10 @@ protected:
 
 	// Purpose: Computes the actual world list info based on the render flags
 	void			PruneWorldListInfo();
+
+#ifdef PORTAL
+	virtual bool	ShouldDrawPortals() { return true; }
+#endif
 
 	// Sets up automatic z-prepass on the 360. No-op on PC.
 	void			Begin360ZPass();
@@ -444,10 +449,6 @@ protected:
 
 	void			DrawMonitors( const CViewSetup &cameraView );
 
-	void			SSAO_DepthPass(const CViewSetup &viewSet);
-	void			DrawBokehDepthOfField();
-	void			SSAO_DrawResults();
-
 	bool			DrawOneMonitor( ITexture *pRenderTarget, int cameraNum, C_PointCamera *pCameraEnt, const CViewSetup &cameraView, C_BasePlayer *localPlayer, 
 						int x, int y, int width, int height );
 
@@ -469,9 +470,11 @@ protected:
 
 	virtual void			ViewDrawScene_Intro( const CViewSetup &view, int nClearFlags, const IntroData_t &introData );
 
-
-
-
+#ifdef PORTAL 
+	// Intended for use in the middle of another ViewDrawScene call, this allows stencils to be drawn after opaques but before translucents are drawn in the main view.
+	void			ViewDrawScene_PortalStencil( const CViewSetup &view, ViewCustomVisibility_t *pCustomVisibility );
+	void			Draw3dSkyboxworld_Portal( const CViewSetup &view, int &nClearFlags, bool &bDrew3dSkybox, SkyboxVisibility_t &nSkyboxVisible, ITexture *pRenderTarget = NULL );
+#endif // PORTAL
 
 	// Determines what kind of water we're going to use
 	void			DetermineWaterRenderInfo( const VisibleFogVolumeInfo_t &fogVolumeInfo, WaterRenderInfo_t &info );
@@ -515,6 +518,10 @@ protected:
 	int					m_BaseDrawFlags;	// Set in ViewDrawScene and OR'd into m_DrawFlags as it goes.
 	C_BaseEntity		*m_pCurrentlyDrawingEntity;
 
+#ifdef PORTAL
+	friend class CPortalRender; //portal drawing needs muck with views in weird ways
+	friend class CPortalRenderable;
+#endif
 
 	int				m_BuildRenderableListsNumber;
 

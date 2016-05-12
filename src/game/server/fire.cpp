@@ -193,11 +193,16 @@ protected:
 	bool	m_bStartDisabled;
 	bool	m_bDidActivate;
 
+	string_t	m_sLoopSound;
+	string_t	m_sIgniteSound;
 
 	COutputEvent	m_OnIgnited;
 	COutputEvent	m_OnExtinguished;
 
 	DECLARE_DATADESC();
+
+private:
+	bool	bReadyToPlaySound;
 };
 
 class CFireSphere : public IPartitionEnumerator
@@ -540,7 +545,10 @@ BEGIN_DATADESC( CFire )
 	DEFINE_FIELD( m_flFuel, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flDamageTime, FIELD_TIME ),
 	DEFINE_FIELD( m_lastDamage, FIELD_TIME ),
+	DEFINE_FIELD( bReadyToPlaySound, FIELD_BOOLEAN ),
 	DEFINE_KEYFIELD( m_flFireSize,	FIELD_FLOAT, "firesize" ),
+	DEFINE_KEYFIELD( m_sLoopSound,	FIELD_STRING, "LoopSound" ),
+ 	DEFINE_KEYFIELD( m_sIgniteSound,	FIELD_STRING, "IgniteSound" ),
 
 	DEFINE_KEYFIELD( m_flHeatLevel,	FIELD_FLOAT,	"ignitionpoint" ),
  	DEFINE_FIELD( m_flHeatAbsorb, FIELD_FLOAT ),
@@ -601,6 +609,16 @@ void CFire::UpdateOnRemove( void )
 	//Stop any looping sounds that might be playing
 	StopSound( "Fire.Plasma" );
 
+	if( STRING( m_sLoopSound ) )
+ 	{
+ 		StopSound( STRING( m_sLoopSound ) );
+ 	}
+ 
+ 	if( !HasSpawnFlags( SF_FIRE_NO_IGNITE_SOUND ) && STRING( m_sIgniteSound ) )
+ 	{
+ 		StopSound( STRING( m_sIgniteSound ) );
+ 	}
+
 	DestroyEffect();
 
 	// Chain at end to mimic destructor unwind order
@@ -637,6 +655,16 @@ void CFire::Precache( void )
 	{
 		UTIL_PrecacheOther("_plasma");
 	}
+
+	if( STRING( m_sLoopSound ) )
+ 	{
+ 		PrecacheScriptSound( STRING( m_sLoopSound ) );
+ 	}
+ 
+ 	if( !HasSpawnFlags( SF_FIRE_NO_IGNITE_SOUND ) && STRING( m_sIgniteSound ) )
+ 	{
+ 		PrecacheScriptSound( STRING( m_sIgniteSound ) );
+ 	}
 
 	PrecacheScriptSound( "Fire.Plasma" );
 }
@@ -769,6 +797,7 @@ void CFire::Activate( void )
 		StartFire();
 	}
 
+	bReadyToPlaySound = false;
 	m_bDidActivate = true;
 }
 
@@ -791,6 +820,11 @@ void CFire::SpawnEffect( fireType_e type, float scale )
 			pEffect			= fireSmoke;
 			m_nFireType		= FIRE_NATURAL;
 			m_takedamage	= DAMAGE_YES;
+
+			if(	STRING( m_sIgniteSound ) && !HasSpawnFlags( SF_FIRE_NO_IGNITE_SOUND ) )
+ 			{
+ 				EmitSound( STRING( m_sIgniteSound ) );
+ 			}
 		}
 		break;
 
@@ -1066,6 +1100,18 @@ void CFire::BurnThink( void )
 
 	Update( FIRE_THINK_INTERVAL );
 
+	if( STRING( m_sLoopSound ) && !bReadyToPlaySound && !HasSpawnFlags( SF_FIRE_NO_SOUND ) )
+ 	{
+ 		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+ 
+ 		if( pPlayer )
+ 		{
+ 			EmitSound( STRING( m_sLoopSound ) );
+ 
+ 			bReadyToPlaySound = true;
+		}
+ 	}
+
 #if 0
 	// Noone is currently using the NavMesh!
 
@@ -1234,6 +1280,16 @@ bool CFire::GoOut()
 	}
 	SetToOutSize();
 	
+	if( STRING( m_sLoopSound ) )
+ 	{
+ 		StopSound( STRING( m_sLoopSound ) );
+ 	}
+ 
+ 	if( !HasSpawnFlags( SF_FIRE_NO_IGNITE_SOUND ) && STRING( m_sIgniteSound ) )
+ 	{
+ 		StopSound( STRING( m_sIgniteSound ) );
+ 	}
+
 	return false;
 }
 

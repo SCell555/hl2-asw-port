@@ -1,6 +1,6 @@
-..\..\..\game\platform\shaders\fxc\ae_depthoffield_ps30.vcs
-..\..\..\game\platform\shaders\fxc\ae_ssao_blurx_ps30.vcs
-..\..\..\game\platform\shaders\fxc\ae_ssao_blury_ps30.vcs
-..\..\..\game\platform\shaders\fxc\ae_ssao_combine_ps30.vcs
-..\..\..\game\platform\shaders\fxc\ae_ssao_ps30.vcs
-..\..\..\game\platform\shaders\fxc\ae_lensflare_ps30.vcs
+..\..\..\game\platform\shaders\fxc\portal_ps30.vcs
+..\..\..\game\platform\shaders\fxc\portal_vs30.vcs
+..\..\..\game\platform\shaders\fxc\portal_refract_ps30.vcs
+..\..\..\game\platform\shaders\fxc\portal_refract_vs30.vcs
+..\..\..\game\platform\shaders\fxc\portalstaticoverlay_ps30.vcs
+..\..\..\game\platform\shaders\fxc\portalstaticoverlay_vs30.vcs

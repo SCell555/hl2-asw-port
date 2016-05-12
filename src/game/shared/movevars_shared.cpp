@@ -18,6 +18,9 @@
 #define DEFAULT_GRAVITY_STRING	"800"
 #endif
 
+#undef FCVAR_DEVELOPMENTONLY
+#define FCVAR_DEVELOPMENTONLY 0
+
 ConVar	sv_gravity		( "sv_gravity",DEFAULT_GRAVITY_STRING, FCVAR_NOTIFY | FCVAR_REPLICATED, "World gravity." );
 
 

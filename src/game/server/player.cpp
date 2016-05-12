@@ -4517,7 +4517,9 @@ void CBasePlayer::PostThink()
 				if ( m_hUseEntity->OnControls( this ) && 
 					( !GetActiveWeapon() || GetActiveWeapon()->IsEffectActive( EF_NODRAW ) ||
 					( GetActiveWeapon()->GetActivity() == ACT_VM_HOLSTER ) 
-		
+#ifdef PORTAL // Portalgun view model stays up when holding an object -Jeep
+					|| FClassnameIs( GetActiveWeapon(), "weapon_portalgun" ) 
+#endif //#ifdef PORTAL	
 					) )
 				{  
 					m_hUseEntity->Use( this, this, USE_SET, 2 );	// try fire the gun

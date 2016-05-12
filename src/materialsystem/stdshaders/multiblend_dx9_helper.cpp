@@ -299,6 +299,7 @@ void DrawMultiblend_DX9( CBaseVSShader *pShader, IMaterialVar** params, IShaderD
 
 		pShaderAPI->BindStandardTexture( SHADER_SAMPLER5, TEXTURE_LIGHTMAP );
 
+		bool bFlashlightShadows = false;
 
 #if 1
 		if( bHasFlashlight )
@@ -309,7 +310,7 @@ void DrawMultiblend_DX9( CBaseVSShader *pShader, IMaterialVar** params, IShaderD
 			
 			pShader->BindTexture( SHADER_SAMPLER13, state.m_pSpotlightTexture, state.m_nSpotlightTextureFrame );
 
-			//bFlashlightShadows = state.m_bEnableShadows;
+			bFlashlightShadows = state.m_bEnableShadows;
 
 			SetFlashLightColorFromState( state, pShaderAPI, PSREG_FLASHLIGHT_COLOR );
 
@@ -405,7 +406,6 @@ void DrawMultiblend_DX9( CBaseVSShader *pShader, IMaterialVar** params, IShaderD
 		LightState_t lightState;
 		pShaderAPI->GetDX9LightState( &lightState );
 
-		bool bFlashlightShadows = false;
 
 #ifndef _X360
 		if ( !g_pHardwareConfig->HasFastVertexTextures() )

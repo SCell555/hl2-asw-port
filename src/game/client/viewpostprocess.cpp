@@ -102,20 +102,6 @@ ConVar mat_vignette_enable("mat_vignette_enable", "0");
 ConVar mat_vignette_blur("mat_vignette_blur", "0");
 ConVar mat_local_contrast_enable( "mat_local_contrast_enable", "1" );
 
-static ConVar ae_vignette( "ae_vignette", "1", FCVAR_ARCHIVE );
-static ConVar ae_dof( "ae_dof", "0", FCVAR_ARCHIVE );
-
-static ConVar ae_lensflare("ae_lensflare", "1", FCVAR_ARCHIVE );
-static ConVar ae_grain( "ae_grain", "1", FCVAR_ARCHIVE );
-
-static ConVar ae_grain_intensity( "ae_grain_intensity", "2.0", FCVAR_ARCHIVE );
-static ConVar ae_grain_falloff( "ae_grain_falloff", "40.0", FCVAR_ARCHIVE);
-
-static ConVar ae_colorgrading( "ae_colorgrading", "0", FCVAR_ARCHIVE );
-static ConVar ae_experimental_depth( "ae_experimental_depth", "0" );
-static ConVar ae_experimental_normals( "ae_experimental_normals", "0" );
-static ConVar ae_experimental_albedo( "ae_experimental_albedo", "0" );
-
 static void SetRenderTargetAndViewPort(ITexture *rt)
 {
 	CMatRenderContextPtr pRenderContext( materials );
@@ -1957,62 +1943,6 @@ void DoEnginePostProcessing(int x, int y, int w, int h, bool bFlashlightIsOn, bo
 #if defined( _X360 )
 	pRenderContext->PopVertexShaderGPRAllocation();
 #endif
-
-	if (ae_vignette.GetBool())
-	{
-		static IMaterial *vignetteMat = materials->FindMaterial("effects/vignette", TEXTURE_GROUP_OTHER);
-		if (vignetteMat)
-		{
-			UpdateScreenEffectTexture();
-			pRenderContext->DrawScreenSpaceRectangle(vignetteMat, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
-		}
-	}
-
-	static ConVar ae_dof_post("ae_dof_post", "0");
-	if (ae_dof_post.GetBool())
-	{
-		static IMaterial *ae_DOF_X_Mat = materials->FindMaterial("effects/dof_x", TEXTURE_GROUP_OTHER);
-		if (ae_DOF_X_Mat)
-		{
-			UpdateScreenEffectTexture();
-			pRenderContext->DrawScreenSpaceRectangle(ae_DOF_X_Mat, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
-		}
-	}
-
-	if (ae_experimental_depth.GetBool())
-	{
-		static IMaterial *e_Depth_Mat = materials->FindMaterial("effects/exp/depth", TEXTURE_GROUP_OTHER);
-		if (e_Depth_Mat)
-		{
-			UpdateScreenEffectTexture();
-			pRenderContext->DrawScreenSpaceRectangle(e_Depth_Mat, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
-		}
-	}
-
-	if (ae_lensflare.GetBool())
-	{
-		static IMaterial *lensflareMat = materials->FindMaterial("effects/lensflare", TEXTURE_GROUP_OTHER);
-		if (lensflareMat)
-		{
-			UpdateScreenEffectTexture();
-			pRenderContext->DrawScreenSpaceRectangle(lensflareMat, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
-		}
-	}
-
-	if (ae_grain.GetBool() && ae_grain_intensity.GetFloat() > 0)
-	{
-		static IMaterial *grainMat = materials->FindMaterial("effects/filmgrain", TEXTURE_GROUP_OTHER);
-		IMaterialVar *pGrainAmountVar = grainMat->FindVar("$noiseamount", NULL);
-		pGrainAmountVar->SetFloatValue(ae_grain_intensity.GetFloat());
-		IMaterialVar *pGrainFalloffVar = grainMat->FindVar("$noisefalloff", NULL);
-		pGrainFalloffVar->SetFloatValue(ae_grain_falloff.GetFloat());
-		if (grainMat)
-		{
-			UpdateScreenEffectTexture();
-			pRenderContext->DrawScreenSpaceRectangle(grainMat, 0, 0, w, h, 0, 0, w - 1, h - 1, w, h);
-		}
-	}
-
 }
 void DoBlurFade( float flStrength, float flDesaturate, int x, int y, int w, int h )
 {
@@ -2568,8 +2498,8 @@ ConVar mat_dof_far_focus_depth( "mat_dof_far_focus_depth", "250.0" );
 ConVar mat_dof_far_blur_depth( "mat_dof_far_blur_depth", "1000.0" );
 ConVar mat_dof_near_blur_radius( "mat_dof_near_blur_radius", "10.0" );
 ConVar mat_dof_far_blur_radius( "mat_dof_far_blur_radius", "5.0" );
-ConVar mat_dof_always_update_focal_target ( "mat_dof_always_update_focal_target", "0" );
-ConVar mat_dof_quality( "mat_dof_quality", "0" );
+ConVar mat_dof_always_update_focal_target ( "mat_dof_always_update_focal_target", "1" );
+ConVar mat_dof_quality( "mat_dof_quality", "2" );
 ConVar mat_dof_delay( "mat_dof_delay", "5" );
 
 extern ConVar mat_dest_alpha_range;

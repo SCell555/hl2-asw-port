@@ -53,15 +53,17 @@ set ARG_EXTRA=
 rem %BUILD_SHADER% stdshader_dx9_20b		-game %GAMEDIR% -source %SOURCEDIR%
 %BUILD_SHADER% stdshader_dx9_20b_new		-game %GAMEDIR% -source %SOURCEDIR% -dx9_30
 rem %BUILD_SHADER% stdshader_dx9_30			-game %GAMEDIR% -source %SOURCEDIR% -dx9_30	-force30 
-%BUILD_SHADER% stdshader_dx9_30_new			-game %GAMEDIR% -source %SOURCEDIR% -dx9_30	-force30 
+rem %BUILD_SHADER% stdshader_dx9_30_new			-game %GAMEDIR% -source %SOURCEDIR% -dx9_30	-force30 
 
 
-rem echo.
+echo.
 if not "%dynamic_shaders%" == "1" (
-  rem echo Finished full buildallshaders %*
+  echo Finished full buildallshaders %*
 ) else (
-  rem echo Finished dynamic buildallshaders %*
+  echo Finished dynamic buildallshaders %*
 )
 
 rem %TTEXE% -diff %tt_all_start% -cur
 rem echo.
+
+pause

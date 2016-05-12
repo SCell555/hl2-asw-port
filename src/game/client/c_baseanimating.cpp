@@ -3213,11 +3213,6 @@ int C_BaseAnimating::DrawModel( int flags, const RenderableInstance_t &instance 
 			extraFlags |= STUDIO_SKIP_DECALS;
 		}
 
-		if ( flags & STUDIO_SSAODEPTHTEXTURE )
-		{
-			extraFlags |= STUDIO_SSAODEPTHTEXTURE;
-		}
-
 		// Necessary for lighting blending
 		CreateModelInstance();
 

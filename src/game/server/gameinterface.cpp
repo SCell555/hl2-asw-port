@@ -104,9 +104,15 @@
 #include "vscript_server.h"
 #include "tier2/tier2_logging.h"
 #include "fmtstr.h"
+#include "inventorySaveRestoreManager.h"
 
 #ifdef _WIN32
 #include "IGameUIFuncs.h"
+#endif
+
+#ifdef PORTAL
+#include "prop_portal_shared.h"
+#include "portal_player.h"
 #endif
 
 extern IToolFrameworkServer *g_pToolFrameworkServer;
@@ -767,6 +773,7 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetEventQueueSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetAchievementSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetVScriptSaveRestoreBlockHandler() );
+	g_pGameSaveRestoreBlockSet->AddBlockHandler( InventorySaverestoreMgr() );
 
 	bool bInitSuccess = false;
 	if ( sv_threaded_init.GetBool() )
@@ -841,7 +848,7 @@ void CServerGameDLL::DLLShutdown( void )
 	ModelSoundsCacheShutdown();
 
 
-
+	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( InventorySaverestoreMgr() );
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetVScriptSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetAchievementSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetCommentarySaveRestoreBlockHandler() );
@@ -2820,7 +2827,50 @@ void CServerGameClients::ClientSettingsChanged( edict_t *pEdict )
 	g_pGameRules->ClientSettingsChanged( player );
 }
 
+#ifdef PORTAL
+//-----------------------------------------------------------------------------
+// Purpose: Runs CFuncAreaPortalBase::UpdateVisibility on each portal
+// Input  : pAreaPortal - The Area portal to test for visibility from portals
+// Output : int - 1 if any portal needs this area portal open, 0 otherwise.
+//-----------------------------------------------------------------------------
+int TestAreaPortalVisibilityThroughPortals ( CFuncAreaPortalBase* pAreaPortal, edict_t *pViewEntity, unsigned char *pvs, int pvssize  )
+{
+	int iPortalCount = CProp_Portal_Shared::AllPortals.Count();
+	if( iPortalCount == 0 )
+		return 0;
 
+	CProp_Portal **pPortals = CProp_Portal_Shared::AllPortals.Base();
+
+	for ( int i = 0; i != iPortalCount; ++i )
+	{
+		CProp_Portal* pLocalPortal = pPortals[ i ];
+		if ( pLocalPortal && pLocalPortal->m_bActivated )
+		{
+			CProp_Portal* pRemotePortal = pLocalPortal->m_hLinkedPortal.Get();
+
+			// Make sure this portal's linked portal is in the PVS before we add what it can see
+			if ( pRemotePortal && pRemotePortal->m_bActivated && pRemotePortal->NetworkProp() && 
+				pRemotePortal->NetworkProp()->IsInPVS( pViewEntity, pvs, pvssize ) )
+			{
+				bool bIsOpenOnClient = true;
+				float fovDistanceAdjustFactor = 1.0f;
+				CUtlVector<Vector> portalOrg;
+				portalOrg.AddToTail(pLocalPortal->GetAbsOrigin());
+				portalOrg.AddToTail(pRemotePortal->GetAbsOrigin());
+				bool iPortalNeedsThisPortalOpen = pAreaPortal->UpdateVisibility( portalOrg, fovDistanceAdjustFactor, bIsOpenOnClient );
+
+				// Stop checking on success, this portal needs to be open
+				if ( iPortalNeedsThisPortalOpen )
+				{
+					return iPortalNeedsThisPortalOpen;
+				}
+			}
+		}
+	}
+	
+	return 0;
+}
+#endif
 
 
 //-----------------------------------------------------------------------------
@@ -2907,7 +2957,13 @@ void CServerGameClients::ClientSetupVisibility( edict_t *pViewEntity, edict_t *p
 		portalNums[iOutPortal] = pCur->m_portalNumber;
 		isOpen[iOutPortal] = pCur->UpdateVisibility( areaPortalOrigins, fovDistanceAdjustFactor, bIsOpenOnClient );
 
-
+#ifdef PORTAL
+		// If the client doesn't need this open, test if portals might need this area portal open
+		if ( isOpen[iOutPortal] == 0 )
+		{
+			isOpen[iOutPortal] = TestAreaPortalVisibilityThroughPortals( pCur, pViewEntity, pvs, pvssize );
+		}
+#endif
 
 		++iOutPortal;
 		if ( iOutPortal >= ARRAYSIZE( portalNums ) )
@@ -2940,9 +2996,16 @@ void CServerGameClients::ClientSetupVisibility( edict_t *pViewEntity, edict_t *p
 	if ( pPlayer )
 	{
 		pPlayer->m_Local.UpdateAreaBits( pPlayer, portalBits );
+
+#ifdef PORTAL 
+	// *After* the player's view has updated its area bits, add on any other areas seen by portals
+		CPortal_Player* pPortalPlayer = dynamic_cast<CPortal_Player*>( pPlayer );
+		if ( pPortalPlayer )
+		{
+			pPortalPlayer->UpdatePortalViewAreaBits( pvs, pvssize );
+		}
+#endif //PORTAL
 	}
-
-
 }
 
 
